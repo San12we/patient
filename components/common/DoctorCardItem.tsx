@@ -1,0 +1,1 @@
+// Remove the entire file content as it will be implemented directly in the index.tsx file.
