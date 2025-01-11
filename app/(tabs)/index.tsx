@@ -9,7 +9,6 @@ import { theme } from '@/core/theme';
 import Clinics from '@/components/client/Clinics';
 import SubHeading from '@/components/client/SubHeading';
 
-
 const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const router = useRouter();
@@ -21,7 +20,7 @@ const Index: React.FC = () => {
   return (
     <LinearGradient
       colors={['rgba(55, 98, 122, 0.46)', 'rgba(211, 9, 177, 0.4)']}
-      style={[styles.gradient, { backgroundColor: theme.colors.background }]}
+      style={styles.gradient}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
@@ -30,9 +29,7 @@ const Index: React.FC = () => {
             setSearchQuery={setSearchQuery}
             onSubmit={handleSearchSubmit}
           />
-         
           <Category searchQuery={searchQuery} />
-
           <Doctors searchQuery={searchQuery} />
           <Clinics searchQuery={searchQuery} />
         </View>
@@ -46,16 +43,14 @@ export default Index;
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
-    backgroundColor: theme.colors.backgroundColor,
-    paddingVertical: 30,
   },
   scrollContainer: {
     flexGrow: 1,
+    // Remove backgroundColor to allow the gradient to be visible
   },
   container: {
     flex: 1,
     padding: 20,
-    // Removed backgroundColor to ensure LinearGradient is visible
   },
   heading: {
     fontSize: 24,

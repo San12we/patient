@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.medplus.client"
     },
     "web": {
       "bundler": "metro",
@@ -36,12 +37,19 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/SpaceMono-Regular.ttf"]
+          "fonts": [
+            "./assets/fonts/SpaceMono-Regular.ttf"
+          ]
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8a6f5b68-9751-41ae-becb-e0e36f618b26"
+      }
     }
   }
 }

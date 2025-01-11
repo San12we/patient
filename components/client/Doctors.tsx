@@ -39,7 +39,6 @@ interface DoctorsProps {
 
 const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   const router = useRouter();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
   const { insuranceProviders } = useInsurance();
   const { doctors, loading, error } = useDoctors();
   const dispatch = useDispatch();
@@ -50,15 +49,6 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
     router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
   };
   
-  
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
   const filteredDoctors = doctors.filter(doctor => {
     const matchesQuery = (doctor.firstName && doctor.firstName.toLowerCase().includes(searchQuery.toLowerCase())) ||
                          (doctor.specialty && doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -83,7 +73,7 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   }
 
   return (
-    <View style={{ marginTop: 10 }}>
+    <View style={styles.container}>
       <SubHeading subHeadingTitle="Discover Doctors Near You" />
       {filteredDoctors.length === 0 && searchQuery ? (
         <Text>No results found</Text>
@@ -92,7 +82,7 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
           data={filteredDoctors.length > 0 ? filteredDoctors : doctors}
           horizontal
           renderItem={({ item }) => (
-            <Animated.View style={[styles.doctorItem, { opacity: fadeAnim }]}>
+            <View style={styles.doctorItem}>
               <TouchableOpacity onPress={() => handleConsult(item)}>
                 <Image
                   source={{
@@ -105,7 +95,7 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
                 <Text style={styles.doctorName}>{item.firstName} {item.lastName}</Text>
                 <Text style={styles.doctorName}>{item.specialty}</Text>
               </View>
-            </Animated.View>
+            </View>
           )}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           showsHorizontalScrollIndicator={false}
@@ -117,6 +107,11 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    marginTop: 10,
+    padding: 10, // Add padding if necessary
+    borderRadius: 10, // Add border radius if necessary
+  },
   doctorItem: {
     marginRight: 10,
     borderRadius: 10,
