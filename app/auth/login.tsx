@@ -49,11 +49,11 @@ export default function Login() {
             .mutateAsync(values)
             .then((data) => {
               dispatch(loginAction(data));
+              router.push("/(tabs)");
             })
             .catch((err) => {
               console.log(err);
             });
-          router.push("/(tabs)");
         }}
       >
         {({

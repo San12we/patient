@@ -6,7 +6,7 @@ import {
 } from "react-native";
 
 import { theme } from "../core/theme";
-// Import the image at the top
+
 import backgroundImage from "../assets/items/dot.png";
 
 export default function Background({ children }) {

@@ -13,9 +13,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <PaperProvider>
           <ToastProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <AppWrapper />
-            </Stack>
+            <AppWrapper />
           </ToastProvider>
         </PaperProvider>
       </QueryClientProvider>

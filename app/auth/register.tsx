@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import { Formik } from "formik";
 import * as Yup from "yup";
@@ -13,18 +14,14 @@ import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { registerUser } from "../(services)/api/api";
-import { loginAction, setLoading } from "../(redux)/authSlice";
-import Background from "../../components/Background";
-import Header from "../../components/Header";
-import Logo from "../../components/Logo";
-import Button from "../../components/Button";
-import TextInput from "../../components/TextInput";
-import Loader from "@/components/Loader";
-import { ScrollView } from "react-native";
 
 import axios from "axios";
+import TextInput from "@/components/TextInput";
+import Background from "@/components/Background";
+import Logo from "@/components/Logo";
+import Loader from "@/components/Loader";
 import { Image } from "react-native";
-
+import Button from "@/components/Header";
 
 const RegisterSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -45,11 +42,6 @@ export default function Register() {
   const [countdown, setCountdown] = useState<number>(60);
   const [timerActive, setTimerActive] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>("");
-  const emailInputRef: RefObject<typeof TextInput> = createRef();
-  const passwordInputRef: RefObject<typeof TextInput> = createRef();
-  const firstNameInputRef: RefObject<typeof TextInput> = createRef();
-  const lastNameInputRef: RefObject<typeof TextInput> = createRef();
-  const confirmPasswordInputRef: RefObject<typeof TextInput> = createRef();
 
   const mutation = useMutation({
     mutationFn: registerUser,
@@ -58,9 +50,7 @@ export default function Register() {
 
   return (
     <Background>
-      
       <Logo />
-      <Header>Welcome.</Header>
       <Loader loading={loading} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ justifyContent: 'center', alignContent: 'center' }}>
         <View style={{ alignItems: 'center' }}>
@@ -139,8 +129,6 @@ export default function Register() {
                         onBlur={handleBlur("firstName")}
                         error={!!errors.firstName && touched.firstName}
                         errorText={errors.firstName}
-                        ref={firstNameInputRef}
-                        onSubmitEditing={() => lastNameInputRef.current && lastNameInputRef.current.focus()}
                       />
                       <TextInput
                         label="Last Name"
@@ -150,8 +138,6 @@ export default function Register() {
                         onBlur={handleBlur("lastName")}
                         error={!!errors.lastName && touched.lastName}
                         errorText={errors.lastName}
-                        ref={lastNameInputRef}
-                        onSubmitEditing={() => emailInputRef.current && emailInputRef.current.focus()}
                       />
                       <TextInput
                         label="Email"
@@ -165,8 +151,6 @@ export default function Register() {
                         autoCompleteType="email"
                         textContentType="emailAddress"
                         keyboardType="email-address"
-                        ref={emailInputRef}
-                        onSubmitEditing={() => passwordInputRef.current && passwordInputRef.current.focus()}
                       />
                       <TextInput
                         label="Password"
@@ -177,8 +161,6 @@ export default function Register() {
                         error={!!errors.password && touched.password}
                         errorText={errors.password}
                         secureTextEntry
-                        ref={passwordInputRef}
-                        onSubmitEditing={() => confirmPasswordInputRef.current && confirmPasswordInputRef.current.focus()}
                       />
                       <TextInput
                         label="Confirm Password"
@@ -189,8 +171,6 @@ export default function Register() {
                         error={!!errors.confirmPassword && touched.confirmPassword}
                         errorText={errors.confirmPassword}
                         secureTextEntry
-                        ref={confirmPasswordInputRef}
-                        onSubmitEditing={Keyboard.dismiss}
                       />
                       <Button mode="contained" onPress={handleSubmit} style={{ marginTop: 24 }}>
                         Register
@@ -261,4 +241,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#6200ee",
   },
+  subHeading: {
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  countdownText: {
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  
 });

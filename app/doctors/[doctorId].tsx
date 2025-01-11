@@ -48,68 +48,75 @@ const DoctorProfile: React.FC = () => {
   const userId = doctor.user?._id;
 
   return (
-    <LinearGradient
-      colors={['rgba(55, 98, 122, 0.46)', 'rgba(211, 9, 177, 0.4)']}
-      style={styles.gradient}
-    >
-      <ScrollView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.heroContainer}>
-          <Image source={{ uri: profileImageUri }} style={styles.heroImage} />
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.heroOverlay}>
-            <Text style={styles.heroText}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['rgba(55, 98, 122, 0.46)', 'rgba(211, 9, 177, 0.4)']}
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollContainer}>
+          <StatusBar barStyle="dark-content" />
+          <View style={styles.heroContainer}>
+            <Image source={{ uri: profileImageUri }} style={styles.heroImage} />
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.heroOverlay}>
+              <Text style={styles.heroText}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <ClinicSubHeading subHeadingTitle={`${doctor.firstName} ${doctor.lastName}`} />
-          <Text style={styles.descriptionText}>
-            {doctor.bio || 'No description available'}
-          </Text>
-        </View>
-
-        <View style={[styles.section, styles.horizontalSection]}>
-          <View style={styles.infoCard}>
-            <Ionicons name="medkit" size={20} color={Colors.primary} />
-            <Text style={styles.infoText}>{specialties}</Text>
+          <View style={styles.section}>
+            <ClinicSubHeading subHeadingTitle={`${doctor.firstName} ${doctor.lastName}`} />
+            <Text style={styles.descriptionText}>
+              {doctor.bio || 'No description available'}
+            </Text>
           </View>
-          <View style={styles.infoCard}>
-            <Ionicons name="business" size={20} color={Colors.primary} />
-            <Text style={styles.infoText}>{clinicName}</Text>
-          </View>
-          <View style={styles.infoCard}>
-            <Ionicons name="calendar" size={20} color={Colors.primary} />
-            <Text style={styles.infoText}>{yearsOfExperience} years of experience</Text>
-          </View>
-        </View>
 
-        <BookingSection
-          doctorId={doctor._id}
-          userId={userId} // Ensure userId is passed correctly
-          consultationFee={doctor.consultationFee || 'N/A'}
-          insurances={doctor.insuranceProviders} // Pass insurance provider IDs here
-        />
-        <HorizontalLine />
+          <View style={[styles.section, styles.horizontalSection]}>
+            <View style={styles.infoCard}>
+              <Ionicons name="medkit" size={20} color={Colors.primary} />
+              <Text style={styles.infoText}>{specialties}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Ionicons name="business" size={20} color={Colors.primary} />
+              <Text style={styles.infoText}>{clinicName}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Ionicons name="calendar" size={20} color={Colors.primary} />
+              <Text style={styles.infoText}>{yearsOfExperience} years of experience</Text>
+            </View>
+          </View>
 
-        <View style={styles.section}>
-          <Doctors searchQuery="" excludeDoctorId={doctor.id} />
-        </View>
-      </ScrollView>
-    </LinearGradient>
+          <BookingSection
+            doctorId={doctor._id}
+            userId={userId}
+            consultationFee={doctor.consultationFee || 'N/A'}
+            insurances={doctor.insuranceProviders}
+          />
+          <HorizontalLine />
+
+          <View style={styles.section}>
+            <Doctors searchQuery="" excludeDoctorId={doctor.id} />
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 };
 
 export default DoctorProfile;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   gradient: {
     flex: 1,
     backgroundColor: theme.colors.backgroundColor,
   },
-  container: { flex: 1 },
+  scrollContainer: {
+    flex: 1,
+  },
   heroContainer: { position: 'relative', height: 250 },
   heroImage: { width: '100%', height: '100%' },
   backButton: {

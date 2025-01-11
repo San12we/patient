@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Stack } from "expo-router/stack";
+import { Stack } from "expo-router";
 import { loadUser } from "./authSlice";
 
 function AppWrapper() {
@@ -19,21 +19,21 @@ function AppWrapper() {
   }, [error]);
 
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="index"
         options={{ title: "Home", headerShown: false }}
       />
       <Stack.Screen 
-        name="profile" 
-        options={{ title: "Profile", headerShown: false }} 
+        name="auth/register" 
+        options={{ title: "Register", headerShown: false }} 
       />
       <Stack.Screen 
         name="auth/login" 
         options={{ title: "Login", headerShown: false }} 
       />
       <Stack.Screen 
-        name="(routes)/onboarding" 
+        name="(routes)/onboarding/index" 
         options={{ 
           title: "Welcome", 
           headerShown: false,
