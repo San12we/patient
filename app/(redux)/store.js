@@ -1,16 +1,31 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import authReducer from "./authSlice";
 import doctorReducer from "./doctorSlice";
-import clinicReducer from "./clinicSlice"; // Import the clinic reducer
-import appointmentsReducer from "./appointmentSlice"; // Import the appointments reducer
+import clinicReducer from "./clinicSlice";
+import appointmentsReducer from "./appointmentSlice";
+import insuranceReducer from "./insuranceSlice";
+
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['auth', 'clinics', 'doctors']
+};
+
+const rootReducer = {
+  auth: authReducer,
+  doctors: doctorReducer,
+  clinics: clinicReducer,
+  appointments: appointmentsReducer,
+  insurance: insuranceReducer,
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    doctors: doctorReducer,
-    clinics: clinicReducer, // Add the clinic reducer
-    appointments: appointmentsReducer, // Add the appointments reducer
-  },
+  reducer: persistedReducer,
 });
 
+export const persistor = persistStore(store);
 export default store;

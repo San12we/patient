@@ -1,41 +1,20 @@
-import { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchInsuranceProviders } from "../app/(redux)/insuranceSlice";
 
 const useInsurance = () => {
-  const [insuranceProviders, setInsuranceProviders] = useState([]);
-
-  const fetchInsuranceProviders = async () => {
-    try {
-      const response = await fetch("https://project03-rj91.onrender.com/insurance");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data && Array.isArray(data)) {
-        setInsuranceProviders(data);
-
-      } else {
-        console.error("Unexpected response format:", data);
-      }
-    } catch (error) {
-      console.error("Error fetching insurance providers:", error);
-    }
-  };
-
-  const clearCacheAndFetchAfresh = async () => {
-    try {
-      await AsyncStorage.removeItem("insuranceProviders");
-      await fetchInsuranceProviders();
-    } catch (error) {
-      console.error("Error clearing cache and fetching afresh:", error);
-    }
-  };
+  const dispatch = useDispatch();
+  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
+  const status = useSelector((state) => state.insurance.status);
+  const error = useSelector((state) => state.insurance.error);
 
   useEffect(() => {
-    fetchInsuranceProviders();
-  }, []);
+    if (status === 'idle') {
+      dispatch(fetchInsuranceProviders());
+    }
+  }, [status, dispatch]);
 
-  return { insuranceProviders, clearCacheAndFetchAfresh };
+  return { insuranceProviders, status, error };
 };
 
 export default useInsurance;

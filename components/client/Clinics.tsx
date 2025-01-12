@@ -13,6 +13,8 @@ import Colors from '../Shared/Colors';
 import * as SplashScreen from 'expo-splash-screen';
 import { useRouter } from 'expo-router';
 import useClinics from '../../hooks/useClinics'; // Import the useClinics hook
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchInsuranceProviders } from '../../app/(redux)/insuranceSlice';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,11 +33,19 @@ interface ClinicsProps {
 const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
   const router = useRouter();
   const { clinics, loading, error } = useClinics(); // Use the useClinics hook
+  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     SplashScreen.hideAsync();
     console.log("Clinics data:", clinics); // Log the clinics data
   }, [clinics]);
+
+  useEffect(() => {
+    if (insuranceProviders.length === 0) {
+      dispatch(fetchInsuranceProviders());
+    }
+  }, [insuranceProviders, dispatch]);
 
   const handlePress = (item: Clinic) => {
     console.log("Navigating to clinic with ID:", item._id);

@@ -17,7 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 import ClinicSubHeading from '../../../components/clinics/ClinicSubHeading';
 import { theme } from '@/constants/theme';
 import Colors from '../../../components/Shared/Colors';
-import useInsurance from '../../../hooks/useInsurance';
 import Doctors from '../../../components/client/Doctors'; // Ensure this import is correct
 import { useSelector } from 'react-redux';
 
@@ -27,7 +26,7 @@ const ClinicProfileScreen = () => {
   const clinicData = useSelector((state) => state.clinics.clinics.find(clinic => clinic._id === clinicId));
   const doctorsData = clinicData ? clinicData.doctors : [];
   const router = useRouter();
-  const { insuranceProviders } = useInsurance(); // Use the insurance hook
+  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders); // Get insurance providers from Redux store
 
   const clinicImages = clinicData?.clinicImages || [];
   const [currentImage, setCurrentImage] = useState(clinicImages[0] || null);

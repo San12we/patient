@@ -15,7 +15,7 @@ const loadUserFromStorage = async () => {
 const initialState = {
   user: null,
   loading: true,
-  error: null, // Add error state
+  error: null,
 };
 
 const authSlice = createSlice({
@@ -25,13 +25,13 @@ const authSlice = createSlice({
     loginAction: (state, action) => {
       state.user = action.payload;
       state.loading = false;
-      state.error = null; // Reset error on login
+      state.error = null;
       AsyncStorage.setItem("userInfo", JSON.stringify(action.payload));
     },
     logoutAction: (state) => {
       state.user = null;
       state.loading = false;
-      state.error = null; // Reset error on logout
+      state.error = null;
       AsyncStorage.removeItem("userInfo");
     },
     setUser: (state, action) => {
@@ -42,7 +42,7 @@ const authSlice = createSlice({
       state.loading = action.payload;
     },
     setError: (state, action) => {
-      state.error = action.payload; // Add setError reducer
+      state.error = action.payload;
     },
     updateProfile: (state, action) => {
       state.profileData = action.payload;
@@ -64,10 +64,10 @@ export const loadUser = () => async (dispatch) => {
       dispatch(setLoading(false));
     }
   } catch (error) {
-    dispatch(setError(error.message)); // Dispatch error if loading fails
+    dispatch(setError(error.message));
   }
 };
 
 // Selector to get the user from the state
 export const selectUser = (state) => state.auth.user;
-export const selectAuthError = (state) => state.auth.error; // Add selector for error
+export const selectAuthError = (state) => state.auth.error;

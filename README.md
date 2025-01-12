@@ -1,50 +1,69 @@
-# Welcome to your Expo app 👋
+import React from "react";
+import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+import { useRouter } from "expo-router";
+import { logoutAction } from "../app/(redux)/authSlice";
+import ProtectedRoute from "../components/ProtectedRoute";
 
-## Get started
+export default function Profile() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
 
-1. Install dependencies
+  const handleLogout = () => {
+    dispatch(logoutAction());
+    router.push("/");
+  };
 
-   ```bash
-   npm install
-   ```
+  return (
+    <ProtectedRoute>
+      <View style={styles.container}>
+        <Text style={styles.title}>User Profile</Text>
+        {user ? (
+          <>
+            <Text style={styles.text}>Email: {user.email}</Text>
+            <TouchableOpacity style={styles.button} onPress={handleLogout}>
+              <Text style={styles.buttonText}>Logout</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text style={styles.text}>No user logged in</Text>
+        )}
+      </View>
+    </ProtectedRoute>
+  );
+}
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#f5f5f5",
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 24,
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 16,
+  },
+  button: {
+    height: 50,
+    backgroundColor: "#6200ea",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    marginTop: 16,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -48,6 +48,17 @@ export default function Register() {
     mutationKey: ["register"],
   });
 
+  useEffect(() => {
+    if (timerActive && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prevCountdown) => prevCountdown - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (countdown === 0) {
+      setTimerActive(false);
+    }
+  }, [timerActive, countdown]);
+
   return (
     <Background>
       <Logo />
@@ -64,7 +75,7 @@ export default function Register() {
               confirmPassword: "",
               firstName: "",
               lastName: "",
-              userType: "professional", // Default userType
+              userType: "patient", // Default userType
             }}
             validationSchema={RegisterSchema}
             onSubmit={(values: RegisterValues) => {
@@ -102,7 +113,7 @@ export default function Register() {
             }) => {
               const handleVerificationPress = async () => {
                 try {
-                  const response = await axios.post('https://medplus-health.onrender.com/api/users/verify-email', {
+                  const response = await axios.post('https://project03-rj91.onrender.com/api/users/verify-email', {
                     email: values.email,
                     verificationCode,
                   });
@@ -113,6 +124,22 @@ export default function Register() {
                   router.push('/auth/login');
                 } catch (error) {
                   setMessage("Verification failed. Please try again.");
+                  setMessageType("error");
+                }
+              };
+
+              const handleResendCode = async () => {
+                try {
+                  const response = await axios.post('https://project03-rj91.onrender.com/api/users/request-password-reset', {
+                    email: values.email,
+                  });
+
+                  setMessage("Verification code resent! Please check your email.");
+                  setMessageType("success");
+                  setCountdown(60);
+                  setTimerActive(true);
+                } catch (error) {
+                  setMessage("Failed to resend verification code. Please try again.");
                   setMessageType("error");
                 }
               };
@@ -198,6 +225,11 @@ export default function Register() {
                       <Button mode="contained" onPress={handleVerificationPress} style={{ marginTop: 24 }}>
                         Verify
                       </Button>
+                      {countdown <= 0 && (
+                        <Button mode="outlined" onPress={handleResendCode} style={{ marginTop: 16 }}>
+                          Resend Code
+                        </Button>
+                      )}
                     </>
                   )}
                 </View>

@@ -42,6 +42,14 @@ function AppWrapper() {
           headerTitleStyle: { fontWeight: 'bold' }
         }} 
       />
+      <Stack.Screen 
+        name="(routes)/EditProfile" 
+        options={{ title: "Edit Profile", headerShown: false }} 
+      />
+       <Stack.Screen 
+        name="(routes)/insurance" 
+        options={{ title: "Insurance information", headerShown: false }} 
+      />
     </Stack>
   );
 }

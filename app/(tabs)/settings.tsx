@@ -14,30 +14,36 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUser } from '../(redux)/authSlice';
-import InsuranceScreen from '../insurance';
+import InsuranceScreen from '../(routes)/insurance';
 import { theme } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import Colors from '@/components/Shared/Colors';
+import { black } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 interface FormState {
   darkMode: boolean;
   emailNotifications: boolean;
   pushNotifications: boolean;
+  location: boolean; // Add location to FormState
 }
 
 const Settings: React.FC = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user.user);
+  const profileImage = user.profileImage; // Get profile image from user object
   const profileData = useSelector((state) => state.auth.profileData); // Get profile data from Redux
   const router = useRouter();
   const [form, setForm] = useState<FormState>({
     darkMode: false,
     emailNotifications: true,
     pushNotifications: false,
+    location: false, // Initialize location state
   });
   const [isInsuranceModalVisible, setInsuranceModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     console.log(user);
+    console.log('Profile Image:', profileImage); // Log the profile image
   }, [user]);
 
   const toggleInsuranceModal = () => {
@@ -51,12 +57,11 @@ const Settings: React.FC = () => {
     >
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView>
-          <View style={styles.section}>
-            <Text style={styles.rowLabel}>Patient Profile</Text>
+          <View style={styles.profileWrapper}>
             <TouchableOpacity onPress={() => router.push('/profile')} style={styles.row}>
               <View style={[styles.rowIcon, { backgroundColor: '#007bff' }]}>
-                {user.profileImage ? (
-                  <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.profileImage} />
                 ) : (
                   <View style={styles.profileImageFallback}>
                     <Text style={styles.profileInitial}>{user.firstName?.[0]}</Text>
@@ -68,48 +73,33 @@ const Settings: React.FC = () => {
                 <Text style={styles.profileEmail}>{user.email}</Text>
               </View>
               <View style={styles.rowSpacer} />
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+              <FeatherIcon color="#0CAC2D" name="chevron-right" size={20} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Preferences</Text>
 
+           
+
             <View style={styles.row}>
-              <View style={[styles.rowIcon, { backgroundColor: '#007afe' }]}>
-                <FeatherIcon color="#fff" name="moon" size={20} />
-              </View>
-
-              <Text style={styles.rowLabel}>Dark Mode</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <Switch
-                onValueChange={darkMode => setForm({ ...form, darkMode })}
-                value={form.darkMode}
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={() => {
-                
-              }}
-              style={styles.row}
-            >
               <View style={[styles.rowIcon, { backgroundColor: '#32c759' }]}>
-                <FeatherIcon color="#fff" name="navigation" size={20} />
+                <FeatherIcon color="#CC4343" name="navigation" size={20} />
               </View>
 
               <Text style={styles.rowLabel}>Location</Text>
 
               <View style={styles.rowSpacer} />
 
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
-            </TouchableOpacity>
+              <Switch
+                onValueChange={location => setForm({ ...form, location })}
+                value={form.location}
+              />
+            </View>
 
             <View style={styles.row}>
               <View style={[styles.rowIcon, { backgroundColor: '#38C959' }]}>
-                <FeatherIcon color="#fff" name="at-sign" size={20} />
+                <FeatherIcon color="#EB18EE" name="at-sign" size={20} />
               </View>
 
               <Text style={styles.rowLabel}>Email Notifications</Text>
@@ -184,7 +174,7 @@ const Settings: React.FC = () => {
               style={styles.row}
             >
               <View style={[styles.rowIcon, { backgroundColor: '#32c759' }]}>
-                <FeatherIcon color="#fff" name="star" size={20} />
+                <FeatherIcon color="#0CAC2D" name="star" size={20} />
               </View>
 
               <Text style={styles.rowLabel}>Rate in App Store</Text>
@@ -219,21 +209,50 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 17,
     fontWeight: '400',
-    color: '#0c0c0c',
+    color: Colors.primary,
   },
   profileEmail: {
     fontSize: 16,
-    color: '#989898',
+    color: Colors.primary,
+  },
+  profileImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 9999,
+  },
+  profileImageFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 9999,
+    backgroundColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileInitial: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  profileWrapper: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    margin: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
   /** Section */
   section: {
     paddingHorizontal: 10,
+    paddingVertical: 20,
   },
   sectionTitle: {
     paddingVertical: 12,
     fontSize: 12,
     fontWeight: '600',
-    color: '#9e9e9e',
+    color: '#000',
     textTransform: 'uppercase',
     letterSpacing: 1.1,
   },
@@ -243,7 +262,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     height: 50,
-    backgroundColor: '#f2f2f2',
+    
     borderRadius: 8,
     marginBottom: 12,
     paddingHorizontal: 12,
@@ -260,7 +279,7 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 17,
     fontWeight: '400',
-    color: '#0c0c0c',
+    color: Colors.primary,
   },
   rowSpacer: {
     flexGrow: 1,
