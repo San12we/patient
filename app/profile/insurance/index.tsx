@@ -1,23 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, TextInput, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, TextInput, Alert, Picker, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useToast } from 'react-native-paper-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchInsuranceProviders } from '../../(redux)/insuranceSlice';
 
 const InsuranceSettings = () => {
   const [insuranceData, setInsuranceData] = useState({
     provider: '',
     policyNumber: '',
     policyholderName: '',
-    startDate: '',
-    endDate: '',
+    startDate: new Date(),
+    endDate: new Date(),
     contact: '',
     address: '',
   });
 
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
   const toaster = useToast();
+  const dispatch = useDispatch();
+  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
 
   useEffect(() => {
     const loadInsuranceData = async () => {
@@ -32,7 +40,8 @@ const InsuranceSettings = () => {
     };
 
     loadInsuranceData();
-  }, []);
+    dispatch(fetchInsuranceProviders());
+  }, [dispatch]);
 
   const handleInputChange = (field, value) => {
     setInsuranceData((prevData) => ({ ...prevData, [field]: value }));
@@ -48,88 +57,134 @@ const InsuranceSettings = () => {
     }
   };
 
-  const renderInputField = ({ icon, label, placeholder, value, onChangeText }) => (
-    <View style={styles.inputContainer}>
-      <MaterialIcons name={icon} size={24} color="#007AFF" />
-      <View style={{ flex: 1, marginLeft: 10 }}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder={placeholder}
-          placeholderTextColor="#999"
-          value={value}
-          onChangeText={onChangeText}
-        />
-      </View>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => {}}>
-          <MaterialIcons name="arrow-back-ios" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Insurance Settings</Text>
-      </View>
+     
 
-      {/* Insurance Fields */}
       <ScrollView style={styles.content}>
-        <Text style={styles.sectionTitle}>Insurance Details</Text>
+        
         <View style={styles.sectionContainer}>
-          {renderInputField({
-            icon: 'credit-card',
-            label: 'Insurance Provider',
-            placeholder: 'Enter provider name',
-            value: insuranceData.provider,
-            onChangeText: (text) => handleInputChange('provider', text),
-          })}
-          {renderInputField({
-            icon: 'policy',
-            label: 'Policy Number',
-            placeholder: 'Enter policy number',
-            value: insuranceData.policyNumber,
-            onChangeText: (text) => handleInputChange('policyNumber', text),
-          })}
-          {renderInputField({
-            icon: 'person-outline',
-            label: 'Policyholder Name',
-            placeholder: 'Enter policyholder name',
-            value: insuranceData.policyholderName,
-            onChangeText: (text) => handleInputChange('policyholderName', text),
-          })}
-          {renderInputField({
-            icon: 'calendar-today',
-            label: 'Policy Start Date',
-            placeholder: 'Enter start date (DD/MM/YYYY)',
-            value: insuranceData.startDate,
-            onChangeText: (text) => handleInputChange('startDate', text),
-          })}
-          {renderInputField({
-            icon: 'calendar-today',
-            label: 'Policy End Date',
-            placeholder: 'Enter end date (DD/MM/YYYY)',
-            value: insuranceData.endDate,
-            onChangeText: (text) => handleInputChange('endDate', text),
-          })}
-          {renderInputField({
-            icon: 'phone',
-            label: 'Insurance Contact',
-            placeholder: 'Enter support contact number',
-            value: insuranceData.contact,
-            onChangeText: (text) => handleInputChange('contact', text),
-          })}
-          {renderInputField({
-            icon: 'location-on',
-            label: 'Insurance Office Address',
-            placeholder: 'Enter office address',
-            value: insuranceData.address,
-            onChangeText: (text) => handleInputChange('address', text),
-          })}
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="credit-card" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Insurance Provider</Text>
+              <Picker
+                selectedValue={insuranceData.provider}
+                style={styles.picker}
+                onValueChange={(itemValue) => handleInputChange('provider', itemValue)}
+              >
+                {insuranceProviders.map((provider) => (
+                  <Picker.Item key={provider._id} label={provider.name} value={provider.name} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="person" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Policyholder Name</Text>
+              <TextInput
+                style={styles.textInput}
+                value={insuranceData.policyholderName}
+                onChangeText={(text) => handleInputChange('policyholderName', text)}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="confirmation-number" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Policy Number</Text>
+              <TextInput
+                style={styles.textInput}
+                value={insuranceData.policyNumber}
+                onChangeText={(text) => handleInputChange('policyNumber', text)}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="phone" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Contact Number</Text>
+              <TextInput
+                style={styles.textInput}
+                value={insuranceData.contact}
+                onChangeText={(text) => handleInputChange('contact', text)}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="location-on" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Address</Text>
+              <TextInput
+                style={styles.textInput}
+                value={insuranceData.address}
+                onChangeText={(text) => handleInputChange('address', text)}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="calendar-today" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Policy Start Date</Text>
+              <TouchableOpacity
+                onPress={() => setShowStartDatePicker(true)}
+                style={styles.datePickerButton}
+              >
+                <Text style={styles.dateText}>
+                  {insuranceData.startDate ? insuranceData.startDate.toDateString() : 'Select Start Date'}
+                </Text>
+              </TouchableOpacity>
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={insuranceData.startDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    setShowStartDatePicker(false);
+                    if (selectedDate) {
+                      handleInputChange('startDate', selectedDate);
+                    }
+                  }}
+                />
+              )}
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="calendar-today" size={24} color="#007AFF" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.inputLabel}>Policy End Date</Text>
+              <TouchableOpacity
+                onPress={() => setShowEndDatePicker(true)}
+                style={styles.datePickerButton}
+              >
+                <Text style={styles.dateText}>
+                  {insuranceData.endDate ? insuranceData.endDate.toDateString() : 'Select End Date'}
+                </Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={insuranceData.endDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    setShowEndDatePicker(false);
+                    if (selectedDate) {
+                      handleInputChange('endDate', selectedDate);
+                    }
+                  }}
+                />
+              )}
+            </View>
+          </View>
         </View>
 
-        {/* Action Button */}
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Save Insurance Details</Text>
         </TouchableOpacity>
@@ -138,70 +193,21 @@ const InsuranceSettings = () => {
   );
 };
 
-export default InsuranceSettings;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
-    marginLeft: 10,
-  },
-  content: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
-    textTransform: 'uppercase',
-    letterSpacing: 1.1,
-    marginBottom: 10,
-  },
-  sectionContainer: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#555',
-  },
-  textInput: {
-    fontSize: 14,
-    color: '#000',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    marginTop: 4,
-    paddingBottom: 4,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#ddd' },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#000', marginLeft: 10 },
+  content: { padding: 16 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', textTransform: 'uppercase', marginBottom: 10 },
+  sectionContainer: { backgroundColor: '#f9f9f9', borderRadius: 8, padding: 16, marginBottom: 16 },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  inputLabel: { fontSize: 12, fontWeight: '600', color: '#555' },
+  datePickerButton: { borderBottomWidth: 1, borderBottomColor: '#ddd', paddingVertical: 4 },
+  dateText: { fontSize: 14, color: '#000' },
+  picker: { height: 50, width: '100%' },
+  textInput: { borderBottomWidth: 1, borderBottomColor: '#ddd', paddingVertical: 4, fontSize: 14, color: '#000' },
+  saveButton: { backgroundColor: '#007AFF', padding: 16, borderRadius: 8, alignItems: 'center' },
+  saveButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
 });
+
+export default InsuranceSettings;

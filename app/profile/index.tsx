@@ -19,7 +19,7 @@ export default function Example() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const router = useRouter();
-  const user = useSelector((state) => state.auth.user.user);
+  const user = useSelector((state) => state.auth.user);
   const [form, setForm] = useState({
     emailNotifications: true,
     pushNotifications: false,

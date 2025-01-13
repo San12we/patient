@@ -5,21 +5,20 @@ import { logoutAction, selectUser } from '../app/(redux)/authSlice';
 import { useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Badge } from 'react-native-elements';
-import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
-
-import Colors from './Shared/Colors';
+import { theme } from '@/constants/theme'; // Import theme
 
 const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const user = useSelector(selectUser);
-  const { profileImage, name, userId } = user || {};
+  const user = useSelector((state) => state.auth.user);
+  const profileImage = user?.user?.profileImage; // Add optional chaining
+  const name = user ? `${user?.user?.firstName} ${user?.user?.lastName}` : ''; // Add optional chaining and fallback
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     return () => {
     };
-  }, [userId]);
+  }, [user]);
 
   const handleLogout = () => {
     dispatch(logoutAction());
@@ -27,45 +26,37 @@ const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
   };
 
   return (
-    <LinearGradient
-      colors={['rgba(55, 98, 122, 0.46)', 'rgba(211, 9, 177, 0.4)']} // Use the same gradient colors
-      style={styles.gradient}
-    >
-      <View style={styles.container}>
-        <View style={styles.leftSection}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-          ) : (
-            <View style={styles.profileImageFallback}>
-              <Text style={styles.profileInitial}>{name?.[0]}</Text>
-            </View>
-          )}
-        </View>
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.rightSection}>
-          <TouchableOpacity style={styles.notificationButton}>
-            <AntDesign name="bells" size={24} color="black" />
-            {notificationCount > 0 && (
-              <Badge
-                value={notificationCount}
-                status="error"
-                containerStyle={styles.badgeContainer}
-              />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <AntDesign name="logout" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
+    <View style={[styles.container, { backgroundColor: theme.colors.backgroundColor }]}>
+      <View style={styles.leftSection}>
+        {profileImage ? (
+          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.profileImageFallback}>
+            <Text style={styles.profileInitial}>{name?.[0]}</Text>
+          </View>
+        )}
       </View>
-    </LinearGradient>
+      <Text style={styles.title}>{title}</Text>
+      <View style={styles.rightSection}>
+        <TouchableOpacity style={styles.notificationButton}>
+          <AntDesign name="bells" size={24} color="black" />
+          {notificationCount > 0 && (
+            <Badge
+              value={notificationCount}
+              status="error"
+              containerStyle={styles.badgeContainer}
+            />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <AntDesign name="logout" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  gradient: {
-    paddingTop: 40, // Increased padding to create space from the status bar
-  },
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -73,13 +64,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     elevation: 4,
+    paddingTop: 40, // Increased padding to create space from the status bar
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   title: {
-    color: Colors.primary,
+    color: theme.colors.textColor,
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,

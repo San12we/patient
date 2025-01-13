@@ -13,12 +13,13 @@ import {
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import { selectUser } from '../(redux)/authSlice';
 import InsuranceScreen from '../(routes)/insurance';
 import { theme } from '@/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/components/Shared/Colors';
 import { black } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface FormState {
   darkMode: boolean;
@@ -28,9 +29,14 @@ interface FormState {
 }
 
 const Settings: React.FC = () => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user.user);
-  const profileImage = user.profileImage; // Get profile image from user object
+  const user = useSelector((state) => state.auth.user);
+  const insuranceProvider = useSelector((state) => state.auth.insuranceProvider); // Get insurance provider from Redux
+  console.log('User Data:', user); // Log the user data
+  const profileImage = user?.user?.profileImage || ''; // Handle undefined profileImage
+  const userName = `${user?.user?.firstName || ''} ${user?.user?.lastName || ''}`; // Get user name
+  const userEmail = user?.user?.email || ''; // Get user email
   const profileData = useSelector((state) => state.auth.profileData); // Get profile data from Redux
   const router = useRouter();
   const [form, setForm] = useState<FormState>({
@@ -50,31 +56,40 @@ const Settings: React.FC = () => {
     setInsuranceModalVisible(!isInsuranceModalVisible);
   };
 
+  const navigateToEditProfile = () => {
+    navigation.navigate('(routes)/EditProfile')
+  }
+  
+  const navigateToInsuranceProvider = () => {
+    navigation.navigate('(routes)/insurance/index');
+  };
+
   return (
-    <LinearGradient
-      colors={['rgba(55, 98, 122, 0.46)', 'rgba(211, 9, 177, 0.4)']}
-      style={{ flex: 1 }}
-    >
+    <View style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView>
           <View style={styles.profileWrapper}>
-            <TouchableOpacity onPress={() => router.push('/profile')} style={styles.row}>
-              <View style={[styles.rowIcon, { backgroundColor: '#007bff' }]}>
-                {profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.profileImage} />
-                ) : (
-                  <View style={styles.profileImageFallback}>
-                    <Text style={styles.profileInitial}>{user.firstName?.[0]}</Text>
-                  </View>
-                )}
-              </View>
-              <View>
-                <Text style={styles.profileName}>{user.firstName} {user.lastName}</Text>
-                <Text style={styles.profileEmail}>{user.email}</Text>
-              </View>
-              <View style={styles.rowSpacer} />
-              <FeatherIcon color="#0CAC2D" name="chevron-right" size={20} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                          onPress={navigateToEditProfile}
+                          style={styles.profile}>
+                          <Image
+                            alt=""
+                            source={{
+                              uri: profileImage,
+                            }}
+                            style={styles.profileAvatar} />
+            
+                          <View style={styles.profileBody}>
+                            <Text style={styles.profileName}>{userName}</Text>
+            
+                            <Text style={styles.profileHandle}>{userEmail}</Text>
+                          </View>
+            
+                          <FeatherIcon
+                            color="#bcbcbc"
+                            name="chevron-right"
+                            size={22} />
+                        </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -128,6 +143,27 @@ const Settings: React.FC = () => {
                 value={form.pushNotifications}
               />
             </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Insurance Provider</Text>
+
+            <TouchableOpacity
+              onPress={navigateToInsuranceProvider}
+              style={styles.row}
+            >
+              <View style={[styles.rowIcon, { backgroundColor: '#f0ad4e' }]}>
+                <FeatherIcon color="#fff" name="shield" size={20} />
+              </View>
+
+              <Text style={styles.rowLabel}>
+                {insuranceProvider ? insuranceProvider : 'Manage Insurance Provider'}
+              </Text>
+
+              <View style={styles.rowSpacer} />
+
+              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -195,22 +231,46 @@ const Settings: React.FC = () => {
           <InsuranceScreen onClose={toggleInsuranceModal} />
         </Modal>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.backgroundColor, // Set the background color
+  },
+  
   /** Profile */
+  profile: {
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
   profileAvatar: {
-    width: 32,
-    height: 32,
+    width: 60,
+    height: 60,
     borderRadius: 9999,
+    marginRight: 12,
+  },
+  profileBody: {
+    marginRight: 'auto',
   },
   profileName: {
-    fontSize: 17,
-    fontWeight: '400',
-    color: Colors.primary,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#292929',
   },
+  profileHandle: {
+    marginTop: 2,
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#858585',
+  },
+ 
   profileEmail: {
     fontSize: 16,
     color: Colors.primary,

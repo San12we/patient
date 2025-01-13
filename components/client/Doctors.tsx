@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderRadius: 10,
     padding: 10,
-    width: 240,
+    width: 200,
   },
   doctorImage: {
     width: '100%',
@@ -130,9 +130,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   doctorName: {
-    fontFamily: 'SourceSans3-Bold',
-    fontSize: 16,
-    textAlign: 'center',
+        fontWeight: 'bold',
+        color: Colors.primary,
   },
   loadingContainer: {
     flex: 1,

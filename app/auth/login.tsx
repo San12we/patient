@@ -88,8 +88,8 @@ export default function Login() {
                 <Text style={styles.forgot}>Forgot your password?</Text>
               </TouchableOpacity>
             </View>
-            <Button mode="contained" onPress={handleSubmit}>
-              Login
+            <Button mode="contained" onPress={handleSubmit} disabled={mutation.isLoading}>
+              {mutation.isLoading ? 'Logging in...' : 'Login'}
             </Button>
             <View style={styles.row}>
               <Text>You do not have an account yet?</Text>

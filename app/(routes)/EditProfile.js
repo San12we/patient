@@ -3,23 +3,25 @@ import React, { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView } from 'react-native-web';
 import * as ImagePicker from 'expo-image-picker';
-import { imagesDataURL } from '../../constants/data';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TextInput from '../../components/TextInput';
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
 import { useNavigation } from '@react-navigation/native';
-
+import { useSelector } from 'react-redux';
+import AntDesign from '@expo/vector-icons/AntDesign';
 const EditProfile = () => {
     const navigation = useNavigation();
-    const [selectedImage, setSelectedImage] = useState(imagesDataURL[0]);
-    const [name, setName] = useState('name');
-    const [email, setEmail] = useState('email');
-    const [phone, setPhone] = useState('phone');
-    const [address, setAddress] = useState('address');
-    const [city, setCity] = useState('city');
-    const [state, setState] = useState('state');
-    const [zip, setZip] = useState('zip');
-    const [country, setCountry] = useState('country');
+    const user = useSelector((state) => state.auth.user);
+    const profileImage = user?.user?.profileImage || ''; // Handle undefined profileImage
+    const [selectedImage, setSelectedImage] = useState(profileImage);
+    const [name, setName] = useState(`${user?.user?.firstName || ''} ${user?.user?.lastName || ''}`);
+    const [email, setEmail] = useState(user?.user?.email || '');
+    const [phone, setPhone] = useState(user?.user?.phoneNumber || '');
+    const [addressLine, setAddressLine] = useState('');
+    const [streetAndBuilding, setStreetAndBuilding] = useState('');
+    const [city, setCity] = useState('');
+    const [postalCode, setPostalCode] = useState('');
+    const [country, setCountry] = useState('KEN');
     const [dob, setDob] = useState('dob');
 
     const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
@@ -122,255 +124,139 @@ const EditProfile = () => {
     }
 
     return (
-        <SafeAreaView
-            style={{
-                flex: 1,
-                backgroundColor: '#fff',
-                paddingHorizontal: 22,
-            }}
-        >
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginHorizontal: 12,
-                    marginVertical: 10,
-                }}
-            >
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={{
-                        backgroundColor: '#6200ea',
-                        padding: 10,
-                        borderRadius: 5,
-                    }}
-                >
-                    <MaterialIcons name="arrow-back" size={24} color="white" />
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <AntDesign name="left" size={24} color="black" />
                 </TouchableOpacity>
-                <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Text
-                        style={{
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                        }}
-                    >
-                        Edit Profile
-                    </Text>
-                </View>
+                <Text style={styles.headerTitle}>Edit Profile</Text>
             </View>
-            <ScrollView>
-                <View
-                    style={{
-                        alignItems: 'center',
-                        marginVertical: 22,
-                    }}
-                >
+            <ScrollView contentContainerStyle={styles.scrollView}>
+                <View style={styles.imageContainer}>
                     <TouchableOpacity onPress={handleImageSelection}>
-                        <Image
-                            source={{ uri: selectedImage }}
-                            style={{
-                                width: 170,
-                                height: 170,
-                                borderRadius: 85,
-                                borderWidth: 2,
-                                borderColor: '#6200ea',
-                            }}
-                        />
+                        <Image source={{ uri: selectedImage }} style={styles.profileImage} />
                     </TouchableOpacity>
                 </View>
-                <View
-                    style={{
-                        flexDirection: 'column',
-                        marginBottom: 6,
-                    }}
-                >
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Name</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={name}
-                            onChangeText={(value) => setName(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Email</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={email}
-                            onChangeText={(value) => setEmail(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Phone</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={phone}
-                            onChangeText={(value) => setPhone(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Address</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={address}
-                            onChangeText={(value) => setAddress(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>City</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={city}
-                            onChangeText={(value) => setCity(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>State</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={state}
-                            onChangeText={(value) => setState(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Zip</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={zip}
-                            onChangeText={(value) => setZip(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Country</Text>
-                    <View
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
-                        <TextInput
-                            value={country}
-                            onChangeText={(value) => setCountry(value)}
-                            editable={true}
-                        />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Date of Birth</Text>
-                    <TouchableOpacity
-                        onPress={handleOnPressStartDate}
-                        style={{
-                            height: 50,
-                            width: '100%',
-                            borderColor: '#6200ea',
-                            borderWidth: 1,
-                            borderRadius: 5,
-                            marginVertical: 6,
-                            justifyContent: 'center',
-                            paddingLeft: 8,
-                        }}
-                    >
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Name</Text>
+                    <TextInput value={name} onChangeText={setName} style={styles.input} placeholder="Enter your full name" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput value={email} onChangeText={setEmail} style={styles.input} placeholder="Enter your email" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Phone</Text>
+                    <TextInput value={phone} onChangeText={setPhone} style={styles.input} placeholder="Enter your phone number" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Address Line</Text>
+                    <TextInput value={addressLine} onChangeText={setAddressLine} style={styles.input} placeholder="Enter addressee line" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Street and Building Number</Text>
+                    <TextInput value={streetAndBuilding} onChangeText={setStreetAndBuilding} style={styles.input} placeholder="Enter street and building number" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>City</Text>
+                    <TextInput value={city} onChangeText={setCity} style={styles.input} placeholder="Enter city" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Postal Code</Text>
+                    <TextInput value={postalCode} onChangeText={setPostalCode} style={styles.input} placeholder="Enter postal code" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Country</Text>
+                    <TextInput value={country} onChangeText={setCountry} style={styles.input} editable={false} placeholder="KEN" />
+                </View>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>Date of Birth</Text>
+                    <TouchableOpacity onPress={handleOnPressStartDate} style={styles.datePicker}>
                         <Text>{selectedStartDate}</Text>
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={{
-                        backgroundColor: '#6200ea',
-                        height: 50,
-                        borderRadius: 6,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    marginVertical: 10,
-                    }}
-                >
-                    <Text style={{ color: 'white', textAlign: 'center' }}>Save</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.saveButton}>
+                    <Text style={styles.saveButtonText}>Save</Text>
                 </TouchableOpacity>
                 {renderDatePicker()}
             </ScrollView>
         </SafeAreaView>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        paddingHorizontal: 22,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 12,
+        marginVertical: 10,
+    },
+    backButton: {
+       
+        padding: 10,
+        borderRadius: 5,
+    },
+    headerTitle: {
+        flex: 1,
+        textAlign: 'center',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    scrollView: {
+        paddingBottom: 20,
+    },
+    imageContainer: {
+        alignItems: 'center',
+        marginVertical: 22,
+    },
+    profileImage: {
+        width: 170,
+        height: 170,
+        borderRadius: 85,
+        borderWidth: 2,
+        borderColor: '#6200ea',
+    },
+    formGroup: {
+        marginBottom: 16,
+    },
+    label: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    input: {
+        height: 50,
+        borderColor: '#6200ea',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingLeft: 8,
+    },
+    datePicker: {
+        height: 50,
+        borderColor: '#6200ea',
+        borderWidth: 1,
+        borderRadius: 5,
+        justifyContent: 'center',
+        paddingLeft: 8,
+    },
+    saveButton: {
+        backgroundColor: '#6200ea',
+        height: 50,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 10,
+    },
+    saveButtonText: {
+        color: 'white',
+        textAlign: 'center',
+    },
+});
 
 export default EditProfile;
 

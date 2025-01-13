@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -35,9 +35,13 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
   const { clinics, loading, error } = useClinics(); // Use the useClinics hook
   const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
   const dispatch = useDispatch();
+  const initialLoad = useRef(true);
 
   useEffect(() => {
-    SplashScreen.hideAsync();
+    if (initialLoad.current) {
+      SplashScreen.hideAsync();
+      initialLoad.current = false;
+    }
     console.log("Clinics data:", clinics); // Log the clinics data
   }, [clinics]);
 
@@ -47,12 +51,12 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
     }
   }, [insuranceProviders, dispatch]);
 
-  const handlePress = (item: Clinic) => {
+  const handlePress = useCallback((item: Clinic) => {
     console.log("Navigating to clinic with ID:", item._id);
     router.push(`/hospital/book-appointment/${item._id}`);
-  };
+  }, [router]);
 
-  const ClinicItem: React.FC<{ item: Clinic }> = ({ item }) => {
+  const ClinicItem: React.FC<{ item: Clinic }> = React.memo(({ item }) => {
     const [currentImage, setCurrentImage] = useState<string | null>(null);
     const clinicImages = item.clinicImages || [];
 
@@ -92,7 +96,7 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
         </View>
       </TouchableOpacity>
     );
-  };
+  });
 
   const filteredClinics = clinics.filter(clinic =>
     clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

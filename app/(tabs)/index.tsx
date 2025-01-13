@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+// Remove the LinearGradient import
+// import { LinearGradient } from 'expo-linear-gradient';
 import Doctors from '../../components/client/Doctors';
 import Category from '@/components/client/Category';
 import SearchBar from '@/components/client/SearchBar';
-import { theme } from '@/core/theme';
+import { theme } from '@/constants/theme';
 import Clinics from '@/components/client/Clinics';
 import SubHeading from '@/components/client/SubHeading';
 
@@ -18,12 +19,10 @@ const Index: React.FC = () => {
   };
 
   return (
-    <LinearGradient
-      colors={['rgba(55, 98, 122, 0.46)', 'rgba(211, 9, 177, 0.4)']}
-      style={styles.gradient}
-    >
+    // Replace LinearGradient with a View
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.container}>
+        <View style={styles.innerContainer}>
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -34,21 +33,22 @@ const Index: React.FC = () => {
           <Clinics searchQuery={searchQuery} />
         </View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 
 export default Index;
 
 const styles = StyleSheet.create({
-  gradient: {
+  container: {
     flex: 1,
+    backgroundColor: theme.colors.backgroundColor, // Set the background color
   },
   scrollContainer: {
     flexGrow: 1,
     // Remove backgroundColor to allow the gradient to be visible
   },
-  container: {
+  innerContainer: {
     flex: 1,
     padding: 20,
   },

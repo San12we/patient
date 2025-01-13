@@ -11,7 +11,8 @@ import useSchedule from '../hooks/useSchedule'; // Import the useSchedule hook
 import io from 'socket.io-client';
 import { useToast } from 'react-native-paper-toast'; // Import useToast
 import useInsurance from '../hooks/useInsurance'; // Import the useInsurance hook
-
+import {theme} from '../constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const BookingSection: React.FC<{ doctorId: string; userId: string; consultationFee: number; insurances?: string[]; selectedInsurance?: string }> = ({
   doctorId,
   userId, // Accept userId
@@ -29,6 +30,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedInsurance, setSelectedInsurance] = useState<string>(initialSelectedInsurance);
+  const [userInsurance, setUserInsurance] = useState<string | null>(null);
 
   const user = useSelector(selectUser);
   const userEmail = user.user?.email; // Extract userEmail from the user object
@@ -67,6 +69,28 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   const [availableInsurances, setAvailableInsurances] = useState<any[]>([]); // Initialize as an empty array
 
   useEffect(() => {
+    const fetchUserInsurance = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem('insuranceData');
+        if (storedData) {
+          const insuranceData = JSON.parse(storedData);
+          setUserInsurance(insuranceData.insuranceProvider);
+        }
+      } catch (error) {
+        console.error('Error loading user insurance data:', error);
+      }
+    };
+
+    fetchUserInsurance();
+  }, []);
+
+  useEffect(() => {
+    console.log('User Insurance:', userInsurance); // Log the user's insurance
+  }, [userInsurance]);
+
+  const userInsuranceName = userInsurance; // Direct name absence of ID check
+
+  useEffect(() => {
     // Map insurance provider IDs to corresponding details
     const mappedInsurances = insurances
       .map((providerId) =>
@@ -76,17 +100,27 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
 
     setAvailableInsurances(mappedInsurances);
     console.log('Mapped Insurances in BookingSection:', mappedInsurances); // Log mapped insurances
+    console.log('Accepted Insurances:', mappedInsurances.map((insurance) => insurance.name)); // Log accepted insurances
   }, [insurances, insuranceProviders]);
 
-  const handleBookPress = async () => {
+  useEffect(() => {
+    console.log('User Insurance:', userInsuranceName); // Log the user's insurance name
+    const isAccepted = availableInsurances.some((insurance) => insurance.name === userInsuranceName);
+    console.log('Is User Insurance Accepted:', isAccepted); // Log if the user's insurance is accepted
+  }, [userInsuranceName, availableInsurances]);
+
+  const userInsuranceMatches = userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName);
+
+  const handleBookPress = async (withInsurance: boolean) => {
+    console.log(withInsurance ? 'Proceed with Insurance button pressed' : 'Proceed to Payment button pressed'); // Log button press
     if (!selectedTimeSlot && !selectedInsurance) {
-      Alert.alert('Error', 'Please select a time slot or insurance.');
+      toaster.show({ message: 'Please select a time slot or insurance.', type: 'error' });
       return;
     }
   
     const selectedDateTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${selectedTimeSlot?.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
     if (selectedTimeSlot && selectedDateTime.isBefore(moment())) {
-      Alert.alert('Error', 'Cannot book an appointment in the past.');
+      toaster.show({ message: 'Cannot book an appointment in the past.', type: 'error' });
       return;
     }
   
@@ -94,9 +128,9 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
       return;
     }
   
-    console.log('Selected Time Slot:', selectedTimeSlot); // Add this line to log selectedTimeSlot
-    console.log('User Email:', userEmail); // Log the userEmail
-    console.log('Patient Name:', patientName); // Log the patientName
+    console.log('Selected Time Slot:', selectedTimeSlot); // Log selectedTimeSlot
+    console.log('User Email:', userEmail); // Log userEmail
+    console.log('Patient Name:', patientName); // Log patientName
   
     setIsSubmitting(true);
     setShowAlert(false);
@@ -121,7 +155,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
     await fetchSubaccountCode(userId); // Use userId to fetch the subaccount code
   
     try {
-      if (!subaccountCode) {
+      if (!subaccountCode && !withInsurance) {
         throw new Error('Missing subaccount code.');
       }
       if (!userEmail) {
@@ -165,7 +199,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
         updateSlot(selectedTimeSlot.id, { isBooked: true });
       }
   
-      if (selectedInsurance) {
+      if (withInsurance) {
         toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
         setIsSubmitting(false);
         return;
@@ -361,35 +395,42 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
               );
             }}
           />
-          <Text style={styles.insuranceTitle}>Accepted Insurances</Text>
-          {availableInsurances.length > 0 ? (
-            <FlatList
-              horizontal
-              data={availableInsurances}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => setSelectedInsurance(item._id)}
-                  style={[
-                    styles.insuranceCard,
-                    item._id === selectedInsurance ? styles.selectedInsuranceCard : null
-                  ]}
-                >
-                  <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
-                  <Text style={[
-                    styles.insuranceText,
-                    item._id === selectedInsurance ? styles.selectedInsuranceText : null
-                  ]}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-              showsHorizontalScrollIndicator={false}
-            />
+          {userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName) ? (
+            <>
+              <Text style={styles.insuranceTitle}>Your Insurance is Accepted</Text>
+              <FlatList
+                horizontal
+                data={availableInsurances}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => setSelectedInsurance(item._id)}
+                    style={[
+                      styles.insuranceCard,
+                      item._id === selectedInsurance ? styles.selectedInsuranceCard : null,
+                      item.name === userInsuranceName ? styles.userInsuranceCard : null
+                    ]}
+                    disabled={item.name !== userInsuranceName} // Disable selection if it does not match user insurance
+                  >
+                    <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
+                    <Text style={[
+                      styles.insuranceText,
+                      item._id === selectedInsurance ? styles.selectedInsuranceText : null,
+                      item.name === userInsuranceName ? styles.userInsuranceText : null
+                    ]}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+                showsHorizontalScrollIndicator={false}
+              />
+              <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(true)} disabled={isSubmitting}>
+                <Text style={styles.bookButtonText}>Proceed with Insurance</Text>
+              </TouchableOpacity>
+            </>
           ) : (
-            <Text style={styles.noInsuranceText}>No insurances available</Text>
+            <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(false)} disabled={isSubmitting}>
+              <Text style={styles.bookButtonText}>Book Appointment</Text>
+            </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.bookButton} onPress={handleBookPress} disabled={isSubmitting}>
-            <Text style={styles.bookButtonText}>Book Appointment</Text>
-          </TouchableOpacity>
 
           <Paystack
             paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
@@ -410,7 +451,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    marginTop: 30
+    marginTop: 30,
+    backgroundColor: theme.colors.backgroundColor,
   },
   title: {
     fontSize: 24,
@@ -515,3 +557,4 @@ const styles = StyleSheet.create({
 });
 
 export default BookingSection;
+

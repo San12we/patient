@@ -15,25 +15,29 @@ import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Colors from '@/components/Shared/Colors';
-
+import { useToast } from 'react-native-paper-toast'; // Import useToast
+import { theme } from '@/constants/theme';
 const InsuranceScreen = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [insuranceData, setInsuranceData] = useState({
     insuranceProvider: 'HealthPlus',
     insuranceNumber: '123-456-789',
     policyholderName: 'John Doe',
-    effectiveDate: '2024-01s-01',
+    effectiveDate: '2024-01-01',
     expirationDate: '2025-01-01',
   });
 
   const { insuranceProviders } = useInsurance();
   const router = useRouter();
+  const toaster = useToast(); // Initialize useToast
 
   const saveInsuranceData = async (data) => {
     try {
       await AsyncStorage.setItem('insuranceData', JSON.stringify(data));
+      toaster.show({ message: 'Insurance data saved successfully.', type: 'success' }); // Show success toast
     } catch (error) {
       console.error('Error saving data:', error);
+      toaster.show({ message: 'Failed to save insurance data.', type: 'error' }); // Show error toast
     }
   };
 
@@ -136,6 +140,9 @@ const InsuranceScreen = () => {
           value={insuranceData.expirationDate}
           onChangeText={(value) => handleUpdate('expirationDate', value)}
         />
+        <TouchableOpacity style={styles.saveButton} onPress={() => saveInsuranceData(insuranceData)}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -155,7 +162,7 @@ const EditableField = ({ label, value, onChangeText }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e0f7fa',
+    backgroundColor: theme.colors.backgroundColor,
     padding: 16,
     paddingTop: 40, // Added paddingTop to prevent overlap with the status bar
   },
@@ -171,15 +178,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#e0f7fa', // Light cyan background color
-    borderRadius: 16, // Increased border radius
+    backgroundColor: Colors.SECONDARY,// Light cyan background color
+    
     padding: 20, // Increased padding
     shadowColor: '#000',
     shadowOpacity: 0.4, // Increased shadow opacity
     shadowRadius: 10, // Increased shadow radius
     shadowOffset: { width: 2, height: 4 },
-    elevation: 8, // Increased elevation
-    marginBottom: 20, // Added margin bottom for spacing
+    elevation: 6, // Increased elevation
+  
   },
   cardHeader: {
     flexDirection: 'row',
@@ -205,7 +212,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   editSection: {
-    marginTop: 16,
+    
     padding: 16, // Added padding
     backgroundColor: '#ffffff', // White background
     borderRadius: 16, // Border radius to match card
@@ -233,6 +240,17 @@ const styles = StyleSheet.create({
   picker: {
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
+  },
+  saveButton: {
+    backgroundColor: Colors.SECONDARY,
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  saveButtonText: {
+    color: Colors.primary,
+    fontSize: 18,
   },
 });
 

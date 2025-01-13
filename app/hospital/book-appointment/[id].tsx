@@ -59,7 +59,9 @@ const ClinicProfileScreen = () => {
   useEffect(() => {
     console.log('Clinic Data:', clinicData);
     console.log('Doctors Data:', doctorsData);
-  }, [clinicData, doctorsData]);
+    console.log('Clinic Insurance Providers:', clinicData?.insuranceProviders);
+    console.log('All Insurance Providers:', insuranceProviders);
+  }, [clinicData, doctorsData, insuranceProviders]);
 
   if (!clinicData) {
     return (
@@ -69,8 +71,8 @@ const ClinicProfileScreen = () => {
     );
   }
 
-  const insuranceDetails = clinicData.insuranceProviders.map(id => {
-    const provider = insuranceProviders.find(provider => provider._id === id);
+  const insuranceDetails = clinicData.insuranceProviders.map(name => {
+    const provider = insuranceProviders.find(provider => provider.name === name);
     return provider ? { name: provider.name, icon: provider.icon } : { name: 'Unknown', icon: null };
   });
 
@@ -167,10 +169,9 @@ const ClinicProfileScreen = () => {
           showsHorizontalScrollIndicator={false}
         />
       </View>
-
       {/* Medical Professionals */}
       <View style={styles.section}>
-        <ClinicSubHeading subHeadingTitle="Medical Professionals" />
+        
         <Doctors searchQuery="" excludeDoctorId={null} />
       </View>
     </ScrollView>

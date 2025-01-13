@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const initialState = {
   clinics: [],
@@ -47,6 +48,10 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async ({ in
       }],
     };
   });
+
+  // Save transformed data to AsyncStorage
+  await AsyncStorage.setItem('clinics', JSON.stringify(transformedData));
+
   return transformedData;
 });
 
@@ -56,6 +61,9 @@ const clinicSlice = createSlice({
   reducers: {
     setSelectedClinic: (state, action) => {
       state.selectedClinic = action.payload;
+    },
+    setClinicsFromStorage: (state, action) => {
+      state.clinics = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -75,5 +83,5 @@ const clinicSlice = createSlice({
   },
 });
 
-export const { setSelectedClinic } = clinicSlice.actions;
+export const { setSelectedClinic, setClinicsFromStorage } = clinicSlice.actions;
 export default clinicSlice.reducer;
