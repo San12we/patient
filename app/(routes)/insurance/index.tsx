@@ -56,10 +56,6 @@ const InsuranceScreen = () => {
     loadInsuranceData();
   }, []);
 
-  useEffect(() => {
-    saveInsuranceData(insuranceData);
-  }, [insuranceData]);
-
   const handleUpdate = (field, value) => {
     const updatedData = { ...insuranceData, [field]: value };
     setInsuranceData(updatedData);

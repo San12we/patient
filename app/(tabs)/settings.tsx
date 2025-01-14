@@ -157,7 +157,7 @@ const Settings: React.FC = () => {
               </View>
 
               <Text style={styles.rowLabel}>
-                {insuranceProvider ? insuranceProvider : 'Manage Insurance Provider'}
+                {insuranceProvider ? insuranceProvider : 'Health Insurance'}
               </Text>
 
               <View style={styles.rowSpacer} />

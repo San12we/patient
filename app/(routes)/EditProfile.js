@@ -1,36 +1,31 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image, Modal } from 'react-native';
 import React, { useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView } from 'react-native-web';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TextInput from '../../components/TextInput';
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
 import AntDesign from '@expo/vector-icons/AntDesign';
+
 const EditProfile = () => {
     const navigation = useNavigation();
-    const user = useSelector((state) => state.auth.user);
-    const profileImage = user?.user?.profileImage || ''; // Handle undefined profileImage
-    const [selectedImage, setSelectedImage] = useState(profileImage);
-    const [name, setName] = useState(`${user?.user?.firstName || ''} ${user?.user?.lastName || ''}`);
-    const [email, setEmail] = useState(user?.user?.email || '');
-    const [phone, setPhone] = useState(user?.user?.phoneNumber || '');
+    const [selectedImage, setSelectedImage] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [addressLine, setAddressLine] = useState('');
     const [streetAndBuilding, setStreetAndBuilding] = useState('');
     const [city, setCity] = useState('');
     const [postalCode, setPostalCode] = useState('');
     const [country, setCountry] = useState('KEN');
     const [dob, setDob] = useState('dob');
-
     const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
     const today = new Date();
     const startDate = getFormatedDate(
         today.setDate(today.getDate() + 1),
         'yyyy-MM-dd'
     );
-
     const [selectedStartDate, setSelectedStartDate] = useState('01/01/1990');
     const [startedDate, setStartedDate] = useState('12/12/2025');
 
@@ -127,7 +122,7 @@ const EditProfile = () => {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <AntDesign name="left" size={24} color="black" />
+                    <AntDesign name="left" size={24} color="black" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Edit Profile</Text>
             </View>
@@ -197,7 +192,6 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     backButton: {
-       
         padding: 10,
         borderRadius: 5,
     },

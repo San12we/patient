@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     elevation: 4,
-    paddingTop: 40, // Increased padding to create space from the status bar
+    paddingTop: 20, // Increased padding to create space from the status bar
   },
   leftSection: {
     flexDirection: 'row',

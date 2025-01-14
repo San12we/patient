@@ -74,7 +74,7 @@ export default function Category({ searchQuery }: CategoryProps) {
               style={styles.categoryItem} 
               onPress={() => {
                 setActiveIndex(index); // Set active index on press
-                router.push('/search'); // Navigate to the doctors screen
+                router.push({ pathname: '/search', params: { category: item.name } }); // Pass selected category to search screen
               }}
             >
               <View style={activeIndex == index ? styles.categoryIconContainerActive : styles.categoryIconContainer}>

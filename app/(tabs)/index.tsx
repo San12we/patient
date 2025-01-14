@@ -24,13 +24,12 @@ const Index: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.innerContainer}>
           <SearchBar
-            searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             onSubmit={handleSearchSubmit}
           />
           <Category searchQuery={searchQuery} />
-          <Doctors searchQuery={searchQuery} />
-          <Clinics searchQuery={searchQuery} />
+          <Doctors />
+          <Clinics />
         </View>
       </ScrollView>
     </View>

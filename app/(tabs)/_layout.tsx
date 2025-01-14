@@ -7,10 +7,11 @@ import TabBarBackground from '@/components/ui/TabBarBackground'; // Ensure this 
 import { theme } from '@/constants/theme'; // Import theme
 import { useColorScheme } from '@/hooks/useColorScheme';
 import ClientHeader from '@/components/ClientHeader'; // Import ClientHeader
+import Colors from '@/components/Shared/Colors';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const backgroundColor = theme.colors.backgroundColor; // Use theme color
+  const backgroundColor = Colors.SECONDARY; // Use theme color
 
   return (
     <>
@@ -43,7 +44,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: 'MedPlus',
             tabBarIcon: ({ color }) => (
               <Ionicons name="home-outline" size={24} color={theme.colors.textColor} />
             ),

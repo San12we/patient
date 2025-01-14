@@ -33,11 +33,10 @@ interface Doctor {
 }
 
 interface DoctorsProps {
-  searchQuery: string;
   excludeDoctorId?: string;
 }
 
-const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
+const Doctors: React.FC<DoctorsProps> = ({ excludeDoctorId }) => {
   const router = useRouter();
   const { insuranceProviders } = useInsurance();
   const { doctors, loading, error } = useDoctors();
@@ -50,10 +49,8 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   };
   
   const filteredDoctors = doctors.filter(doctor => {
-    const matchesQuery = (doctor.firstName && doctor.firstName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                         (doctor.specialty && doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase()));
     const isNotExcluded = doctor.id !== excludeDoctorId;
-    return matchesQuery && isNotExcluded;
+    return isNotExcluded;
   });
 
   useEffect(() => {
@@ -75,7 +72,7 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   return (
     <View style={styles.container}>
       <SubHeading subHeadingTitle="Discover Doctors Near You" />
-      {filteredDoctors.length === 0 && searchQuery ? (
+      {filteredDoctors.length === 0 ? (
         <Text>No results found</Text>
       ) : (
         <FlatList

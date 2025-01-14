@@ -2,17 +2,15 @@ import React from 'react';
 import { TouchableOpacity, View, TextInput, StyleSheet, Text } from 'react-native';
 
 interface SearchBarProps {
-  searchQuery: string;
   setSearchQuery: (query: string) => void;
   onSubmit: () => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuery, onSubmit }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ setSearchQuery, onSubmit }) => {
   return (
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        value={searchQuery}
         onChangeText={setSearchQuery}
         placeholder="Search..."
         onSubmitEditing={onSubmit}

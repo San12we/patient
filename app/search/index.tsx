@@ -3,9 +3,12 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons'; // Ensure this package is installed
 import useSearch from '@/hooks/useSearch';
+import { useRouter, useSearchParams } from 'expo-router';
 
 const index = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  const { category } = useSearchParams(); // Get category from params
+  const [searchQuery, setSearchQuery] = useState(category || ''); // Initialize search query with category if provided
   const [showFilters, setShowFilters] = useState(false);
   const [currentFilter, setCurrentFilter] = useState('Category');
 
@@ -24,6 +27,13 @@ const index = () => {
   useEffect(() => {
     console.log('Filtered Clinics:', filteredClinics);
   }, [filteredClinics]);
+
+  useEffect(() => {
+    if (category) {
+      setSelectedCategory(category);
+      handleCombinedFilters();
+    }
+  }, [category]);
 
   const renderFilterOptions = () => {
     switch (currentFilter) {

@@ -27,10 +27,10 @@ interface Clinic {
 }
 
 interface ClinicsProps {
-  searchQuery: string;
+  // Remove searchQuery prop
 }
 
-const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
+const Clinics: React.FC<ClinicsProps> = () => {
   const router = useRouter();
   const { clinics, loading, error } = useClinics(); // Use the useClinics hook
   const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
@@ -98,10 +98,7 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
     );
   });
 
-  const filteredClinics = clinics.filter(clinic =>
-    clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    clinic.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredClinics = clinics.filter(clinic => true);
 
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.GRAY} />;
