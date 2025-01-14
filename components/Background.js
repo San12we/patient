@@ -1,25 +1,22 @@
 import React from "react";
 import {
-  ImageBackground,
   StyleSheet,
   KeyboardAvoidingView,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { theme } from "../core/theme";
 
-import backgroundImage from "../assets/items/dot.png";
-
 export default function Background({ children }) {
   return (
-    <ImageBackground
-      source={backgroundImage} // Use the imported image
-      resizeMode="repeat"
+    <LinearGradient
+      colors={['#ffebbb', '#e0ffcd', '#fcffc1', '#1dad9b']}
       style={styles.background}
     >
       <KeyboardAvoidingView style={styles.container} behavior="padding">
         {children}
       </KeyboardAvoidingView>
-    </ImageBackground>
+    </LinearGradient>
   );
 }
 
@@ -27,7 +24,6 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     width: "100%",
-    backgroundColor: theme.colors.surface,
   },
   container: {
     flex: 1,

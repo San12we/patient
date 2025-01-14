@@ -1,10 +1,10 @@
 import { View, Text, Image, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
 import SubHeading from './SubHeading';
 import Colors from '../Shared/Colors';
 import GlobalApi from '../../Services/GlobalApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router'; // Reintroduce this import
 
 interface CategoryProps {
   searchQuery: string;
@@ -19,7 +19,7 @@ export default function Category({ searchQuery }: CategoryProps) {
   const [categoryList, setCategoryList] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeIndex, setActiveIndex] = useState<number | null>(null); // State to track active index
-  const router = useRouter();
+  const router = useRouter(); // Reintroduce this line
 
   useEffect(() => {
     getCategories();
@@ -74,7 +74,7 @@ export default function Category({ searchQuery }: CategoryProps) {
               style={styles.categoryItem} 
               onPress={() => {
                 setActiveIndex(index); // Set active index on press
-                router.push({ pathname: '/search', params: { category: item.name } }); // Pass selected category to search screen
+                router.push('/search'); // Navigate to the search screen without parameters
               }}
             >
               <View style={activeIndex == index ? styles.categoryIconContainerActive : styles.categoryIconContainer}>

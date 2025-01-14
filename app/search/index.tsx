@@ -1,14 +1,13 @@
 import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import React from 'react';
-import { Ionicons } from '@expo/vector-icons'; // Ensure this package is installed
+import { Ionicons, AntDesign } from '@expo/vector-icons'; // Ensure this package is installed
 import useSearch from '@/hooks/useSearch';
-import { useRouter, useSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router'; // Update this import
 
 const index = () => {
-  const router = useRouter();
-  const { category } = useSearchParams(); // Get category from params
-  const [searchQuery, setSearchQuery] = useState(category || ''); // Initialize search query with category if provided
+  const router = useRouter(); // Update this line
+  const [searchQuery, setSearchQuery] = useState(''); // Initialize search query with an empty string
   const [showFilters, setShowFilters] = useState(false);
   const [currentFilter, setCurrentFilter] = useState('Category');
 
@@ -25,15 +24,17 @@ const index = () => {
   } = useSearch();
 
   useEffect(() => {
-    console.log('Filtered Clinics:', filteredClinics);
+    try {
+      console.log('Filtered Clinics:', filteredClinics);
+    } catch (error) {
+      console.error('Error logging filtered clinics:', error);
+    }
   }, [filteredClinics]);
 
-  useEffect(() => {
-    if (category) {
-      setSelectedCategory(category);
-      handleCombinedFilters();
-    }
-  }, [category]);
+  const handlePress = useCallback((item) => {
+    console.log("Navigating to clinic with ID:", item._id);
+    router.push(`/hospital/book-appointment/${item._id}`);
+  }, [router]);
 
   const renderFilterOptions = () => {
     switch (currentFilter) {
@@ -83,6 +84,11 @@ const index = () => {
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <AntDesign name="left" size={24} color="black" />
+      </TouchableOpacity>
+
       {/* Search Bar with Filter Toggle */}
       <View style={styles.searchBarContainer}>
         <TextInput
@@ -138,14 +144,14 @@ const index = () => {
         data={filteredClinics}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <View style={styles.item}>
+          <TouchableOpacity style={styles.item} onPress={() => handlePress(item)}>
             <Image source={{ uri: item.profileImage }} style={styles.clinicImage} />
             <View style={styles.info}>
               <Text style={styles.title}>{item.name}</Text>
               <Text>{item.address}</Text>
               <Text>{item.practiceName}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>
@@ -159,6 +165,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     padding: 20,
+  },
+  backButton: {
+    marginBottom: 10,
   },
   searchBarContainer: {
     flexDirection: 'row',

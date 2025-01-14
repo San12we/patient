@@ -11,7 +11,7 @@ export default {
     selectedBackground: '#91d690',
     gray: '#388e3c',
     goofy: '#8bffff',
-    background: '#F8F9FA', // Background color used in scrollContainer
-    textPrimary: '#002D62', // Text color for primary text like title and name
-    textSecondary: '#a6a4a4' // Text color for secondary text like dateTime and noAppointmentsText
+    background: '#F8F9FA',
+    textPrimary: '#002D62', 
+    textSecondary: '#a6a4a4',
 }

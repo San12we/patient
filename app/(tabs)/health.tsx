@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '@/components/Shared/Colors';
 import SubHeading from '@/components/client/SubHeading';
 import { fetchPubMedData, fetchFullArticle } from '@/utils/pubmed';
+import { theme } from '@/constants/theme';
 
 const sections = [
   { id: '1', title: 'Consultations' },
@@ -72,21 +73,6 @@ const Health = () => {
     </TouchableOpacity>
   );
 
-  const renderDynamicView = () => {
-    switch (selectedSection) {
-      case '1':
-        return <Text style={styles.dynamicText}>Consultations Content</Text>;
-      case '2':
-        return <Text style={styles.dynamicText}>Prescription Content</Text>;
-      case '3':
-        return <Text style={styles.dynamicText}>Lab Tests Content</Text>;
-      case '4':
-        return <Text style={styles.dynamicText}>Reports Content</Text>;
-      default:
-        return null;
-    }
-  };
-
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
@@ -104,11 +90,6 @@ const Health = () => {
           contentContainerStyle={styles.flatListContainer}
           initialScrollIndex={0}
         />
-      </View>
-
-      {/* Dynamic View */}
-      <View style={styles.dynamicContainer}>
-        {renderDynamicView()}
       </View>
 
       {/* Subheading */}
@@ -159,7 +140,7 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+   backgroundColor: theme.colors.backgroundColor,
     padding: 20,
   },
   section: {
@@ -192,21 +173,6 @@ const styles = StyleSheet.create({
   cardText: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  dynamicContainer: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  dynamicText: {
-    fontSize: 16,
-    color: '#333',
   },
   articleListContainer: {
     paddingHorizontal: 10,

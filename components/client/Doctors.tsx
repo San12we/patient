@@ -33,10 +33,11 @@ interface Doctor {
 }
 
 interface DoctorsProps {
+  searchQuery: string;
   excludeDoctorId?: string;
 }
 
-const Doctors: React.FC<DoctorsProps> = ({ excludeDoctorId }) => {
+const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   const router = useRouter();
   const { insuranceProviders } = useInsurance();
   const { doctors, loading, error } = useDoctors();
@@ -72,7 +73,7 @@ const Doctors: React.FC<DoctorsProps> = ({ excludeDoctorId }) => {
   return (
     <View style={styles.container}>
       <SubHeading subHeadingTitle="Discover Doctors Near You" />
-      {filteredDoctors.length === 0 ? (
+      {filteredDoctors.length === 0 && searchQuery ? (
         <Text>No results found</Text>
       ) : (
         <FlatList

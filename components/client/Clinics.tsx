@@ -27,10 +27,11 @@ interface Clinic {
 }
 
 interface ClinicsProps {
-  // Remove searchQuery prop
+  searchQuery: string;
+
 }
 
-const Clinics: React.FC<ClinicsProps> = () => {
+const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
   const router = useRouter();
   const { clinics, loading, error } = useClinics(); // Use the useClinics hook
   const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);

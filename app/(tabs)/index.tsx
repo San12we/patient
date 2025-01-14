@@ -8,7 +8,7 @@ import Category from '@/components/client/Category';
 import SearchBar from '@/components/client/SearchBar';
 import { theme } from '@/constants/theme';
 import Clinics from '@/components/client/Clinics';
-import SubHeading from '@/components/client/SubHeading';
+
 
 const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -28,8 +28,8 @@ const Index: React.FC = () => {
             onSubmit={handleSearchSubmit}
           />
           <Category searchQuery={searchQuery} />
-          <Doctors />
-          <Clinics />
+          <Doctors searchQuery={searchQuery} />
+          <Clinics searchQuery={searchQuery} />
         </View>
       </ScrollView>
     </View>
