@@ -1,0 +1,32 @@
+{
+  "articles": [
+    {
+      "uid": "1",
+      "title": "Understanding Healthcare",
+      "source": "Health Journal",
+      "content": "Full content of the article goes here...",
+      "introduction": "Introduction text...",
+      "symptoms": "Symptoms text...",
+      "home_treatment": "Home treatment text...",
+      "when_to_see_a_doctor": "When to see a doctor text...",
+      "professional_treatment": "Professional treatment text...",
+      "prevention_tips": "Prevention tips text...",
+      "conclusion": "Conclusion text...",
+      "imageUrl": "https://via.placeholder.com/100"
+    },
+    {
+      "uid": "2",
+      "title": "Advancements in Medicine",
+      "source": "Medical News",
+      "content": "Full content of the article goes here...",
+      "introduction": "Introduction text...",
+      "symptoms": "Symptoms text...",
+      "home_treatment": "Home treatment text...",
+      "when_to_see_a_doctor": "When to see a doctor text...",
+      "professional_treatment": "Professional treatment text...",
+      "prevention_tips": "Prevention tips text...",
+      "conclusion": "Conclusion text...",
+      "imageUrl": "https://via.placeholder.com/100"
+    }
+  ]
+}

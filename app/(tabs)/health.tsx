@@ -3,8 +3,8 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Dimensions, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '@/components/Shared/Colors';
 import SubHeading from '@/components/client/SubHeading';
-import { fetchPubMedData, fetchFullArticle } from '@/utils/pubmed';
 import { theme } from '@/constants/theme';
+import postData from '@/data/post.json'; // Import the dummy data
 
 const sections = [
   { id: '1', title: 'Consultations' },
@@ -24,8 +24,8 @@ const Health = () => {
   useEffect(() => {
     const loadArticles = async () => {
       try {
-        const data = await fetchPubMedData('healthcare insights');
-        const articlesArray = Object.values(data).filter(item => item.uid); // Adjust based on actual data structure
+        // Use the imported dummy data instead of fetching from an API
+        const articlesArray = postData.articles;
         setArticles(articlesArray);
       } catch (error) {
         console.error(error);
@@ -39,7 +39,8 @@ const Health = () => {
 
   const handleArticlePress = async (articleId) => {
     try {
-      const fullContent = await fetchFullArticle(articleId);
+      // Find the full content from the dummy data
+      const fullContent = postData.articles.find(article => article.uid === articleId).content;
       setFullArticleContent(fullContent);
       setSelectedArticle(articleId);
       setModalVisible(true);
@@ -60,7 +61,7 @@ const Health = () => {
   const renderArticle = ({ item }) => (
     <TouchableOpacity onPress={() => handleArticlePress(item.uid)}>
       <View style={styles.articleCard}>
-        <Image source={{ uri: 'https://via.placeholder.com/100' }} style={styles.articleImage} />
+        <Image source={{ uri: item.imageUrl }} style={styles.articleImage} />
         <View style={styles.articleContent}>
           <Text style={styles.articleTitle} numberOfLines={1}>
             {item.title}
