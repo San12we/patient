@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { useNotification } from '@/context/NotificationsContext';
 
 export default function Index() {
+  const { expoPushToken, notification, error } = useNotification(); // Import and use the hook
   const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
   const router = useRouter();
 
@@ -21,18 +23,27 @@ export default function Index() {
       if (isOnboarded) {
         router.replace('/auth/login');
       } else {
-        router.replace('/(routes)/onboarding');
+        router.replace('/onboarding');
       }
     }
   }, [isOnboarded, router]);
 
-  if (isOnboarded === null) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (error) {
+      console.error('Notification error:', error);
+    } else if (notification) {
+      console.log('Notification received:', JSON.stringify(notification, null, 2));
+      const { title, body } = notification.request.content;
+      Alert.alert(title, body); // Display the notification as an alert
+    }
+  }, [notification, error]);
 
-  return null;
+  useEffect(() => {
+    if (expoPushToken) {
+      console.log('Expo Push Token:', expoPushToken); // Log the Expo Push Token
+      AsyncStorage.setItem('expoPushToken', expoPushToken); // Store the token in AsyncStorage
+    }
+  }, [expoPushToken]);
+
+  return null; // Do not render any view
 }

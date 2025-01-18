@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Badge } from 'react-native-elements';
 import { theme } from '@/constants/theme'; // Import theme
+import Colors from './Shared/Colors';
 
 const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
   const dispatch = useDispatch();
@@ -26,7 +27,7 @@ const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: Colors.SECONDARY}]}>
       <View style={styles.leftSection}>
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.profileImage} />

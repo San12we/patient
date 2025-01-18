@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const EditProfile = () => {
+const index = () => {
   return (
     <View>
-      <Text>EditProfile</Text>
+      <Text>index</Text>
     </View>
   )
 }
 
-export default EditProfile
+export default index
 
 const styles = StyleSheet.create({})

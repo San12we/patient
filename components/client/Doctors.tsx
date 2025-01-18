@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, FlatList, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,7 @@ import Colors from '../../components/Shared/Colors';
 import useInsurance from '../../hooks/useInsurance';
 import { useDoctors } from '../../hooks/useDoctors';
 import { useDispatch } from 'react-redux';
-import { setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import the action
+import { setSelectedDoctor, getDoctors } from '../../app/(redux)/doctorSlice'; // Import the actions
 
 interface Doctor {
   id: string;
@@ -43,16 +43,22 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   const { doctors, loading, error } = useDoctors();
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    dispatch(getDoctors()); // Fetch doctors when the component mounts
+  }, [dispatch]);
+
   const handleConsult = (doctor: Doctor) => {
     console.log('Consulting doctor:', doctor);
     dispatch(setSelectedDoctor(doctor)); // Dispatch the selected doctor
     router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
   };
   
-  const filteredDoctors = doctors.filter(doctor => {
-    const isNotExcluded = doctor.id !== excludeDoctorId;
-    return isNotExcluded;
-  });
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter(doctor => {
+      const isNotExcluded = doctor.id !== excludeDoctorId;
+      return isNotExcluded;
+    });
+  }, [doctors, excludeDoctorId]);
 
   useEffect(() => {
     console.log('Filtered doctors:', filteredDoctors); // Log the filtered data

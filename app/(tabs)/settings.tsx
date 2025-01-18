@@ -57,9 +57,10 @@ const Settings: React.FC = () => {
   };
 
   const navigateToEditProfile = () => {
-    navigation.navigate('(routes)/EditProfile')
-  }
-  
+    console.log('Navigating to EditProfile'); // Add console log
+    navigation.navigate('(routes)/EditProfile');
+  };
+
   const navigateToInsuranceProvider = () => {
     navigation.navigate('(routes)/insurance/index');
   };

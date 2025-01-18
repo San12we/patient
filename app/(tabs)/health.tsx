@@ -1,232 +1,141 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Colors from '@/components/Shared/Colors';
-import SubHeading from '@/components/client/SubHeading';
-import { theme } from '@/constants/theme';
-import postData from '@/data/post.json'; // Import the dummy data
+import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, FlatList } from 'react-native';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPosts } from '../(redux)/postSlice';
+import { RootState } from '../(redux)/store';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const sections = [
-  { id: '1', title: 'Consultations' },
-  { id: '2', title: 'Prescription' },
-  { id: '3', title: 'Lab Tests' },
-  { id: '4', title: 'Reports' },
-];
-
-const Health = () => {
-  const [selectedSection, setSelectedSection] = useState(sections[0].id);
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedArticle, setSelectedArticle] = useState(null);
-  const [fullArticleContent, setFullArticleContent] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+const health = () => {
+  const dispatch = useDispatch();
+  const { posts, loading } = useSelector((state: RootState) => state.posts);
+  const router = useRouter();
 
   useEffect(() => {
-    const loadArticles = async () => {
-      try {
-        // Use the imported dummy data instead of fetching from an API
-        const articlesArray = postData.articles;
-        setArticles(articlesArray);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    dispatch(fetchPosts());
+  }, [dispatch]);
 
-    loadArticles();
-  }, []);
-
-  const handleArticlePress = async (articleId) => {
-    try {
-      // Find the full content from the dummy data
-      const fullContent = postData.articles.find(article => article.uid === articleId).content;
-      setFullArticleContent(fullContent);
-      setSelectedArticle(articleId);
-      setModalVisible(true);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const renderSection = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.card, selectedSection === item.id && styles.selectedCard]}
-      onPress={() => setSelectedSection(item.id)}
-    >
-      <Text style={styles.cardText}>{item.title}</Text>
-    </TouchableOpacity>
-  );
-
-  const renderArticle = ({ item }) => (
-    <TouchableOpacity onPress={() => handleArticlePress(item.uid)}>
-      <View style={styles.articleCard}>
-        <Image source={{ uri: item.imageUrl }} style={styles.articleImage} />
-        <View style={styles.articleContent}>
-          <Text style={styles.articleTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.articleAuthor} numberOfLines={1}>
-            {item.source}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  const segments = [
+    { title: 'Consultations', route: '/consultation' },
+    { title: 'Labs Reports', route: '/labs' },
+    { title: 'Diagnosis', route: '/diagnosis' },
+    { title: 'Health Monitor', route: '/monitor' },
+  ];
 
   if (loading) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6200ee" />
+      </View>
+    );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Existing Horizontal Scroll Section */}
+    <LinearGradient colors={['#ffebbb', '#e0ffcd', '#fcffc1', '#1dad9b']} style={styles.background}>
       <View style={styles.container}>
+        <ScrollView horizontal contentContainerStyle={styles.segmentsContainer} showsHorizontalScrollIndicator={false}>
+          {segments.map((segment, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.segment}
+              onPress={() => router.push(segment.route)}
+            >
+              <Text style={styles.segmentText}>{segment.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        
         <FlatList
-          data={sections}
-          renderItem={renderSection}
-          keyExtractor={(item) => item.id}
+          data={posts}
           horizontal
+          renderItem={({ item }) => (
+            <View style={styles.postContainer}>
+              <TouchableOpacity onPress={() => router.push(`/${item.slug}`)}>
+                <Image
+                  source={{ uri: item.thumbnail }}
+                  style={styles.thumbnail}
+                  onError={(error) => console.log('Error loading image:', error)}
+                />
+              </TouchableOpacity>
+              <View style={styles.nameCategoryContainer}>
+                <Text style={styles.title}>{item.title}</Text>
+              </View>
+            </View>
+          )}
+          keyExtractor={(item, index) => `${item.slug}-${index}`}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.flatListContainer}
-          initialScrollIndex={0}
+          nestedScrollEnabled={true}
         />
       </View>
-
-      {/* Subheading */}
-      <View style={styles.section}>
-        <SubHeading subHeadingTitle={'Discover Health'} />
-        {/* Horizontal FlatList for Articles */}
-        <FlatList
-          data={articles}
-          renderItem={renderArticle}
-          keyExtractor={(item) => item.uid}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.articleListContainer}
-        />
-      </View>
-
-      {/* Modal for Full Article Content */}
-      <Modal
-        animationType="slide"
-        transparent={false}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-        }}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <ScrollView>
-            <Text style={styles.fullArticleText}>{fullArticleContent}</Text>
-          </ScrollView>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => {
-              setModalVisible(false);
-            }}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+    </LinearGradient>
   );
 };
 
-export default Health;
-
-const { width } = Dimensions.get('window');
+export default health;
 
 const styles = StyleSheet.create({
-  safeArea: {
+  background: {
     flex: 1,
-   backgroundColor: theme.colors.backgroundColor,
-    padding: 20,
-  },
-  section: {
-    marginTop: 20,
-    marginBottom: 10,
   },
   container: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  segmentsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    marginBottom: 8,
   },
-  flatListContainer: {
-    paddingHorizontal: 20,
-  },
-  card: {
+  segment: {
     backgroundColor: '#fff',
-    borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginHorizontal: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginRight: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  selectedCard: {
-    backgroundColor: Colors.primary,
-  },
-  cardText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  articleListContainer: {
-    paddingHorizontal: 10,
-  },
-  articleCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    width: width * 0.6,
-    marginRight: 15,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
-  articleImage: {
-    width: '100%',
-    height: 80,
-    resizeMode: 'cover',
-  },
-  articleContent: {
-    padding: 10,
-  },
-  articleTitle: {
+  segmentText: {
     fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 5,
-    color: '#333',
+    fontWeight: '500',
   },
-  articleAuthor: {
-    fontSize: 12,
-    color: '#555',
-    fontStyle: 'italic',
+  subtitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  modalContainer: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: Colors.background,
-  },
-  fullArticleText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  closeButton: {
-    marginTop: 20,
+  postContainer: {
+    marginRight: 10,
+    borderRadius: 15,
     padding: 10,
-    backgroundColor: Colors.primary,
-    borderRadius: 5,
-    alignItems: 'center',
+    width: 220,
   },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  thumbnail: {
+    width: '100%',
+    height: 120,
+    borderRadius: 15,
+  },
+  nameCategoryContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  title: {
+    fontWeight: 'bold',
+    color: '#6200ee',
+  },
+  description: {
+    color: '#333',
   },
 });

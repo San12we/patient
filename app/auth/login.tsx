@@ -17,6 +17,8 @@ import Header from "../../components/Header";
 import Logo from "../../components/Logo";
 import Button from "../../components/Button";
 import TextInput from "../../components/TextInput";
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -37,76 +39,108 @@ export default function Login() {
     }
   }, [user, router]);
 
+  const sendTokenToBackend = async (token: string, userId: string) => {
+    try {
+        const response = await fetch('https://medplus-health.onrender.com/api/push-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token, userId }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send push token to backend');
+        }
+
+        console.log('Push token sent to backend successfully');
+    } catch (error) {
+        console.error('Error sending push token to backend:', error);
+    }
+  };
+
+  const handleLogin = async (values: { email: string; password: string }) => {
+    try {
+      const data = await mutation.mutateAsync(values);
+      dispatch(loginAction(data));
+      const token = await AsyncStorage.getItem('expoPushToken');
+      if (token) {
+        sendTokenToBackend(token, data.userId); // Send the token to the backend with userId
+      }
+      router.push("/(tabs)");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
-    <Background>
-      <Logo />
-      <Header>Login</Header>
-      <Formik
-        initialValues={{ email: "user@gmail.com", password: "123456" }}
-        validationSchema={LoginSchema}
-        onSubmit={(values) => {
-          mutation
-            .mutateAsync(values)
-            .then((data) => {
-              dispatch(loginAction(data));
-              router.push("/(tabs)");
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        }}
-      >
-        {({
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          values,
-          errors,
-          touched,
-        }) => (
-          <View style={styles.form}>
-            <TextInput
-              label="Email"
-              placeholder="Email"
-              onChangeText={handleChange("email")}
-              onBlur={handleBlur("email")}
-              value={values.email}
-              keyboardType="email-address"
-              error={errors.email && touched.email ? errors.email : null}
-            />
-            <TextInput
-              label="Password"
-              placeholder="Password"
-              onChangeText={handleChange("password")}
-              onBlur={handleBlur("password")}
-              value={values.password}
-              secureTextEntry
-              error={errors.password && touched.password ? errors.password : null}
-            />
-            <View style={styles.forgotPassword}>
-              <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
-                <Text style={styles.forgot}>Forgot your password?</Text>
-              </TouchableOpacity>
+    <LinearGradient
+      colors={['#ffebbb', '#e0ffcd', '#fcffc1', '#1dad9b']}
+      style={styles.background}
+    >
+      <Background>
+        <Logo />
+        <Header>Login</Header>
+        <Formik
+          initialValues={{ email: "user@gmail.com", password: "123456" }}
+          validationSchema={LoginSchema}
+          onSubmit={handleLogin}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+          }) => (
+            <View style={styles.form}>
+              <TextInput
+                label="Email"
+                placeholder="Email"
+                onChangeText={handleChange("email")}
+                onBlur={handleBlur("email")}
+                value={values.email}
+                keyboardType="email-address"
+                error={errors.email && touched.email ? errors.email : null}
+              />
+              <TextInput
+                label="Password"
+                placeholder="Password"
+                onChangeText={handleChange("password")}
+                onBlur={handleBlur("password")}
+                value={values.password}
+                secureTextEntry
+                error={errors.password && touched.password ? errors.password : null}
+              />
+              <View style={styles.forgotPassword}>
+                <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
+                  <Text style={styles.forgot}>Forgot your password?</Text>
+                </TouchableOpacity>
+              </View>
+              <Button mode="contained" onPress={handleSubmit} disabled={mutation.isLoading}>
+                {mutation.isLoading ? 'Logging in...' : 'Login'}
+              </Button>
+              <View style={styles.row}>
+                <Text>You do not have an account yet?</Text>
+              </View>
+              <View style={styles.row}>
+                <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+                  <Text style={styles.link}>Create!</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <Button mode="contained" onPress={handleSubmit} disabled={mutation.isLoading}>
-              {mutation.isLoading ? 'Logging in...' : 'Login'}
-            </Button>
-            <View style={styles.row}>
-              <Text>You do not have an account yet?</Text>
-            </View>
-            <View style={styles.row}>
-              <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-                <Text style={styles.link}>Create!</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </Formik>
-    </Background>
+          )}
+        </Formik>
+      </Background>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
   form: {
     width: "100%",
     maxWidth: 340,

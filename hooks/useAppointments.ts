@@ -20,6 +20,24 @@ const useAppointments = () => {
     const user = useSelector(selectUser);
     const userId = user?.userId;
 
+    const saveExpoPushToken = async (token) => {
+        try {
+            const response = await fetch(`https://medplus-health.onrender.com/api/users/saveExpoPushToken`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token, userId }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save Expo Push Token');
+            }
+        } catch (err) {
+            console.error('Error saving Expo Push Token:', err);
+        }
+    };
+
     useEffect(() => {
         const fetchAppointments = async () => {
             dispatch(setLoading(true));
@@ -58,6 +76,7 @@ const useAppointments = () => {
         if (userId) {
             fetchAppointments();
         }
+
     }, [dispatch, userId]);
 
     const confirmAppointment = async (appointmentId) => {

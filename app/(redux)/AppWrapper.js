@@ -55,6 +55,26 @@ function AppWrapper() {
           name="(routes)/insurance" 
           options={{ title: "Insurance information", headerShown: false }} 
         />
+        <Stack.Screen 
+          name="(routes)/[slug]" 
+          options={{ title: "Post Details", headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="(routes)/consultation"
+          options={{ title: "", headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="(routes)/diagnosis"
+          options={{ title: "Diagnosis", headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="(routes)/labs"
+          options={{ title: "Labs", headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="(routes)/monitor"
+          options={{ title: "Monitor", headerShown: false }} 
+        />
       </Stack>
     </>
   );
