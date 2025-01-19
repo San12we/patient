@@ -44,8 +44,14 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getDoctors()); // Fetch doctors when the component mounts
-  }, [dispatch]);
+    if (doctors.length === 0) {
+      dispatch(getDoctors()); // Fetch doctors only if not already available
+    }
+  }, [dispatch, doctors.length]);
+
+  useEffect(() => {
+    console.log('Doctors component rendered');
+  });
 
   const handleConsult = (doctor: Doctor) => {
     console.log('Consulting doctor:', doctor);
