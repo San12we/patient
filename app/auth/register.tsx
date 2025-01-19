@@ -1,27 +1,24 @@
-import React, { useState, useEffect } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  ScrollView,
+  View,
+  Alert,
 } from "react-native";
-import { Formik } from "formik";
-import * as Yup from "yup";
+import React, { useState } from "react";
+import CustomBox from "react-native-customized-box";
 import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { registerUser } from "../(services)/api/api";
-
-import axios from "axios";
-import TextInput from "@/components/TextInput";
-import Background from "@/components/Background";
-import Logo from "@/components/Logo";
-import Loader from "@/components/Loader";
-import { Image } from "react-native";
-import Button from "@/components/Header";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import Colors from "@/components/Shared/Colors";
 
 const RegisterSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -34,40 +31,57 @@ const RegisterSchema = Yup.object().shape({
 export default function Register() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [isVerifying, setIsVerifying] = useState<boolean>(false);
-  const [verificationCode, setVerificationCode] = useState<string>("");
-  const [countdown, setCountdown] = useState<number>(60);
-  const [timerActive, setTimerActive] = useState<boolean>(false);
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerificationSent, setIsVerificationSent] = useState(false);
 
   const mutation = useMutation({
     mutationFn: registerUser,
     mutationKey: ["register"],
   });
 
-  useEffect(() => {
-    if (timerActive && countdown > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prevCountdown) => prevCountdown - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    } else if (countdown === 0) {
-      setTimerActive(false);
-    }
-  }, [timerActive, countdown]);
+  const registerFunction = (values) => {
+    setLoading(true);
+    const auth = getAuth();
+    createUserWithEmailAndPassword(auth, values.email, values.password)
+      .then((userCredential) => {
+        // Send verification email
+        sendEmailVerification(userCredential.user)
+          .then(() => {
+            // Email verification sent
+            console.log("Verification email sent.");
+            setIsVerificationSent(true);
+            Alert.alert("Verification email sent", "Please check your email for the verification code.");
+          })
+          .catch((error) => {
+            console.error("Error sending verification email:", error);
+            setLoading(false);
+          });
+      })
+      .catch((error) => {
+        console.error("Error registering user:", error);
+        setLoading(false);
+      });
+  };
+
+  const verifyEmail = () => {
+    // Logic to verify the email with the provided verification code
+    // This is a placeholder and should be replaced with actual verification logic
+    console.log("Verification code entered:", verificationCode);
+    router.push("/auth/login");
+  };
 
   return (
-    <Background>
-      <Logo />
-      <Loader loading={loading} />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ justifyContent: 'center', alignContent: 'center' }}>
-        <View style={{ alignItems: 'center' }}>
-          <Image source={{ uri: imageUrl }} style={{ width: '50%', height: 100, resizeMode: 'contain', margin: 30 }} />
-        </View>
-        <KeyboardAvoidingView enabled>
+    <View style={{ backgroundColor: "white" }}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={{ paddingTop: 20 }}>
+        <View style={styles.container}>
+          <Image
+            style={styles.registerImage}
+            source={{
+              uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1732035035/medplus/e4nxgjnackg7deiqetgp.jpg",
+            }}
+          />
           <Formik
             initialValues={{
               email: "",
@@ -75,33 +89,9 @@ export default function Register() {
               confirmPassword: "",
               firstName: "",
               lastName: "",
-              userType: "patient", // Default userType
             }}
             validationSchema={RegisterSchema}
-            onSubmit={(values: RegisterValues) => {
-              const data = {
-                email: values.email,
-                password: values.password,
-                firstName: values.firstName,
-                lastName: values.lastName,
-                userType: values.userType, // Include userType in payload
-              };
-              setLoading(true);
-              mutation.mutateAsync(data)
-                .then(() => {
-                  setMessage("Registration successful! Please check your email for verification.");
-                  setMessageType("success");
-                  setIsVerifying(true);
-                  setCountdown(60);
-                  setTimerActive(true);
-                  setLoading(false);
-                })
-                .catch((error) => {
-                  setMessage(error?.response?.data?.message);
-                  setMessageType("error");
-                  setLoading(false);
-                });
-            }}
+            onSubmit={registerFunction}
           >
             {({
               handleChange,
@@ -110,180 +100,280 @@ export default function Register() {
               values,
               errors,
               touched,
-            }) => {
-              const handleVerificationPress = async () => {
-                try {
-                  const response = await axios.post('https://project03-rj91.onrender.com/api/users/verify-email', {
-                    email: values.email,
-                    verificationCode,
-                  });
-
-                  setMessage("Verification successful! You can now log in.");
-                  setMessageType("success");
-                  setIsVerifying(false);
-                  router.push('/auth/login');
-                } catch (error) {
-                  setMessage("Verification failed. Please try again.");
-                  setMessageType("error");
-                }
-              };
-
-              const handleResendCode = async () => {
-                try {
-                  const response = await axios.post('https://project03-rj91.onrender.com/api/users/request-password-reset', {
-                    email: values.email,
-                  });
-
-                  setMessage("Verification code resent! Please check your email.");
-                  setMessageType("success");
-                  setCountdown(60);
-                  setTimerActive(true);
-                } catch (error) {
-                  setMessage("Failed to resend verification code. Please try again.");
-                  setMessageType("error");
-                }
-              };
-
-              return (
-                <View style={styles.form}>
-                  {!isVerifying ? (
-                    <>
-                      <TextInput
-                        label="First Name"
-                        returnKeyType="next"
-                        value={values.firstName}
-                        onChangeText={handleChange("firstName")}
-                        onBlur={handleBlur("firstName")}
-                        error={!!errors.firstName && touched.firstName}
-                        errorText={errors.firstName}
-                        description=""
-                      />
-                      <TextInput
-                        label="Last Name"
-                        returnKeyType="next"
-                        value={values.lastName}
-                        onChangeText={handleChange("lastName")}
-                        onBlur={handleBlur("lastName")}
-                        error={!!errors.lastName && touched.lastName}
-                        errorText={errors.lastName}
-                        description=""
-                      />
-                      <TextInput
-                        label="Email"
-                        returnKeyType="next"
-                        value={values.email}
-                        onChangeText={handleChange("email")}
-                        onBlur={handleBlur("email")}
-                        error={!!errors.email && touched.email}
-                        errorText={errors.email}
-                        autoCapitalize="none"
-                        autoCompleteType="email"
-                        textContentType="emailAddress"
-                        keyboardType="email-address"
-                        description=""
-                      />
-                      <TextInput
-                        label="Password"
-                        returnKeyType="next"
-                        value={values.password}
-                        onChangeText={handleChange("password")}
-                        onBlur={handleBlur("password")}
-                        error={!!errors.password && touched.password}
-                        errorText={errors.password}
-                        secureTextEntry
-                        description=""
-                      />
-                      <TextInput
-                        label="Confirm Password"
-                        returnKeyType="done"
-                        value={values.confirmPassword}
-                        onChangeText={handleChange("confirmPassword")}
-                        onBlur={handleBlur("confirmPassword")}
-                        error={!!errors.confirmPassword && touched.confirmPassword}
-                        errorText={errors.confirmPassword}
-                        secureTextEntry
-                        description=""
-                      />
-                      <Button mode="contained" onPress={handleSubmit} style={{ marginTop: 24 }}>
-                        Register
-                      </Button>
-                      
-                      <View style={styles.row}>
-                        <Text>Already have an account?</Text>
-                        <TouchableOpacity onPress={() => router.push("/auth/login")}>
-                          <Text style={styles.link}> Login</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.subHeading}>Enter the verification code sent to your email</Text>
-                      <TextInput
-                        label="Verification Code"
-                        value={verificationCode}
-                        onChangeText={setVerificationCode}
-                        keyboardType="numeric"
-                      />
-                      <Text style={styles.countdownText}>
-                        {countdown > 0 ? `Time remaining: ${countdown}s` : 'Code expired!'}
-                      </Text>
-                      <Button mode="contained" onPress={handleVerificationPress} style={{ marginTop: 24 }}>
-                        Verify
-                      </Button>
-                      {countdown <= 0 && (
-                        <Button mode="outlined" onPress={handleResendCode} style={{ marginTop: 16 }}>
-                          Resend Code
-                        </Button>
-                      )}
-                    </>
-                  )}
+            }) => (
+              <View style={styles.form}>
+                {!isVerificationSent ? (
+                  <>
+                    <CustomBox
+                      placeholder={"First Name"}
+                      boxColor={"silver"}
+                      focusColor={"#e07964"}
+                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                      inputStyle={{
+                        fontWeight: "bold",
+                        color: "#30302e",
+                        paddingLeft: 20,
+                        borderRadius: 40,
+                      }}
+                      labelConfig={{
+                        text: "First Name",
+                        style: {
+                          color: "#0e0e21",
+                          fontWeight: "bold",
+                        },
+                      }}
+                      requiredConfig={{
+                        text: <Text>{touched.firstName && errors.firstName ? errors.firstName : ""}</Text>,
+                        style: {
+                          marginBottom: 10,
+                        },
+                      }}
+                      values={values.firstName}
+                      onChangeText={handleChange("firstName")}
+                      onBlur={handleBlur("firstName")}
+                    />
+                    <CustomBox
+                      placeholder={"Last Name"}
+                      boxColor={"silver"}
+                      focusColor={"#e07964"}
+                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                      inputStyle={{
+                        fontWeight: "bold",
+                        color: "#30302e",
+                        paddingLeft: 20,
+                        borderRadius: 40,
+                      }}
+                      labelConfig={{
+                        text: "Last Name",
+                        style: {
+                          color: "#0e0e21",
+                          fontWeight: "bold",
+                        },
+                      }}
+                      requiredConfig={{
+                        text: <Text>{touched.lastName && errors.lastName ? errors.lastName : ""}</Text>,
+                        style: {
+                          marginBottom: 10,
+                        },
+                      }}
+                      values={values.lastName}
+                      onChangeText={handleChange("lastName")}
+                      onBlur={handleBlur("lastName")}
+                    />
+                    <CustomBox
+                      placeholder={"Email"}
+                      boxColor={"silver"}
+                      focusColor={"#e07964"}
+                      type={"email"}
+                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                      inputStyle={{
+                        fontWeight: "bold",
+                        color: "#30302e",
+                        paddingLeft: 20,
+                        borderRadius: 40,
+                      }}
+                      labelConfig={{
+                        text: "Email",
+                        style: {
+                          color: "#0e0e21",
+                          fontWeight: "bold",
+                        },
+                      }}
+                      requiredConfig={{
+                        text: <Text>{touched.email && errors.email ? errors.email : ""}</Text>,
+                        style: {
+                          marginBottom: 10,
+                        },
+                      }}
+                      values={values.email}
+                      onChangeText={handleChange("email")}
+                      onBlur={handleBlur("email")}
+                    />
+                    <CustomBox
+                      placeholder={"Password"}
+                      boxColor={"silver"}
+                      focusColor={"#e07964"}
+                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                      inputStyle={{
+                        fontWeight: "bold",
+                        color: "#30302e",
+                        paddingLeft: 20,
+                        borderRadius: 40,
+                        overflow: "hidden",
+                      }}
+                      labelConfig={{
+                        text: "Password",
+                        style: {
+                          color: "#0e0e21",
+                          fontWeight: "bold",
+                        },
+                      }}
+                      toggle={true}
+                      requiredConfig={{
+                        text: <Text>{touched.password && errors.password ? errors.password : ""}</Text>,
+                        style: {
+                          marginBottom: 10,
+                        },
+                      }}
+                      values={values.password}
+                      onChangeText={handleChange("password")}
+                      onBlur={handleBlur("password")}
+                    />
+                    <CustomBox
+                      placeholder={"Confirm Password"}
+                      boxColor={"silver"}
+                      focusColor={"#e07964"}
+                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                      inputStyle={{
+                        fontWeight: "bold",
+                        color: "#30302e",
+                        paddingLeft: 20,
+                        borderRadius: 40,
+                        overflow: "hidden",
+                      }}
+                      labelConfig={{
+                        text: "Confirm Password",
+                        style: {
+                          color: "#0e0e21",
+                          fontWeight: "bold",
+                        },
+                      }}
+                      toggle={true}
+                      requiredConfig={{
+                        text: <Text>{touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""}</Text>,
+                        style: {
+                          marginBottom: 10,
+                        },
+                      }}
+                      values={values.confirmPassword}
+                      onChangeText={handleChange("confirmPassword")}
+                      onBlur={handleBlur("confirmPassword")}
+                    />
+                    <TouchableOpacity
+                      style={styles.registerbtn}
+                      onPress={handleSubmit}
+                    >
+                      <Text style={styles.registerBtnText}>Register</Text>
+                      {loading && loading ? (
+                        <ActivityIndicator style={styles.indicator} color={"white"} />
+                      ) : null}
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <CustomBox
+                      placeholder={"Verification Code"}
+                      boxColor={"silver"}
+                      focusColor={"#e07964"}
+                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                      inputStyle={{
+                        fontWeight: "bold",
+                        color: "#30302e",
+                        paddingLeft: 20,
+                        borderRadius: 40,
+                      }}
+                      labelConfig={{
+                        text: "Verification Code",
+                        style: {
+                          color: "#0e0e21",
+                          fontWeight: "bold",
+                        },
+                      }}
+                      values={verificationCode}
+                      onChangeText={setVerificationCode}
+                    />
+                    <TouchableOpacity
+                      style={styles.registerbtn}
+                      onPress={verifyEmail}
+                    >
+                      <Text style={styles.registerBtnText}>Verify Email</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                <View style={styles.footer}>
+                  <Text>Already have an account?</Text>
+                  <TouchableOpacity onPress={() => router.push("/auth/login")}>
+                    <Text style={styles.link}> Login</Text>
+                  </TouchableOpacity>
                 </View>
-              );
-            }}
+              </View>
+            )}
           </Formik>
-        </KeyboardAvoidingView>
+        </View>
       </ScrollView>
-    </Background>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  form: {
-    width: "100%",
-    alignSelf: "center",
+  container: {
+    flex: 1,
+    marginTop: 30,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  errorText: {
-    color: "red",
-    marginBottom: 16,
+  errorCard: {
+    width: 300,
+    height: 50,
+    backgroundColor: "#de3138",
+    justifyContent: "center",
+    paddingLeft: 15,
+    borderRadius: 40,
   },
-  successText: {
-    color: "green",
-    marginBottom: 16,
+  errorCardText: {
+    paddingLeft: 15,
+    color: "white",
+    fontSize: 12,
+    fontWeight: "500",
+    position: "absolute",
   },
-  forgotPassword: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 24,
+  cross: {
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -20,
+    left: 250,
+    position: "relative",
   },
-  forgot: {
-    fontSize: 13,
-    color: "#6200ee",
+  registerImage: {
+    marginTop: 20,
+    width: 200,
+    height: 200,
   },
-  row: {
+  myLogo: {
+    width: 100,
+    height: 70,
+    borderRadius: 40,
+    left: 150,
+    marginBottom: 20,
+  },
+  header: {
+    fontSize: 25,
+  },
+  registerbtn: {
+    marginTop: 10,
+    backgroundColor: Colors.SECONDARY,
+    width: 300,
+    height: 50,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 50,
     flexDirection: "row",
-    marginTop: 4,
+  },
+  registerBtnText: {
+    color: "white",
+    fontSize: 22,
+  },
+  footer: {
+    marginTop: 15,
+    flexDirection: "row",
+    justifyContent: "center",
   },
   link: {
-    fontWeight: "bold",
-    color: "#6200ee",
+    color: "#6200EE",
+    marginLeft: 5,
   },
-  subHeading: {
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  countdownText: {
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  
 });

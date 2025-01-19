@@ -240,7 +240,7 @@ const EditProfile = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor="#6200ea" barStyle="light-content" />
-            <ScrollView contentContainerStyle={styles.scrollView}>
+            <ScrollView contentContainerStyle={styles.scrollView} showsVerticalScrollIndicator={false}>
                 <View style={styles.imageContainer}>
                     <TouchableOpacity onPress={pickImage}>
                         <Image source={{ uri: selectedImage }} style={styles.profileImage} />

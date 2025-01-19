@@ -3,6 +3,7 @@ import { View, StyleSheet, Text } from "react-native";
 import { TextInput as Input } from "react-native-paper";
 
 import { theme } from "../core/theme";
+import Colors from "./Shared/Colors";
 
 export default function TextInput({ errorText, description, ...props }) {
   return (
@@ -28,7 +29,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   input: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: Colors.white,
   },
   description: {
     fontSize: 13,
