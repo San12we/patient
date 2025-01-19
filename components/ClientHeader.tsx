@@ -8,7 +8,7 @@ import { Badge } from 'react-native-elements';
 import { theme } from '@/constants/theme'; // Import theme
 import Colors from './Shared/Colors';
 
-const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
+const ClientHeader: React.FC = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector((state) => state.auth.user);
@@ -21,10 +21,7 @@ const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
     };
   }, [user]);
 
-  const handleLogout = () => {
-    dispatch(logoutAction());
-    router.replace('/auth/login'); // Use replace instead of push to prevent going back to the previous screen
-  };
+
 
   return (
     <View style={[styles.container, { backgroundColor: Colors.SECONDARY}]}>
@@ -37,7 +34,6 @@ const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
           </View>
         )}
       </View>
-      <Text style={styles.title}>{title}</Text>
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.notificationButton}>
           <AntDesign name="bells" size={24} color="black" />
@@ -49,9 +45,7 @@ const ClientHeader: React.FC<{ title: string }> = ({ title }) => {
             />
           )}
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <AntDesign name="logout" size={24} color="black" />
-        </TouchableOpacity>
+       
       </View>
     </View>
   );
@@ -72,11 +66,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: theme.colors.textColor,
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
+    display: 'none', // Hide the title
   },
   profileImage: {
     width: 40,

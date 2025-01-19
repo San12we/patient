@@ -30,7 +30,7 @@ const postsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchPosts.fulfilled, (state, action) => {
-        state.posts = action.payload;
+        state.posts = action.payload.length ? action.payload : [];
         state.loading = false;
       })
       .addCase(fetchPosts.rejected, (state, action) => {

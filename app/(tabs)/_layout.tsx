@@ -20,7 +20,7 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: theme.colors.textColor,
           headerShown: true, // Enable header globally
-          header: ({ route, options }) => <ClientHeader title={options.title} />, // Use title from options
+          header: () => <ClientHeader />, // Remove title from ClientHeader
           headerStyle: {
             backgroundColor: theme.colors.backgroundColor, // Set header background color
           },
@@ -44,7 +44,6 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'MedPlus',
             tabBarIcon: ({ color }) => (
               <Ionicons name="home-outline" size={24} color={theme.colors.textColor} />
             ),
@@ -53,7 +52,6 @@ export default function TabLayout() {
         <Tabs.Screen
           name="health"
           options={{
-            title: 'Health',
             tabBarIcon: ({ color }) => (
               <Ionicons name="heart-outline" size={24} color={theme.colors.textColor} />
             ),
@@ -62,7 +60,6 @@ export default function TabLayout() {
         <Tabs.Screen
           name="appointments"
           options={{
-            title: 'Appointment',
             tabBarIcon: ({ color }) => (
               <Ionicons name="calendar-outline" size={24} color={theme.colors.textColor} />
             ),
@@ -71,7 +68,6 @@ export default function TabLayout() {
         <Tabs.Screen
           name="settings"
           options={{
-            title: 'Settings',
             tabBarIcon: ({ color }) => (
               <Ionicons name="settings-outline" size={24} color={theme.colors.textColor} />
             ),

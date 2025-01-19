@@ -93,9 +93,22 @@ const EditProfile = () => {
     };
 
     const handleSave = async () => {
-      
-        const imageUrl = await uploadImage();
-        if (!imageUrl) return;
+        let imageUrl = selectedImage;
+
+        // Check if the image is a new upload
+        const isValidUrl = (url) => {
+            try {
+                new URL(url);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        };
+
+        if (!isValidUrl(selectedImage)) {
+            imageUrl = await uploadImage();
+            if (!imageUrl) return;
+        }
 
         const data = {
             fullName,
@@ -227,12 +240,6 @@ const EditProfile = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor="#6200ea" barStyle="light-content" />
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <AntDesign name="left" size={24} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Edit Profile</Text>
-            </View>
             <ScrollView contentContainerStyle={styles.scrollView}>
                 <View style={styles.imageContainer}>
                     <TouchableOpacity onPress={pickImage}>
