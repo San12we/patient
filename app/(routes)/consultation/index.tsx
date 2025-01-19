@@ -6,11 +6,14 @@ import {
     FlatList, 
     TextInput, 
     Image, 
-    Platform 
+    Platform,
+    TouchableOpacity 
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../app/(redux)/authSlice';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const Index = () => {
     const [appointments, setAppointments] = useState([]);
@@ -19,6 +22,7 @@ const Index = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const userId = useSelector((state) => state.auth.user.user._id);
+    const navigation = useNavigation();
 
     useEffect(() => {
         const fetchAppointments = async () => {
@@ -61,56 +65,63 @@ const Index = () => {
     }, [searchQuery, appointments]);
 
     const renderCard = ({ item }) => (
-        <View style={styles.card}>
-            <Image source={{ uri: item.doctor.profileImage }} style={styles.profileImage} />
-            <View style={styles.details}>
-                <Text style={styles.name}>{item.doctor.name}</Text>
-                <Text style={styles.specialization}>{item.doctor.specialization}</Text>
-                <Text style={styles.location}>📍 {item.doctor.location}</Text>
-                <Text style={styles.fee}>💵 {item.doctor.consultationFee} KSH</Text>
-                <Text style={[styles.status, item.status === 'pending' ? styles.pending : styles.confirmed]}>
-                    {item.status.toUpperCase()}
-                </Text>
-                <Text style={styles.date}>Created: {new Date(item.createdAt).toLocaleDateString()}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('details/index', { consultation: item })}>
+            <View style={styles.card}>
+                <Image source={{ uri: item.doctor.profileImage }} style={styles.profileImage} />
+                <View style={styles.details}>
+                    <Text style={styles.name}>{item.doctor.name}</Text>
+                    <Text style={styles.specialization}>{item.doctor.specialization}</Text>
+                    <Text style={styles.location}>📍 {item.doctor.location}</Text>
+                    <Text style={styles.fee}>💵 {item.doctor.consultationFee} KSH</Text>
+                    <Text style={[styles.status, item.status === 'pending' ? styles.pending : styles.confirmed]}>
+                        {item.status.toUpperCase()}
+                    </Text>
+                    <Text style={styles.date}>Created: {new Date(item.createdAt).toLocaleDateString()}</Text>
+                </View>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <Text style={styles.title}>My Appointments</Text>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search by doctor, specialization, or location"
-                    placeholderTextColor="#aaa"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                />
-            </View>
-            <View style={styles.container}>
-                {loading ? (
-                    <Text style={styles.loading}>Loading...</Text>
-                ) : error ? (
-                    <Text style={styles.error}>Error: {error}</Text>
-                ) : filteredAppointments.length > 0 ? (
-                    <FlatList
-                        data={filteredAppointments}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderCard}
-                        contentContainerStyle={styles.list}
+        <LinearGradient colors={['#e0ffcd', '#ffebbb', '#1dad9b', '#fcffc1']} style={styles.background}>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>My Appointments</Text>
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search by doctor, specialization, or location"
+                        placeholderTextColor="#aaa"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
                     />
-                ) : (
-                    <Text style={styles.noResults}>No appointments found</Text>
-                )}
-            </View>
-        </SafeAreaView>
+                </View>
+                <View style={styles.container}>
+                    {loading ? (
+                        <Text style={styles.loading}>Loading...</Text>
+                    ) : error ? (
+                        <Text style={styles.error}>Error: {error}</Text>
+                    ) : filteredAppointments.length > 0 ? (
+                        <FlatList
+                            data={filteredAppointments}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderCard}
+                            contentContainerStyle={styles.list}
+                        />
+                    ) : (
+                        <Text style={styles.noResults}>No appointments found</Text>
+                    )}
+                </View>
+            </SafeAreaView>
+        </LinearGradient>
     );
 };
 
 export default Index;
 
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+    },
     safeArea: {
         flex: 1,
         backgroundColor: '#f8f8f8',

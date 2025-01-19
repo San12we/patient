@@ -6,7 +6,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Switch,
   Image,
 } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -19,15 +18,15 @@ export default function Example() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const router = useRouter();
-  const user = useSelector((state) => state.auth.user);
-  const [form, setForm] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-  });
-  
+  const user = useSelector((state) => state.auth.user.user);
+
   const navigateToEditProfile = () => {
-    navigation.navigate('(routes)/EditProfile')
-  }
+    navigation.navigate('edit/index');
+  };
+
+  const navigateToInsurance = () => {
+    navigation.navigate('insurance/index');
+  };
 
   const handleLogout = () => {
     dispatch(logoutAction());
@@ -52,8 +51,7 @@ export default function Example() {
                 style={styles.profileAvatar} />
 
               <View style={styles.profileBody}>
-                <Text style={styles.profileName}>{user.name}</Text>
-
+                <Text style={styles.profileName}>{user.firstName} {user.lastName}</Text>
                 <Text style={styles.profileHandle}>{user.email}</Text>
               </View>
 
@@ -66,7 +64,7 @@ export default function Example() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <Text style={styles.sectionTitle}>Profile</Text>
 
           <View style={styles.sectionBody}>
             <View style={[styles.rowWrapper, styles.rowFirst]}>
@@ -113,7 +111,6 @@ export default function Example() {
             <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity
                 onPress={() => {
-                  // handle onPress
                 }}
                 style={styles.row}>
                 <Text style={styles.rowLabel}>Contact Us</Text>
@@ -130,7 +127,6 @@ export default function Example() {
             <View style={styles.rowWrapper}>
               <TouchableOpacity
                 onPress={() => {
-                  // handle onPress
                 }}
                 style={styles.row}>
                 <Text style={styles.rowLabel}>Report Bug</Text>
@@ -147,7 +143,6 @@ export default function Example() {
             <View style={styles.rowWrapper}>
               <TouchableOpacity
                 onPress={() => {
-                  // handle onPress
                 }}
                 style={styles.row}>
                 <Text style={styles.rowLabel}>Rate in App Store</Text>
@@ -164,7 +159,6 @@ export default function Example() {
             <View style={[styles.rowWrapper, styles.rowLast]}>
               <TouchableOpacity
                 onPress={() => {
-                  // handle onPress
                 }}
                 style={styles.row}>
                 <Text style={styles.rowLabel}>Terms and Privacy</Text>
@@ -207,7 +201,6 @@ export default function Example() {
 }
 
 const styles = StyleSheet.create({
-  /** Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -230,7 +223,6 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     textAlign: 'center',
   },
-  /** Content */
   content: {
     paddingHorizontal: 16,
   },
@@ -241,7 +233,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#a69f9f',
   },
-  /** Section */
   section: {
     paddingVertical: 12,
   },
@@ -265,7 +256,6 @@ const styles = StyleSheet.create({
     shadowRadius: 1.41,
     elevation: 2,
   },
-  /** Profile */
   profile: {
     padding: 12,
     backgroundColor: '#fff',
@@ -294,7 +284,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#858585',
   },
-  /** Row */
   row: {
     height: 44,
     width: '100%',

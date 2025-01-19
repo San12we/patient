@@ -1,34 +1,30 @@
 import { StyleSheet } from 'react-native';
 import React from 'react';
-// Import the Drawer from expo-router
-import { Drawer } from 'expo-router/drawer';
-// Import vector icons
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+// Import the Stack from expo-router
+import { Stack } from 'expo-router';
 
 const _layout = () => {
   return (
-    <Drawer>
-      <Drawer.Screen
+    <Stack>
+      <Stack.Screen
         name="index"
         options={{
-          drawerLabel: "Profile",
           title: "Profile",
-          drawerIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" color={color} size={size} />
-          ),
         }}
       />
-      <Drawer.Screen
+      <Stack.Screen
         name="insurance/index"
         options={{
-          drawerLabel: "Insurance",
           title: "Insurance",
-          drawerIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" color={color} size={size} />
-          ),
         }}
       />
-    </Drawer>
+      <Stack.Screen
+        name="edit/index"
+        options={{
+          title: "Edit Profile",
+        }}
+      />
+    </Stack>
   );
 };
 

@@ -32,7 +32,7 @@ export default function Login() {
     mutationFn: loginUser,
     mutationKey: ["login"],
   });
-  const user = useSelector((state) => state.auth.user);
+  const user = useSelector((state: { auth: { user: any } }) => state.auth.user);
   useEffect(() => {
     if (user) {
       router.push("/(tabs)");
@@ -80,7 +80,7 @@ export default function Login() {
     >
       <Background>
         <Logo />
-        <Header>Login</Header>
+        
         <Formik
           initialValues={{ email: "user@gmail.com", password: "123456" }}
           validationSchema={LoginSchema}
@@ -103,6 +103,8 @@ export default function Login() {
                 value={values.email}
                 keyboardType="email-address"
                 error={errors.email && touched.email ? errors.email : null}
+                errorText={errors.email && touched.email ? errors.email : ""}
+                description=""
               />
               <TextInput
                 label="Password"
@@ -112,14 +114,16 @@ export default function Login() {
                 value={values.password}
                 secureTextEntry
                 error={errors.password && touched.password ? errors.password : null}
+                errorText={errors.password && touched.password ? errors.password : ""}
+                description=""
               />
               <View style={styles.forgotPassword}>
                 <TouchableOpacity onPress={() => router.push("/auth/resetPassword")}>
                   <Text style={styles.forgot}>Forgot your password?</Text>
                 </TouchableOpacity>
               </View>
-              <Button mode="contained" onPress={handleSubmit} disabled={mutation.isLoading}>
-                {mutation.isLoading ? 'Logging in...' : 'Login'}
+              <Button mode="contained" onPress={handleSubmit} disabled={mutation.status === 'pending'} style={{ marginTop: 16 }}>
+                {mutation.status === 'pending' ? 'Logging in...' : 'Login'}
               </Button>
               <View style={styles.row}>
                 <Text>You do not have an account yet?</Text>

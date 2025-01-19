@@ -156,6 +156,7 @@ export default function Register() {
                         onBlur={handleBlur("firstName")}
                         error={!!errors.firstName && touched.firstName}
                         errorText={errors.firstName}
+                        description=""
                       />
                       <TextInput
                         label="Last Name"
@@ -165,6 +166,7 @@ export default function Register() {
                         onBlur={handleBlur("lastName")}
                         error={!!errors.lastName && touched.lastName}
                         errorText={errors.lastName}
+                        description=""
                       />
                       <TextInput
                         label="Email"
@@ -178,6 +180,7 @@ export default function Register() {
                         autoCompleteType="email"
                         textContentType="emailAddress"
                         keyboardType="email-address"
+                        description=""
                       />
                       <TextInput
                         label="Password"
@@ -188,6 +191,7 @@ export default function Register() {
                         error={!!errors.password && touched.password}
                         errorText={errors.password}
                         secureTextEntry
+                        description=""
                       />
                       <TextInput
                         label="Confirm Password"
@@ -198,6 +202,7 @@ export default function Register() {
                         error={!!errors.confirmPassword && touched.confirmPassword}
                         errorText={errors.confirmPassword}
                         secureTextEntry
+                        description=""
                       />
                       <Button mode="contained" onPress={handleSubmit} style={{ marginTop: 24 }}>
                         Register
@@ -245,7 +250,6 @@ export default function Register() {
 const styles = StyleSheet.create({
   form: {
     width: "100%",
-    maxWidth: 340,
     alignSelf: "center",
   },
   errorText: {
