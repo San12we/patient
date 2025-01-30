@@ -1,26 +1,26 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import moment from 'moment';
 
 interface Slot {
-  _id: string;
   date: string;
   startTime: string;
   endTime: string;
-  isBooked: boolean;
-  appointmentId?: string | null;
+  isAvailable: boolean;
+  isBookable: boolean;
+  recurrence: string;
+  _id: string; // Use _id as the unique identifier for slots
 }
 
 interface UseScheduleHook {
-  schedule: Slot[];
-  fetchSchedule: (professionalId: string) => Promise<void>;
-  updateSlot: (slotId: string, updates: Partial<Slot>) => void;
+  schedule: Record<string, Slot[]>; // Group slots by day
+  fetchSchedule: (doctorId: string) => Promise<void>;
+  updateSlot: (_id: string, updates: Partial<Slot>) => void;
   loading: boolean;
   error: string | null;
 }
 
 const useSchedule = (doctorId: string): UseScheduleHook => {
-  const [schedule, setSchedule] = useState<Slot[]>([]);
+  const [schedule, setSchedule] = useState<Record<string, Slot[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,15 +34,16 @@ const useSchedule = (doctorId: string): UseScheduleHook => {
     try {
       const response = await axios.get(`https://medplus-health.onrender.com/api/schedule/${doctorId}`);
       console.log('Fetched schedule data:', response.data); // Log the fetched schedule data
-      if (response.status === 200 && response.data.availability) {
-        const transformedSchedule = Object.entries(response.data.availability).flatMap(([date, shifts]: [string, any[]]) => {
-          return shifts.flatMap(shift => shift.slots.map(slot => ({
+
+      if (response.status === 200) {
+        const transformedSchedule = Object.entries(response.data.schedules).reduce((acc, [day, slots]: [string, any[]]) => {
+          acc[day] = slots.map(slot => ({
             ...slot,
-            date,
-            _id: `${date}-${slot._id}`,
-            isBooked: false, // Assuming isBooked is not provided in the new structure
-          })));
-        });
+            date: day,
+            _id: slot._id.$oid, // Ensure _id is correctly extracted
+          }));
+          return acc;
+        }, {} as Record<string, Slot[]>);
         setSchedule(transformedSchedule);
       }
       setLoading(false);
@@ -52,12 +53,16 @@ const useSchedule = (doctorId: string): UseScheduleHook => {
     }
   };
 
-  const updateSlot = (slotId: string, updates: Partial<Slot>) => {
-    setSchedule(prevSchedule =>
-      prevSchedule.map(slot =>
-        slot._id === slotId ? { ...slot, ...updates } : slot
-      )
-    );
+  const updateSlot = (_id: string, updates: Partial<Slot>) => {
+    setSchedule(prevSchedule => {
+      const updatedSchedule = { ...prevSchedule };
+      for (const day in updatedSchedule) {
+        updatedSchedule[day] = updatedSchedule[day].map(slot =>
+          slot._id === _id ? { ...slot, ...updates } : slot
+        );
+      }
+      return updatedSchedule;
+    });
   };
 
   return {

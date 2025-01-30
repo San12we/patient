@@ -44,10 +44,8 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (doctors.length === 0) {
-      dispatch(getDoctors()); // Fetch doctors only if not already available
-    }
-  }, [dispatch, doctors.length]);
+    dispatch(getDoctors()); // Always fetch the latest doctors' data from the API
+  }, [dispatch]);
 
   useEffect(() => {
     console.log('Doctors component rendered');

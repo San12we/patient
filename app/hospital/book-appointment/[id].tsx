@@ -76,6 +76,12 @@ const ClinicProfileScreen = () => {
     return provider ? { name: provider.name, icon: provider.icon } : { name: 'Unknown', icon: null };
   });
 
+  const bookAppointment = (_id) => {
+    // Logic to book an appointment with the given _id
+    console.log(`Booking appointment with _id: ${_id}`);
+    // ...existing booking logic...
+  };
+
   return (
     <ScrollView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -149,9 +155,13 @@ const ClinicProfileScreen = () => {
       {/* Working Hours */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="Working Hours" />
-        <Text style={styles.workingHoursText}>
-          {clinicData.workingHours.startTime} - {clinicData.workingHours.endTime}
-        </Text>
+        {clinicData.workingHours ? (
+          <Text style={styles.workingHoursText}>
+            {clinicData.workingHours.startTime} - {clinicData.workingHours.endTime}
+          </Text>
+        ) : (
+          <Text style={styles.workingHoursText}>Working hours not available</Text>
+        )}
       </View>
 
       {/* Working Days */}
@@ -169,6 +179,28 @@ const ClinicProfileScreen = () => {
           showsHorizontalScrollIndicator={false}
         />
       </View>
+
+      {/* Available Slots */}
+      <View style={styles.section}>
+        <ClinicSubHeading subHeadingTitle="Available Slots" />
+        {Object.keys(clinicData.schedules).map((day) => (
+          <View key={day} style={styles.daySection}>
+            <Text style={styles.dayText}>{day}</Text>
+            {clinicData.schedules[day].map((slot) => (
+              <TouchableOpacity
+                key={slot._id}
+                style={styles.slotCard}
+                onPress={() => bookAppointment(slot._id)}
+              >
+                <Text style={styles.slotText}>
+                  {slot.startTime} - {slot.endTime}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </View>
+
       {/* Medical Professionals */}
       <View style={styles.section}>
         
@@ -265,4 +297,17 @@ const styles = StyleSheet.create({
   doctorsList: { paddingBottom: 15 },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { fontSize: 18, color: 'red' },
+  daySection: { marginBottom: 15 },
+  dayText: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10 },
+  slotCard: {
+    padding: 10,
+    marginRight: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  slotText: { fontSize: 14, color: '#555' },
 });

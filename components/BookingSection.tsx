@@ -309,12 +309,26 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   };
 
   const groupedSlots = schedule.reduce((acc: Record<string, { date: string; startTime: string; endTime: string; isBooked: boolean; _id: string }[]>, slot) => {
-    const date = moment(slot.date).format('YYYY-MM-DD');
-    if (!acc[date]) acc[date] = [];
-    const generatedSlots = generateSlots(slot.startTime, slot.endTime);
-    acc[date] = acc[date].concat(generatedSlots);
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  
+    if (slot.recurrence === 'Daily') {
+      daysOfWeek.forEach((day, index) => {
+        const date = moment().startOf('week').add(index + 1, 'days').format('YYYY-MM-DD');
+        if (!acc[date]) acc[date] = [];
+        acc[date].push({ ...slot, date, _id: slot._id });
+      });
+    } else {
+      const date = moment().day(slot.date).format('YYYY-MM-DD');
+      if (!acc[date]) acc[date] = [];
+      acc[date].push({ ...slot, date, _id: slot._id });
+    }
+  
     return acc;
   }, {});
+  
+  // Log the groupedSlots to verify the data is grouped correctly
+  console.log('Grouped slots:', groupedSlots);
+  
 
   // Log the groupedSlots to verify the data is grouped correctly
   console.log('Grouped slots:', groupedSlots);
@@ -361,8 +375,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
               const slotTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
               const isPast = slotTime.isBefore(moment());
             
-              console.log('Rendering slot:', item); // Log each slot being rendered
-
+              console.log('Rendering slot:', item); 
               return (
                 <TouchableOpacity
                   onPress={() => {
@@ -397,10 +410,6 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
           />
           {userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName) ? (
             <>
-              <Text style={styles.insuranceTitle}>Your Insurance is Accepted</Text>
-              <FlatList
-                horizontal
-                data={availableInsurances}
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                   <TouchableOpacity
