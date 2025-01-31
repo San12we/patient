@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -20,14 +20,23 @@ import { theme } from '@/constants/theme';
 import Doctors from '../../components/client/Doctors';
 
 const DoctorProfile: React.FC = () => {
+const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
 
   useEffect(() => {
-    if (!doctor) {
-      router.back();
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      if (!doctor) {
+        router.back();
+      } else {
+        console.log('Selected Doctor:', doctor);
+      }
     }
-  }, [doctor, router]);
+  }, [doctor, router, isMounted]);
 
   if (!doctor) {
     return (
@@ -84,7 +93,7 @@ const DoctorProfile: React.FC = () => {
 
         <BookingSection
           doctorId={doctor._id}
-          userId={userId}
+          userId={userId} // Use the userId of the selected doctor
           consultationFee={doctor.consultationFee || 'N/A'}
           insurances={doctor.insuranceProviders}
         />

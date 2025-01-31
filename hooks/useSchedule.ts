@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 interface Slot {
-  date: string;
   startTime: string;
   endTime: string;
   isAvailable: boolean;
@@ -12,57 +11,47 @@ interface Slot {
 }
 
 interface UseScheduleHook {
-  schedule: Record<string, Slot[]>; // Group slots by day
-  fetchSchedule: (doctorId: string) => Promise<void>;
+  schedule: Record<string, Slot[]>; // Use a record of slots grouped by day
+  fetchSchedule: () => Promise<void>;
   updateSlot: (_id: string, updates: Partial<Slot>) => void;
   loading: boolean;
   error: string | null;
 }
 
-const useSchedule = (doctorId: string): UseScheduleHook => {
+const useSchedule = (doctorId: string, userId: string): UseScheduleHook => {
   const [schedule, setSchedule] = useState<Record<string, Slot[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (doctorId) {
-      fetchSchedule(doctorId);
+    if (doctorId && userId) {
+      console.log('Fetching schedule for userId:', userId);
+      fetchSchedule();
     }
-  }, [doctorId]);
+  }, [doctorId, userId]);
 
-  const fetchSchedule = async (doctorId: string) => {
+  const fetchSchedule = useCallback(async () => {
     try {
-      const response = await axios.get(`https://medplus-health.onrender.com/api/schedule/${doctorId}`);
+      const response = await axios.get(`https://medplus-health.onrender.com/api/schedule/${userId}`);
       console.log('Fetched schedule data:', response.data); // Log the fetched schedule data
 
       if (response.status === 200) {
-        const transformedSchedule = Object.entries(response.data.schedules).reduce((acc, [day, slots]: [string, any[]]) => {
-          acc[day] = slots.map(slot => ({
-            ...slot,
-            date: day,
-            _id: slot._id.$oid, // Ensure _id is correctly extracted
-          }));
-          return acc;
-        }, {} as Record<string, Slot[]>);
-        setSchedule(transformedSchedule);
+        setSchedule(response.data);
       }
       setLoading(false);
     } catch (error) {
       setError(axios.isAxiosError(error) ? error.message : 'Failed to load schedule');
       setLoading(false);
     }
-  };
+  }, [doctorId, userId]);
 
-  const updateSlot = (_id: string, updates: Partial<Slot>) => {
-    setSchedule(prevSchedule => {
-      const updatedSchedule = { ...prevSchedule };
-      for (const day in updatedSchedule) {
-        updatedSchedule[day] = updatedSchedule[day].map(slot =>
-          slot._id === _id ? { ...slot, ...updates } : slot
-        );
-      }
-      return updatedSchedule;
-    });
+  const updateSlot = async (_id: string, updates: Partial<Slot>) => {
+    try {
+      await axios.put(`https://medplus-health.onrender.com/api/schedule/slot/${_id}`, updates);
+      fetchSchedule();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return {

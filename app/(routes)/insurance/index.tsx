@@ -17,6 +17,9 @@ import { useRouter } from 'expo-router';
 import Colors from '@/components/Shared/Colors';
 import { useToast } from 'react-native-paper-toast'; // Import useToast
 import { theme } from '@/constants/theme';
+import axios from 'axios'; // Import axios
+import { useSelector } from 'react-redux'; // Import useSelector from react-redux
+
 const InsuranceScreen = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [insuranceData, setInsuranceData] = useState({
@@ -30,6 +33,7 @@ const InsuranceScreen = () => {
   const { insuranceProviders } = useInsurance();
   const router = useRouter();
   const toaster = useToast(); // Initialize useToast
+  const userId = useSelector((state) => state.auth.user.user._id); // Retrieve userId from Redux state
 
   const saveInsuranceData = async (data) => {
     try {
@@ -52,8 +56,23 @@ const InsuranceScreen = () => {
     }
   };
 
+  const fetchInsuranceData = async () => {
+    try {
+      const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
+      if (response.status === 200) {
+        const data = response.data;
+        await AsyncStorage.setItem('insuranceData', JSON.stringify(data));
+        setInsuranceData(data);
+        console.log('Fetched insurance data:', data); // Log data for debugging
+      }
+    } catch (error) {
+      console.error('Error fetching insurance data:', error);
+    }
+  };
+
   useEffect(() => {
     loadInsuranceData();
+    fetchInsuranceData(); // Fetch insurance data from backend
   }, []);
 
   const handleUpdate = (field, value) => {
@@ -62,6 +81,19 @@ const InsuranceScreen = () => {
   };
 
   const maskValue = (value) => value ? '*'.repeat(value.length) : '';
+
+  const handleSubmit = async () => {
+    try {
+      const payload = { ...insuranceData, userId };
+      const response = await axios.put('https://project03-rj91.onrender.com/insurance', payload);
+      if (response.status === 200) {
+        toaster.show({ message: 'Insurance data updated successfully.', type: 'success' });
+      }
+    } catch (error) {
+      console.error('Error updating insurance data:', error);
+      toaster.show({ message: 'Failed to update insurance data.', type: 'error' });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -136,7 +168,7 @@ const InsuranceScreen = () => {
           value={insuranceData.expirationDate}
           onChangeText={(value) => handleUpdate('expirationDate', value)}
         />
-        <TouchableOpacity style={styles.saveButton} onPress={() => saveInsuranceData(insuranceData)}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </ScrollView>

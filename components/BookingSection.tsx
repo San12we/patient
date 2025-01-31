@@ -1,31 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
-
 import { View, Text, TouchableOpacity, FlatList, Alert, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import moment from 'moment';
-import  { Paystack , paystackProps}  from 'react-native-paystack-webview';
-import axios from 'axios';
+
 import Colors from './Shared/Colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
-import useSchedule from '../hooks/useSchedule'; // Import the useSchedule hook
-import io from 'socket.io-client';
-import { useToast } from 'react-native-paper-toast'; // Import useToast
-import useInsurance from '../hooks/useInsurance'; // Import the useInsurance hook
-import {theme} from '../constants/theme';
+import useSchedule from '../hooks/useSchedule';
+import { useToast } from 'react-native-paper-toast';
+import useInsurance from '../hooks/useInsurance';
+import { theme } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Paystack, paystackProps } from 'react-native-paystack-webview';
+import { fetchSubaccountCode, bookAppointment, confirmAppointment } from '../utils/bookingUtils';
+import axios from 'axios';
+
 const BookingSection: React.FC<{ doctorId: string; userId: string; consultationFee: number; insurances?: string[]; selectedInsurance?: string }> = ({
   doctorId,
-  userId, // Accept userId
+  userId,
   consultationFee,
-  insurances = [], // Default to an empty array if insurances is not provided
-  selectedInsurance: initialSelectedInsurance = '', // Default to an empty string if selectedInsurance is not provided
+  insurances = [],
+  selectedInsurance: initialSelectedInsurance = '',
 }) => {
-  
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string } | null>(null);
-  const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>('');
-  const [alertType, setAlertType] = useState<'success' | 'error'>('success');
+  
+  
+ 
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -33,48 +33,29 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   const [userInsurance, setUserInsurance] = useState<string | null>(null);
 
   const user = useSelector(selectUser);
-  const userEmail = user.user?.email; // Extract userEmail from the user object
-  const patientName = user.user?.username || user.name; // Extract patientName from the user object
+  const userEmail = user.user?.email;
+  const patientName = user.user?.username || user.name;
   const dispatch = useDispatch();
-  const { schedule, fetchSchedule,  updateSlot, loading, error } = useSchedule(userId); // Use userId to fetch the schedule
- console.log(userEmail); // Log the userEmail
- 
-
-
- 
- 
-  const [dateOptions, setDateOptions] = useState<Array<Date>>(
-    Array.from({ length: 7 }).map((_, i) => moment().add(i, 'days').toDate())
-  );
+  const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
+  const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctorId, userId);
+  const toaster = useToast();
+  const { insuranceProviders } = useInsurance();
+  const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
+  const userInsuranceName = userInsurance; // Define userInsuranceName
 
   useEffect(() => {
-    fetchSchedule(userId); // Use userId to fetch the schedule
-    
- 
-    const today = new Date();
-    const availableDates = dateOptions.filter(date => moment(date).isSameOrAfter(today, 'day'));
-    setDateOptions(availableDates);
-  }, [userId]);
-
- 
-  useEffect(() => {
-    console.log('Fetched schedule:', schedule);
-  }, [schedule]);
-
-  console.log('BookingSection userId:', userId); // Log the userId
-
-  const toaster = useToast(); // Initialize useToast
-
-  const { insuranceProviders } = useInsurance(); // Use the useInsurance hook
-  const [availableInsurances, setAvailableInsurances] = useState<any[]>([]); // Initialize as an empty array
+    console.log('BookingSection mounted with userId:', userId);
+    fetchSchedule();
+  }, [doctorId, userId]);
 
   useEffect(() => {
     const fetchUserInsurance = async () => {
       try {
-        const storedData = await AsyncStorage.getItem('insuranceData');
-        if (storedData) {
-          const insuranceData = JSON.parse(storedData);
+        const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
+        if (response.status === 200) {
+          const insuranceData = response.data;
           setUserInsurance(insuranceData.insuranceProvider);
+          console.log('User Insurance from backend:', insuranceData);
         }
       } catch (error) {
         console.error('Error loading user insurance data:', error);
@@ -82,79 +63,58 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
     };
 
     fetchUserInsurance();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    console.log('User Insurance:', userInsurance); // Log the user's insurance
+    console.log('User Insurance:', userInsurance);
   }, [userInsurance]);
 
-  const userInsuranceName = userInsurance; // Direct name absence of ID check
-
   useEffect(() => {
-    // Map insurance provider IDs to corresponding details
     const mappedInsurances = insurances
-      .map((providerId) =>
-        insuranceProviders.find((provider) => provider._id === providerId)
-      )
-      .filter((provider) => provider); // Filter out any undefined entries
+      .map((providerId) => insuranceProviders.find((provider) => provider._id === providerId))
+      .filter((provider) => provider);
 
     setAvailableInsurances(mappedInsurances);
-    console.log('Mapped Insurances in BookingSection:', mappedInsurances); // Log mapped insurances
-    console.log('Accepted Insurances:', mappedInsurances.map((insurance) => insurance.name)); // Log accepted insurances
+    console.log('Mapped Insurances in BookingSection:', mappedInsurances);
+    console.log('Accepted Insurances:', mappedInsurances.map((insurance) => insurance.name));
   }, [insurances, insuranceProviders]);
 
   useEffect(() => {
-    console.log('User Insurance:', userInsuranceName); // Log the user's insurance name
+    console.log('User Insurance:', userInsuranceName);
     const isAccepted = availableInsurances.some((insurance) => insurance.name === userInsuranceName);
-    console.log('Is User Insurance Accepted:', isAccepted); // Log if the user's insurance is accepted
+    console.log('Is User Insurance Accepted:', isAccepted);
+    if (isAccepted) {
+      console.log('User insurance is supported:', userInsuranceName);
+    }
+    console.log('Accepted Insurances:', availableInsurances.map((insurance) => insurance.name));
   }, [userInsuranceName, availableInsurances]);
 
-  const userInsuranceMatches = userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName);
-
   const handleBookPress = async (withInsurance: boolean) => {
-    console.log(withInsurance ? 'Proceed with Insurance button pressed' : 'Proceed to Payment button pressed'); // Log button press
+    console.log(withInsurance ? 'Proceed with Insurance button pressed' : 'Proceed to Payment button pressed');
     if (!selectedTimeSlot && !selectedInsurance) {
       toaster.show({ message: 'Please select a time slot or insurance.', type: 'error' });
       return;
     }
-  
+
     const selectedDateTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${selectedTimeSlot?.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
     if (selectedTimeSlot && selectedDateTime.isBefore(moment())) {
       toaster.show({ message: 'Cannot book an appointment in the past.', type: 'error' });
       return;
     }
-  
+
     if (isSubmitting) {
       return;
     }
-  
-    console.log('Selected Time Slot:', selectedTimeSlot); // Log selectedTimeSlot
-    console.log('User Email:', userEmail); // Log userEmail
-    console.log('Patient Name:', patientName); // Log patientName
-  
+
+    console.log('Selected Time Slot:', selectedTimeSlot);
+    console.log('User Email:', userEmail);
+    console.log('Patient Name:', patientName);
+
     setIsSubmitting(true);
-    setShowAlert(false);
-    setAlertMessage('');
-    setAlertType('success');
-    let subaccountCode: string | null = null;
-  
-    const fetchSubaccountCode = async (userId: string) => { // Use userId to fetch the subaccount code
-      try {
-        const response = await axios.get(`https://medplus-health.onrender.com/api/subaccount/${userId}`);
-        if (response.data.status === 'Success') {
-          const { subaccount_code } = response.data.data;
-          subaccountCode = subaccount_code;
-        } else {
-          console.error('Failed to fetch subaccount code:', response.data.message);
-        }
-      } catch (error) {
-        console.error('Failed to fetch subaccount code:', error);
-      }
-    };
-  
-    await fetchSubaccountCode(userId); // Use userId to fetch the subaccount code
-  
+    toaster.show({ message: '', type: 'success' }); // Initialize toaster message
+
     try {
+      const subaccountCode = await fetchSubaccountCode(userId);
       if (!subaccountCode && !withInsurance) {
         throw new Error('Missing subaccount code.');
       }
@@ -164,75 +124,37 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
       if (!patientName) {
         throw new Error('Missing patient name.');
       }
-  
-      const appointmentData = {
-        doctorId: doctorId,
-        userId: userId,
-        patientName: patientName,
-        date: moment(selectedDate).format('YYYY-MM-DD'),
-        timeSlotId: selectedTimeSlot?.id || null,
-        time: selectedTimeSlot?.time || null,
-        status: 'pending',
-        insurance: selectedInsurance,
-      };
-  
-      // Provide default values if booking with insurance
-      if (selectedInsurance) {
-        appointmentData.timeSlotId = appointmentData.timeSlotId || 'defaultTimeSlotId';
-        appointmentData.time = appointmentData.time || 'defaultTime';
-      }
-  
-      const appointmentResponse = await axios.post('https://medplus-health.onrender.com/api/appointments', appointmentData);
-  
-      const newAppointmentId = appointmentResponse.data.appointment._id; // Ensure correct path to appointment ID
-      if (!newAppointmentId) {
-        throw new Error('Failed to retrieve appointmentId from response');
-      }
-      console.log('New appointment ID:', newAppointmentId); // Log the appointmentId from the response
+
+      const newAppointmentId = await bookAppointment(
+        doctorId,
+        userId,
+        patientName,
+        selectedDate,
+        selectedTimeSlot,
+        selectedInsurance,
+        subaccountCode,
+        userEmail,
+        consultationFee,
+        withInsurance
+      );
+
       setAppointmentId(newAppointmentId);
-  
-      // Log the state after setting the appointmentId
       console.log('State after setting appointmentId:', { appointmentId: newAppointmentId });
-  
-      // Update the slot to booked in the local state if time slot is selected
+
       if (selectedTimeSlot) {
         updateSlot(selectedTimeSlot.id, { isBooked: true });
       }
-  
+
       if (withInsurance) {
         toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
         setIsSubmitting(false);
         return;
       }
-  
-      const paymentResponse = await axios.post(
-        'https://api.paystack.co/transaction/initialize',
-        {
-          email: userEmail,
-          amount: consultationFee * 100,
-          subaccount: subaccountCode,
-          currency: 'KES',
-          metadata: {
-            appointmentId: newAppointmentId,
-            timeSlotId: selectedTimeSlot?.id || null,
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.EXPO_PUBLIC_PAYSTACK_SECRET_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-  
-      if (paymentResponse.data.status) {
-        if (paystackWebViewRef.current) {
-          paystackWebViewRef.current.startTransaction();
-        }
-      } else {
-        throw new Error('Payment initialization failed');
+
+      if (paystackWebViewRef.current) {
+        paystackWebViewRef.current.startTransaction();
       }
-  
+
       setIsSubmitting(false);
     } catch (error) {
       console.error('Failed to book appointment:', error);
@@ -240,6 +162,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
       setIsSubmitting(false);
     }
   };
+
   const appointmentIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -260,18 +183,11 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
       }
       console.log('Confirming appointment with ID:', currentAppointmentId);
 
-      const confirmResponse = await axios.put(
-        `https://medplus-health.onrender.com/api/appointments/confirm/${currentAppointmentId}`,
-        { status: 'confirmed' }
-      );
-      console.log('Confirm response:', confirmResponse.data);
-
+      await confirmAppointment(currentAppointmentId);
       fetchSchedule(doctorId);
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      setAlertMessage('Failed to update appointment status.');
-      setAlertType('error');
-      setShowAlert(true);
+      toaster.show({ message: 'Failed to update appointment status.', type: 'error' });
     }
   };
 
@@ -285,59 +201,14 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
     setSelectedTimeSlot(null);
   };
 
-  const generateSlots = (startTime: string, endTime: string) => {
-    const slots = [];
-    const consultationDuration = 60; // 60 minutes
-    const waitingTime = 10; // 10 minutes
-
-    let start = moment(startTime, 'h:mm A');
-    const end = moment(endTime, 'h:mm A');
-
-    while (start.add(consultationDuration + waitingTime, 'minutes').isBefore(end) || start.isSame(end)) {
-      const slotStart = start.clone().subtract(consultationDuration + waitingTime, 'minutes');
-      const slotEnd = slotStart.clone().add(consultationDuration, 'minutes');
-      slots.push({
-        startTime: slotStart.format('h:mm A'),
-        endTime: slotEnd.format('h:mm A'),
-        isBooked: false,
-        _id: `${slotStart.format('HHmm')}-${slotEnd.format('HHmm')}`,
-      });
-    }
-
-    console.log('Generated slots:', slots); // Log the generated slots
-    return slots;
+  const getSlotsForSelectedDate = () => {
+    const dayOfWeek = moment(selectedDate).format('dddd');
+    return schedule[dayOfWeek] || [];
   };
 
-  const groupedSlots = schedule.reduce((acc: Record<string, { date: string; startTime: string; endTime: string; isBooked: boolean; _id: string }[]>, slot) => {
-    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  
-    if (slot.recurrence === 'Daily') {
-      daysOfWeek.forEach((day, index) => {
-        const date = moment().startOf('week').add(index + 1, 'days').format('YYYY-MM-DD');
-        if (!acc[date]) acc[date] = [];
-        acc[date].push({ ...slot, date, _id: slot._id });
-      });
-    } else {
-      const date = moment().day(slot.date).format('YYYY-MM-DD');
-      if (!acc[date]) acc[date] = [];
-      acc[date].push({ ...slot, date, _id: slot._id });
-    }
-  
-    return acc;
-  }, {});
-  
-  // Log the groupedSlots to verify the data is grouped correctly
-  console.log('Grouped slots:', groupedSlots);
-  
+  const slotsForSelectedDate = getSlotsForSelectedDate();
 
-  // Log the groupedSlots to verify the data is grouped correctly
-  console.log('Grouped slots:', groupedSlots);
-
-  const markedDates = Object.keys(groupedSlots).reduce((acc: Record<string, { marked: boolean }>, date) => {
-    acc[date] = { marked: true };
-    return acc;
-  }, {});
-
+  console.log('Slots for selected date:', slotsForSelectedDate);
   console.log('Doctor ID:', doctorId);
 
   return (
@@ -369,13 +240,13 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
           <Text style={styles.dateTitle}>{moment(selectedDate).format('dddd, MMMM Do YYYY')}</Text>
           <FlatList
             horizontal
-            data={groupedSlots[moment(selectedDate).format('YYYY-MM-DD')] || []}
+            data={slotsForSelectedDate}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => {
               const slotTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
               const isPast = slotTime.isBefore(moment());
-            
-              console.log('Rendering slot:', item); 
+
+              console.log('Rendering slot:', item);
               return (
                 <TouchableOpacity
                   onPress={() => {
@@ -408,8 +279,11 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
               );
             }}
           />
-          {userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName) ? (
+          {userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName) && (
             <>
+              <Text style={styles.acceptedInsurancesTitle}>Accepted Insurances</Text>
+              <FlatList
+                data={availableInsurances}
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                   <TouchableOpacity
@@ -419,7 +293,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
                       item._id === selectedInsurance ? styles.selectedInsuranceCard : null,
                       item.name === userInsuranceName ? styles.userInsuranceCard : null
                     ]}
-                    disabled={item.name !== userInsuranceName} // Disable selection if it does not match user insurance
+                    disabled={item.name !== userInsuranceName}
                   >
                     <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
                     <Text style={[
@@ -429,27 +303,28 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
                     ]}>{item.name}</Text>
                   </TouchableOpacity>
                 )}
+                horizontal
                 showsHorizontalScrollIndicator={false}
               />
-              <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(true)} disabled={isSubmitting}>
-                <Text style={styles.bookButtonText}>Proceed with Insurance</Text>
-              </TouchableOpacity>
             </>
-          ) : (
-            <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(false)} disabled={isSubmitting}>
-              <Text style={styles.bookButtonText}>Book Appointment</Text>
-            </TouchableOpacity>
           )}
+          <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName))} disabled={isSubmitting}>
+            <Text style={styles.bookButtonText}>
+              {userInsuranceName && availableInsurances.some((insurance) => insurance.name === userInsuranceName) ? 'Proceed with Insurance' : 'Book Appointment'}
+            </Text>
+          </TouchableOpacity>
 
-          <Paystack
-            paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
-            billingEmail={userEmail}
-            amount={consultationFee * 100}
-            currency='KES'
-            onCancel={handlePaymentCancel}
-            onSuccess={handlePaymentSuccess}
-            ref={paystackWebViewRef}
-          />
+          {!userInsuranceName || !availableInsurances.some((insurance) => insurance.name === userInsuranceName) ? (
+            <Paystack
+              paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
+              billingEmail={userEmail}
+              amount={consultationFee * 100}
+              currency='KES'
+              onCancel={handlePaymentCancel}
+              onSuccess={handlePaymentSuccess}
+              ref={paystackWebViewRef}
+            />
+          ) : null}
         </>
       )}
     </View>
@@ -562,6 +437,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 10,
+  },
+  acceptedInsurancesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 20,
+  },
+  warningText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 10,
   },
 });
 
