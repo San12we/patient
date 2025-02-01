@@ -141,10 +141,6 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
       setAppointmentId(newAppointmentId);
       console.log('State after setting appointmentId:', { appointmentId: newAppointmentId });
 
-      if (selectedTimeSlot) {
-        updateSlot(selectedTimeSlot.id, { isBooked: true });
-      }
-
       if (withInsurance) {
         toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
         setIsSubmitting(false);
@@ -184,6 +180,11 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
       console.log('Confirming appointment with ID:', currentAppointmentId);
 
       await confirmAppointment(currentAppointmentId);
+
+      if (selectedTimeSlot) {
+        updateSlot(selectedTimeSlot.id, { isBooked: true });
+      }
+
       fetchSchedule(doctorId);
     } catch (error) {
       console.error('Error updating appointment status:', error);
