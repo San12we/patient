@@ -17,8 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import ClinicSubHeading from '../../../components/clinics/ClinicSubHeading';
 import { theme } from '@/constants/theme';
 import Colors from '../../../components/Shared/Colors';
-import Doctors from '../../../components/client/Doctors'; // Ensure this import is correct
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSelectedDoctor } from '../../../app/(redux)/doctorSlice'; // Import the action
 
 const ClinicProfileScreen = () => {
   const { id } = useLocalSearchParams();
@@ -27,6 +27,7 @@ const ClinicProfileScreen = () => {
   const doctorsData = clinicData ? clinicData.doctors : [];
   const router = useRouter();
   const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders); // Get insurance providers from Redux store
+  const dispatch = useDispatch();
 
   const clinicImages = clinicData?.clinicImages || [];
   const [currentImage, setCurrentImage] = useState(clinicImages[0] || null);
@@ -81,6 +82,24 @@ const ClinicProfileScreen = () => {
     console.log(`Booking appointment with _id: ${_id}`);
     // ...existing booking logic...
   };
+
+  const handleConsult = (doctor) => {
+    console.log('Consulting doctor:', doctor);
+    dispatch(setSelectedDoctor(doctor)); // Dispatch the selected doctor
+    router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
+  };
+
+  const renderDoctor = (doctor) => (
+    <View key={doctor.id} style={styles.doctorItem}>
+      <TouchableOpacity onPress={() => handleConsult(doctor)}>
+        <Image source={{ uri: doctor.profileImage }} style={styles.doctorImage} />
+      </TouchableOpacity>
+      <View style={styles.nameCategoryContainer}>
+        <Text style={styles.doctorName}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
+        <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -183,28 +202,42 @@ const ClinicProfileScreen = () => {
       {/* Available Slots */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="Available Slots" />
-        {Object.keys(clinicData.schedules).map((day) => (
-          <View key={day} style={styles.daySection}>
-            <Text style={styles.dayText}>{day}</Text>
-            {clinicData.schedules[day].map((slot) => (
-              <TouchableOpacity
-                key={slot._id}
-                style={styles.slotCard}
-                onPress={() => bookAppointment(slot._id)}
-              >
-                <Text style={styles.slotText}>
-                  {slot.startTime} - {slot.endTime}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
+        {clinicData.schedules ? (
+          Object.keys(clinicData.schedules).map((day) => (
+            <View key={day} style={styles.daySection}>
+              <Text style={styles.dayText}>{day}</Text>
+              {clinicData.schedules[day].map((slot) => (
+                <TouchableOpacity
+                  key={slot._id}
+                  style={styles.slotCard}
+                  onPress={() => bookAppointment(slot._id)}
+                >
+                  <Text style={styles.slotText}>
+                    {slot.startTime} - {slot.endTime}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))
+        ) : (
+          <Text style={styles.workingHoursText}>No available slots</Text>
+        )}
       </View>
 
       {/* Medical Professionals */}
       <View style={styles.section}>
-        
-        <Doctors searchQuery="" excludeDoctorId={null} />
+        <ClinicSubHeading subHeadingTitle="Medical Professionals" />
+        {doctorsData.length > 0 ? (
+          <FlatList
+            data={doctorsData}
+            horizontal
+            renderItem={({ item }) => renderDoctor(item)}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+          />
+        ) : (
+          <Text>No doctors available</Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -276,24 +309,30 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   workingDayText: { fontSize: 14, color: '#555' },
-  doctorCard: {
-    flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#fff',
+  doctorItem: {
+    marginRight: 10,
     borderRadius: 10,
-    marginBottom: 15,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
+    padding: 10,
+    width: 200,
   },
-  doctorImage: { width: 100, height: 100, borderRadius: 50, marginRight: 15 },
-  doctorInfo: { flex: 1 },
-  doctorName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  doctorSpecialty: { fontSize: 14, color: '#777', marginBottom: 10 },
-  consultButton: { backgroundColor: Colors.PRIMARY, borderRadius: 5, paddingVertical: 8, paddingHorizontal: 15 },
-  consultButtonText: { color: '#fff', fontWeight: 'bold' },
+  doctorImage: {
+    width: '100%',
+    height: 100,
+    borderRadius: 10,
+  },
+  nameCategoryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  doctorName: {
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  doctorSpecialty: {
+    color: Colors.primary,
+  },
   doctorsList: { paddingBottom: 15 },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { fontSize: 18, color: 'red' },
