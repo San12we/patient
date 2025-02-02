@@ -31,7 +31,7 @@ const health = () => {
   }
 
   return (
-    <LinearGradient colors={['#ffebbb', '#e0ffcd', '#fcffc1', '#1dad9b']} style={styles.background}>
+    <LinearGradient colors={['#bae8e8', '#faf9f9', '#ffffff', '#1dad9b']} style={styles.background}>
       <View style={styles.container}>
         <ScrollView horizontal contentContainerStyle={styles.segmentsContainer} showsHorizontalScrollIndicator={false}>
           {segments.map((segment, index) => (

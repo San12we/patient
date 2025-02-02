@@ -29,7 +29,7 @@ const Index: React.FC = () => {
           />
           <Category searchQuery={searchQuery} />
           <Doctors searchQuery={searchQuery} />
-          <Clinics searchQuery={searchQuery} />
+          <Clinics searchQuery={searchQuery} style={styles.clinics} />
         </View>
       </ScrollView>
     </View>
@@ -41,7 +41,7 @@ export default Index;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#93deff', // Set the background color
+    backgroundColor: '#e3f6f5', // Set the background color
   },
   scrollContainer: {
     flexGrow: 1,
@@ -50,10 +50,14 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
+    paddingBottom: 40, // Add padding to the bottom
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  clinics: {
+    marginBottom: 20, // Add margin to the bottom of Clinics component
   },
 });

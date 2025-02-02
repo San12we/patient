@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import useClinics from '../../hooks/useClinics'; // Import the useClinics hook
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchInsuranceProviders } from '../../app/(redux)/insuranceSlice';
+import { setSelectedClinic } from '../../app/(redux)/clinicSlice'; // Import the setSelectedClinic action
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,11 +28,9 @@ interface Clinic {
 }
 
 interface ClinicsProps {
-  searchQuery: string;
-
 }
 
-const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
+const Clinics: React.FC<ClinicsProps> = () => {
   const router = useRouter();
   const { clinics, loading, error } = useClinics(); // Use the useClinics hook
   const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
@@ -44,6 +43,9 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
       initialLoad.current = false;
     }
     console.log("Clinics data:", clinics); // Log the clinics data
+    clinics.forEach(clinic => {
+      console.log(`Clinic: ${clinic.name}, Doctors:`, clinic.doctors); // Log each clinic's doctors
+    });
   }, [clinics]);
 
   useEffect(() => {
@@ -54,8 +56,11 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
 
   const handlePress = useCallback((item: Clinic) => {
     console.log("Navigating to clinic with ID:", item._id);
-    router.push(`/hospital/book-appointment/${item._id}`);
-  }, [router]);
+    const fullClinicData = clinics.find(clinic => clinic._id === item._id);
+    console.log("Selected Clinic Data:", fullClinicData); // Log the selected clinic data
+    dispatch(setSelectedClinic(fullClinicData)); // Dispatch the selected clinic with full data
+    router.push(`/clinic/${item._id}`); // Navigate to the ClinicProfile screen using id
+  }, [router, dispatch, clinics]);
 
   const ClinicItem: React.FC<{ item: Clinic }> = React.memo(({ item }) => {
     const [currentImage, setCurrentImage] = useState<string | null>(null);
@@ -99,7 +104,7 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
     );
   });
 
-  const filteredClinics = clinics.filter(clinic => true);
+  const filteredClinics = clinics; // No filtering based on searchQuery
 
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.GRAY} />;
@@ -112,17 +117,13 @@ const Clinics: React.FC<ClinicsProps> = ({ searchQuery }) => {
   return (
     <View style={{ marginTop: 10 }}>
       <SubHeading subHeadingTitle={'Discover Clinics Near You'} onViewAll={() => {}} />
-      {filteredClinics.length === 0 && searchQuery ? (
-        <Text>No results found</Text>
-      ) : (
-        <FlatList
-          data={filteredClinics.length > 0 ? filteredClinics : clinics}
-          horizontal={true}
-          renderItem={({ item }) => <ClinicItem item={item} />}
-          keyExtractor={(item) => item._id?.toString() || `temp-${Math.random()}`}
-          showsHorizontalScrollIndicator={false}
-        />
-      )}
+      <FlatList
+        data={filteredClinics}
+        horizontal={true}
+        renderItem={({ item }) => <ClinicItem item={item} />}
+        keyExtractor={(item) => item._id?.toString() || `temp-${Math.random()}`}
+        showsHorizontalScrollIndicator={false}
+      />
     </View>
   );
 };

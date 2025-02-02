@@ -53,7 +53,14 @@ function AppWrapper() {
         />
         <Stack.Screen 
           name="(routes)/insurance" 
-          options={{ title: "Insurance information", headerShown: false }} 
+          options={{ 
+            title: "Welcome", 
+            headerShown: false,
+            headerStyle: { backgroundColor: '#f4511e' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' }
+          }} 
+
         />
         <Stack.Screen 
           name="(routes)/[slug]" 

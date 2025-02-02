@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,8 @@ import {
   Image,
   StyleSheet,
   ScrollView,
-  Animated,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useRouter } from 'expo-router';
@@ -19,6 +19,8 @@ import { theme } from '@/constants/theme';
 import Colors from '../../../components/Shared/Colors';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSelectedDoctor } from '../../../app/(redux)/doctorSlice'; // Import the action
+import useSchedule from '../../../hooks/useSchedule'; // Import the useSchedule hook
+import moment from 'moment';
 
 const ClinicProfileScreen = () => {
   const { id } = useLocalSearchParams();
@@ -31,37 +33,18 @@ const ClinicProfileScreen = () => {
 
   const clinicImages = clinicData?.clinicImages || [];
   const [currentImage, setCurrentImage] = useState(clinicImages[0] || null);
-  const imageFadeAnim = useRef(new Animated.Value(1)).current;
   const [showFullDesc, setShowFullDesc] = useState(false);
-
-  useEffect(() => {
-    if (clinicImages.length) {
-      let index = 0;
-      const interval = setInterval(() => {
-        index = (index + 1) % clinicImages.length;
-        Animated.timing(imageFadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          setCurrentImage(clinicImages[index]);
-          Animated.timing(imageFadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-        });
-      }, 5000);
-
-      return () => clearInterval(interval);
-    }
-  }, [clinicImages, imageFadeAnim]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string } | null>(null);
+  const { schedule, fetchSchedule, loading, error } = useSchedule(clinicId, 'userId'); // Replace 'userId' with actual user ID
+  const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
 
   useEffect(() => {
     console.log('Clinic Data:', clinicData);
     console.log('Doctors Data:', doctorsData);
     console.log('Clinic Insurance Providers:', clinicData?.insuranceProviders);
     console.log('All Insurance Providers:', insuranceProviders);
+    fetchSchedule();
   }, [clinicData, doctorsData, insuranceProviders]);
 
   if (!clinicData) {
@@ -85,8 +68,8 @@ const ClinicProfileScreen = () => {
 
   const handleConsult = (doctor) => {
     console.log('Consulting doctor:', doctor);
-    dispatch(setSelectedDoctor(doctor)); // Dispatch the selected doctor
-    router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
+    dispatch(setSelectedDoctor(doctor));
+    router.push(`/doctors/${doctor.id}`); 
   };
 
   const renderDoctor = (doctor) => (
@@ -101,15 +84,22 @@ const ClinicProfileScreen = () => {
     </View>
   );
 
+  const getSlotsForSelectedDate = () => {
+    const dayOfWeek = moment(selectedDate).format('dddd');
+    return schedule[dayOfWeek] || [];
+  };
+
+  const slotsForSelectedDate = getSlotsForSelectedDate();
+
   return (
     <ScrollView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      {/* Hero Section */}
+      
       <View style={styles.heroContainer}>
         {currentImage ? (
-          <Animated.Image
+          <Image
             source={{ uri: currentImage }}
-            style={[styles.heroImage, { opacity: imageFadeAnim }]}
+            style={styles.heroImage}
           />
         ) : (
           <Image
@@ -125,7 +115,6 @@ const ClinicProfileScreen = () => {
         </View>
       </View>
 
-      {/* Description */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="About Us" />
         <Text style={styles.descriptionText}>
@@ -138,7 +127,6 @@ const ClinicProfileScreen = () => {
         )}
       </View>
 
-      {/* Specialties */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="Specialties" />
         <FlatList
@@ -154,7 +142,6 @@ const ClinicProfileScreen = () => {
         />
       </View>
 
-      {/* Insurance Providers */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="Insurance Providers" />
         <FlatList
@@ -171,60 +158,56 @@ const ClinicProfileScreen = () => {
         />
       </View>
 
-      {/* Working Hours */}
-      <View style={styles.section}>
-        <ClinicSubHeading subHeadingTitle="Working Hours" />
-        {clinicData.workingHours ? (
-          <Text style={styles.workingHoursText}>
-            {clinicData.workingHours.startTime} - {clinicData.workingHours.endTime}
-          </Text>
-        ) : (
-          <Text style={styles.workingHoursText}>Working hours not available</Text>
-        )}
-      </View>
-
-      {/* Working Days */}
-      <View style={styles.section}>
-        <ClinicSubHeading subHeadingTitle="Working Days" />
-        <FlatList
-          data={clinicData.workingDays}
-          renderItem={({ item }) => (
-            <View style={styles.workingDayCard}>
-              <Text style={styles.workingDayText}>{item}</Text>
-            </View>
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
-
-      {/* Available Slots */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="Available Slots" />
-        {clinicData.schedules ? (
-          Object.keys(clinicData.schedules).map((day) => (
-            <View key={day} style={styles.daySection}>
-              <Text style={styles.dayText}>{day}</Text>
-              {clinicData.schedules[day].map((slot) => (
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.PRIMARY} />
+        ) : error ? (
+          <Text>Error loading schedule: {error}</Text>
+        ) : (
+          <FlatList
+            horizontal
+            data={slotsForSelectedDate}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => {
+              const slotTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
+              const isPast = slotTime.isBefore(moment());
+
+              return (
                 <TouchableOpacity
-                  key={slot._id}
-                  style={styles.slotCard}
-                  onPress={() => bookAppointment(slot._id)}
+                  onPress={() => {
+                    if (item.isBooked || isPast) {
+                      Alert.alert(item.isBooked ? 'Slot already booked' : 'Invalid slot', item.isBooked ? 'Please choose another time slot.' : 'Cannot select a past time slot.');
+                    } else {
+                      setSelectedTimeSlot({ id: item._id, time: `${item.startTime} - ${item.endTime}` });
+                    }
+                  }}
+                  style={[
+                    styles.slotButton,
+                    item.isBooked || isPast ? { backgroundColor: Colors.SECONDARY } : { backgroundColor: Colors.goofy },
+                    selectedTimeSlot && selectedTimeSlot.id === item._id
+                      ? { borderColor: Colors.SECONDARY, borderWidth: 2, backgroundColor: Colors.selectedBackground }
+                      : {},
+                  ]}
+                  disabled={item.isBooked || isPast}
                 >
-                  <Text style={styles.slotText}>
-                    {slot.startTime} - {slot.endTime}
+                  <Text
+                    style={[
+                      styles.slotText,
+                      selectedTimeSlot && selectedTimeSlot.id === item._id
+                        ? { color: Colors.selectedText }
+                        : {},
+                    ]}
+                  >
+                    {`${item.startTime} - ${item.endTime}`}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          ))
-        ) : (
-          <Text style={styles.workingHoursText}>No available slots</Text>
+              );
+            }}
+          />
         )}
       </View>
 
-      {/* Medical Professionals */}
       <View style={styles.section}>
         <ClinicSubHeading subHeadingTitle="Medical Professionals" />
         {doctorsData.length > 0 ? (
@@ -246,7 +229,7 @@ const ClinicProfileScreen = () => {
 export default ClinicProfileScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.backgroundColor },
+  container: { flex: 1,  backgroundColor: '#e3f6f5', padding: 10 },
   heroContainer: { position: 'relative', height: 250 },
   heroImage: { width: '100%', height: '100%' },
   backButton: {
@@ -298,17 +281,14 @@ const styles = StyleSheet.create({
   insuranceIcon: { width: 30, height: 30, marginRight: 10 },
   insuranceText: { fontSize: 14, color: '#555' },
   workingHoursText: { fontSize: 16, color: '#333' },
-  workingDayCard: {
+  slotButton: {
     padding: 10,
-    marginRight: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
+    borderRadius: 5,
+    marginHorizontal: 5,
   },
-  workingDayText: { fontSize: 14, color: '#555' },
+  slotText: {
+    fontSize: 14,
+  },
   doctorItem: {
     marginRight: 10,
     borderRadius: 10,
@@ -348,5 +328,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
-  slotText: { fontSize: 14, color: '#555' },
 });

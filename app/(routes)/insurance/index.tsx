@@ -19,6 +19,7 @@ import { useToast } from 'react-native-paper-toast';
 import { theme } from '@/constants/theme';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import ClientHeader from '@/components/ClientHeader';
 
 const InsuranceScreen = () => {
   const [isPrivate, setIsPrivate] = useState(false);
@@ -97,13 +98,7 @@ const InsuranceScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <FeatherIcon name="arrow-left" size={24} color="#007bff" style={{ marginRight: 16 }} />
-        </TouchableOpacity>
-        <FeatherIcon name="shield" size={24} color="#007bff" style={{ marginRight: 16 }} />
-        <Text style={styles.headerTitle}>Insurance Information</Text>
-      </View>
+   <ClientHeader />
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Insurance Details</Text>

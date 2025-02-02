@@ -33,11 +33,10 @@ interface Doctor {
 }
 
 interface DoctorsProps {
-  searchQuery: string;
-  excludeDoctorId?: string;
+  // Remove searchQuery and excludeDoctorId props
 }
 
-const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
+const Doctors: React.FC<DoctorsProps> = () => {
   const router = useRouter();
   const { insuranceProviders } = useInsurance();
   const { doctors, loading, error } = useDoctors();
@@ -58,11 +57,8 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   };
   
   const filteredDoctors = useMemo(() => {
-    return doctors.filter(doctor => {
-      const isNotExcluded = doctor.id !== excludeDoctorId;
-      return isNotExcluded;
-    });
-  }, [doctors, excludeDoctorId]);
+    return doctors; // No filtering based on searchQuery or excludeDoctorId
+  }, [doctors]);
 
   useEffect(() => {
     console.log('Filtered doctors:', filteredDoctors); // Log the filtered data
@@ -83,33 +79,29 @@ const Doctors: React.FC<DoctorsProps> = ({ searchQuery, excludeDoctorId }) => {
   return (
     <View style={styles.container}>
       <SubHeading subHeadingTitle="Discover Doctors Near You" />
-      {filteredDoctors.length === 0 && searchQuery ? (
-        <Text>No results found</Text>
-      ) : (
-        <FlatList
-          data={filteredDoctors.length > 0 ? filteredDoctors : doctors}
-          horizontal
-          renderItem={({ item }) => (
-            <View style={styles.doctorItem}>
-              <TouchableOpacity onPress={() => handleConsult(item)}>
-                <Image
-                  source={{
-                    uri: item.user.profileImage || item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg',
-                  }}
-                  style={styles.doctorImage}
-                />
-              </TouchableOpacity>
-              <View style={styles.nameCategoryContainer}>
-                <Text style={styles.doctorName}>{item.firstName} {item.lastName}</Text>
-                <Text style={styles.doctorName}>{item.specialty}</Text>
-              </View>
+      <FlatList
+        data={filteredDoctors}
+        horizontal
+        renderItem={({ item }) => (
+          <View style={styles.doctorItem}>
+            <TouchableOpacity onPress={() => handleConsult(item)}>
+              <Image
+                source={{
+                  uri: item.user.profileImage || item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg',
+                }}
+                style={styles.doctorImage}
+              />
+            </TouchableOpacity>
+            <View style={styles.nameCategoryContainer}>
+              <Text style={styles.doctorName}>{item.firstName} {item.lastName}</Text>
+              <Text style={styles.doctorName}>{item.specialty}</Text>
             </View>
-          )}
-          keyExtractor={(item, index) => `${item.id}-${index}`}
-          showsHorizontalScrollIndicator={false}
-          nestedScrollEnabled={true}
-        />
-      )}
+          </View>
+        )}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
+        showsHorizontalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      />
     </View>
   );
 };

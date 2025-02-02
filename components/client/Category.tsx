@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router'; // Reintroduce this import
 
 interface CategoryProps {
-  searchQuery: string;
+  // Remove searchQuery prop
 }
 
 interface Category {
@@ -15,7 +15,7 @@ interface Category {
   icon: string;
 }
 
-export default function Category({ searchQuery }: CategoryProps) {
+export default function Category() {
   const [categoryList, setCategoryList] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeIndex, setActiveIndex] = useState<number | null>(null); // State to track active index
@@ -49,10 +49,6 @@ export default function Category({ searchQuery }: CategoryProps) {
     }
   };
 
-  const filteredCategories = categoryList.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <View style={{ marginTop: 10 }}>
       <SubHeading subHeadingTitle={"Let's Find You a Specialist"} />
@@ -60,11 +56,9 @@ export default function Category({ searchQuery }: CategoryProps) {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.PRIMARY} />
         </View>
-      ) : filteredCategories.length === 0 && searchQuery ? (
-        <Text>No results found</Text>
       ) : (
         <FlatList
-          data={filteredCategories.length > 0 ? filteredCategories : categoryList}
+          data={categoryList}
           horizontal={true} // Enable horizontal scrolling
           showsHorizontalScrollIndicator={false} // Hide horizontal scroll indicator
           style={styles.flatList}

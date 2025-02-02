@@ -239,7 +239,7 @@ const Settings: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.backgroundColor, // Set the background color
+    backgroundColor: '#e3f6f5', // Set the background color
   },
   
   /** Profile */

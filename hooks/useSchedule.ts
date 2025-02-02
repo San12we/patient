@@ -24,15 +24,15 @@ const useSchedule = (doctorId: string, userId: string): UseScheduleHook => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (doctorId && userId) {
-      console.log('Fetching schedule for userId:', userId);
+    if (doctorId) {
+      console.log('Fetching schedule for doctorId:', doctorId);
       fetchSchedule();
     }
-  }, [doctorId, userId]);
+  }, [doctorId]);
 
   const fetchSchedule = useCallback(async () => {
     try {
-      const response = await axios.get(`https://medplus-health.onrender.com/api/schedule/${userId}`);
+      const response = await axios.get(`https://medplus-health.onrender.com/api/schedule/${doctorId}`);
       console.log('Fetched schedule data:', response.data); // Log the fetched schedule data
 
       if (response.status === 200) {
@@ -43,7 +43,7 @@ const useSchedule = (doctorId: string, userId: string): UseScheduleHook => {
       setError(axios.isAxiosError(error) ? error.message : 'Failed to load schedule');
       setLoading(false);
     }
-  }, [doctorId, userId]);
+  }, [doctorId]);
 
   const updateSlot = async (_id: string, updates: Partial<Slot>) => {
     try {

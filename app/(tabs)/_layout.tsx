@@ -11,7 +11,7 @@ import Colors from '@/components/Shared/Colors';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const backgroundColor = '#ffffff'; // Use theme color
+  const backgroundColor = '#bae8e8'; // Use theme color
 
   return (
     <>

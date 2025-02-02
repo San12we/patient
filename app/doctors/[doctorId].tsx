@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,21 +8,34 @@ import {
   ScrollView,
   Image,
   StatusBar,
+  FlatList,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';
+import moment from 'moment';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
-import HorizontalLine from '../../components/common/HorizontalLine';
 import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
-import { theme } from '@/constants/theme';
 import Doctors from '../../components/client/Doctors';
+import useSchedule from '../../hooks/useSchedule';
+import useInsurance from '../../hooks/useInsurance';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DoctorProfile: React.FC = () => {
-const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string } | null>(null);
+  const userId = doctor.user?._id;
+  const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctor._id, userId);
+  const { insuranceProviders } = useInsurance();
+  const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
+  const [selectedInsurance, setSelectedInsurance] = useState<string>('');
+  const [userInsurance, setUserInsurance] = useState<string | null>(null);
+  const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,9 +47,44 @@ const [isMounted, setIsMounted] = useState(false);
         router.back();
       } else {
         console.log('Selected Doctor:', doctor);
+        fetchSchedule();
       }
     }
   }, [doctor, router, isMounted]);
+
+  useEffect(() => {
+    const loadUserInsurance = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem('insuranceData');
+        if (storedData) {
+          const insuranceData = JSON.parse(storedData);
+          setUserInsurance(insuranceData.insuranceProvider);
+          console.log('User Insurance from AsyncStorage:', insuranceData);
+        }
+      } catch (error) {
+        console.error('Error loading user insurance data from AsyncStorage:', error);
+      }
+    };
+
+    loadUserInsurance();
+  }, [userId]);
+
+  useEffect(() => {
+    const mappedInsurances = doctor.insuranceProviders
+      .map((providerId) => insuranceProviders.find((provider) => provider._id === providerId))
+      .filter((provider) => provider);
+
+    setAvailableInsurances(mappedInsurances);
+    console.log('Mapped Insurances in DoctorProfile:', mappedInsurances);
+    console.log('Accepted Insurances:', mappedInsurances.map((insurance) => insurance.name));
+  }, [doctor.insuranceProviders, insuranceProviders]);
+
+  useEffect(() => {
+    const isAccepted = availableInsurances.some((insurance) => insurance.name === userInsurance);
+    if (isAccepted) {
+      setSelectedInsurance(userInsurance);
+    }
+  }, [userInsurance, availableInsurances]);
 
   if (!doctor) {
     return (
@@ -55,7 +103,13 @@ const [isMounted, setIsMounted] = useState(false);
   const specializedTreatment = doctor.professionalDetails?.specializedTreatment || 'N/A';
   const yearsOfExperience = doctor.professionalDetails?.yearsOfExperience || 'N/A';
   const clinicName = doctor.practiceName || 'Unknown Clinic';
-  const userId = doctor.user?._id;
+
+  const getSlotsForSelectedDate = () => {
+    const dayOfWeek = moment(selectedDate).format('dddd');
+    return schedule[dayOfWeek] || [];
+  };
+
+  const slotsForSelectedDate = getSlotsForSelectedDate();
 
   return (
     <View style={styles.container}>
@@ -101,17 +155,93 @@ const [isMounted, setIsMounted] = useState(false);
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.title}>Available Slots</Text>
+          {loading ? (
+            <ActivityIndicator size="large" color={Colors.PRIMARY} />
+          ) : error ? (
+            <Text>Error loading schedule: {error}</Text>
+          ) : (
+            <FlatList
+              horizontal
+              data={slotsForSelectedDate}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => {
+                const slotTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
+                const isPast = slotTime.isBefore(moment());
+
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (item.isBooked || isPast) {
+                        Alert.alert(item.isBooked ? 'Slot already booked' : 'Invalid slot', item.isBooked ? 'Please choose another time slot.' : 'Cannot select a past time slot.');
+                      } else {
+                        setSelectedTimeSlot({ id: item._id, time: `${item.startTime} - ${item.endTime}` });
+                      }
+                    }}
+                    style={[
+                      styles.slotButton,
+                      item.isBooked || isPast ? { backgroundColor: Colors.SECONDARY } : { backgroundColor: Colors.goofy },
+                      selectedTimeSlot && selectedTimeSlot.id === item._id
+                        ? { borderColor: Colors.SECONDARY, borderWidth: 2, backgroundColor: Colors.selectedBackground }
+                        : {},
+                    ]}
+                    disabled={item.isBooked || isPast}
+                  >
+                    <Text
+                      style={[
+                        styles.slotText,
+                        selectedTimeSlot && selectedTimeSlot.id === item._id
+                          ? { color: Colors.selectedText }
+                          : {},
+                      ]}
+                    >
+                      {`${item.startTime} - ${item.endTime}`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.acceptedInsurancesTitle}>Accepted Insurances</Text>
+          <FlatList
+            data={availableInsurances}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => setSelectedInsurance(item._id)}
+                style={[
+                  styles.insuranceCard,
+                  item._id === selectedInsurance ? styles.selectedInsuranceCard : null,
+                  item.name === userInsurance ? styles.userInsuranceCard : null
+                ]}
+                disabled={item.name !== userInsurance}
+              >
+                <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
+                <Text style={[
+                  styles.insuranceText,
+                  item._id === selectedInsurance ? styles.selectedInsuranceText : null,
+                  item.name === userInsurance ? styles.userInsuranceText : null
+                ]}>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+
         <BookingSection
           doctorId={doctor._id}
           userId={userId} 
           consultationFee={doctor.consultationFee || 'N/A'}
-          insurances={doctor.insuranceProviders}
+          selectedTimeSlot={selectedTimeSlot}
+          selectedInsurance={selectedInsurance}
         />
-        <HorizontalLine />
 
-        <View style={styles.section}>
-          <Doctors searchQuery="" excludeDoctorId={doctor.id} />
-        </View>
+       
       </ScrollView>
     </View>
   );
@@ -122,7 +252,7 @@ export default DoctorProfile;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.backgroundColor,
+    backgroundColor: '#e3f6f5', // Set the background color
   },
   scrollContainer: {
     flex: 1,
@@ -167,5 +297,59 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontSize: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  slotButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  slotText: {
+    fontSize: 14,
+  },
+  acceptedInsurancesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 20,
+  },
+  insuranceCard: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 8,
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  insuranceText: {
+    fontSize: 16,
+    color: Colors.primary,
+  },
+  selectedInsuranceCard: {
+    borderColor: Colors.primary,
+    borderWidth: 2,
+  },
+  selectedInsuranceText: {
+    color: Colors.primary,
+    fontWeight: 'bold',
+  },
+  userInsuranceCard: {
+    borderColor: Colors.secondary,
+    borderWidth: 2,
+  },
+  userInsuranceText: {
+    color: Colors.secondary,
+    fontWeight: 'bold',
+  },
+  insuranceIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
   },
 });

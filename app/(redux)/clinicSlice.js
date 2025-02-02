@@ -11,11 +11,34 @@ const initialState = {
 export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async ({ insuranceProviders }, { getState }) => {
   const response = await axios.get('https://medplus-health.onrender.com/api/professionals');
   console.log('Data before transformation:', response.data); // Log the data before transformation
+
   const transformedData = response.data.map((clinic) => {
     const insuranceNames = clinic.insuranceProviders.map(id => {
       const provider = insuranceProviders.find(provider => provider._id === id);
       return provider ? provider.name : 'Unknown';
     });
+
+    // Ensure that clinic.doctors exists and is an array
+    const doctors = response.data.filter(professional => professional.practiceLocation === clinic.practiceLocation).map((doctor) => ({
+      id: doctor._id,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
+      specialty: doctor.professionalDetails?.specialization || 'N/A',
+      profileImage: doctor.profileImage,
+      clinicAddress: doctor.practiceLocation,
+      clinicName: doctor.practiceName || 'Unknown Clinic',
+      bio: doctor.bio || 'No bio available',
+      title: doctor.title || 'N/A',
+      profession: doctor.profession || 'N/A',
+      consultationFee: doctor.consultationFee || 'N/A',
+      clinic: doctor.clinic || { insuranceCompanies: [] },
+      insuranceProviders: insuranceNames,
+      yearsOfExperience: doctor.professionalDetails?.yearsOfExperience || 'N/A',
+      specializedTreatment: doctor.professionalDetails?.specializedTreatment || 'N/A',
+      certifications: doctor.professionalDetails?.certifications || [],
+    }));
+    console.log('Doctors for clinic:', clinic._id, doctors); // Log the doctors for each clinic
+
     return {
       _id: clinic._id,
       name: `${clinic.firstName} ${clinic.lastName}`,
@@ -28,24 +51,7 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async ({ in
       practiceName: clinic.practiceName,
       workingHours: clinic.workingHours,
       workingDays: clinic.workingDays,
-      doctors: [{
-        id: clinic._id,
-        firstName: clinic.firstName,
-        lastName: clinic.lastName,
-        specialty: clinic.professionalDetails?.specialization || 'N/A',
-        profileImage: clinic.profileImage,
-        clinicAddress: clinic.practiceLocation,
-        clinicName: clinic.practiceName || 'Unknown Clinic',
-        bio: clinic.bio || 'No bio available',
-        title: clinic.title || 'N/A',
-        profession: clinic.profession || 'N/A',
-        consultationFee: clinic.consultationFee || 'N/A',
-        clinic: clinic.clinic || { insuranceCompanies: [] },
-        insuranceProviders: insuranceNames,
-        yearsOfExperience: clinic.professionalDetails?.yearsOfExperience || 'N/A',
-        specializedTreatment: clinic.professionalDetails?.specializedTreatment || 'N/A',
-        certifications: clinic.professionalDetails?.certifications || [],
-      }],
+      doctors: doctors,
     };
   });
 
@@ -60,7 +66,9 @@ const clinicSlice = createSlice({
   initialState,
   reducers: {
     setSelectedClinic: (state, action) => {
-      state.selectedClinic = action.payload;
+      const clinic = action.payload;
+      const doctors = state.clinics.find(c => c._id === clinic._id)?.doctors || [];
+      state.selectedClinic = { ...clinic, doctors };
     },
     setClinicsFromStorage: (state, action) => {
       state.clinics = action.payload;
