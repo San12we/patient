@@ -12,8 +12,10 @@ const health = () => {
   const router = useRouter();
 
   useEffect(() => {
-    dispatch(fetchPosts());
-  }, [dispatch]);
+    if (posts.length === 0) {
+      dispatch(fetchPosts());
+    }
+  }, [dispatch, posts.length]);
 
   const segments = [
     { title: 'Consultations', route: '/consultation' },

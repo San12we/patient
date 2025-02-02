@@ -20,6 +20,7 @@ import { theme } from '@/constants/theme';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import ClientHeader from '@/components/ClientHeader';
+import { Ionicons } from '@expo/vector-icons';
 
 const InsuranceScreen = () => {
   const [isPrivate, setIsPrivate] = useState(false);
@@ -98,7 +99,12 @@ const InsuranceScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-   <ClientHeader />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Insurance Details</Text>
+      </View>
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Insurance Details</Text>
@@ -205,6 +211,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  backButton: {
+    marginRight: 16,
   },
   headerTitle: {
     fontSize: 22,
