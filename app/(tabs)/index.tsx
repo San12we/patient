@@ -41,7 +41,7 @@ export default Index;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.backgroundColor, // Set the background color
+    backgroundColor: '#93deff', // Set the background color
   },
   scrollContainer: {
     flexGrow: 1,

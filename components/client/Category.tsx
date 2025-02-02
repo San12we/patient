@@ -110,12 +110,12 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   categoryIconContainer: {
-    backgroundColor: Colors.SECONDARY,
+    backgroundColor: '#edf7fa',
     padding: 15,
     borderRadius: 99,
   },
   categoryIconContainerActive: {
-    backgroundColor: Colors.PRIMARY, // Change background color for active state
+    backgroundColor: '#dcd6f7', // Change background color for active state
     padding: 15,
     borderRadius: 99,
   },

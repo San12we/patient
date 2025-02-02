@@ -51,8 +51,10 @@ const [isMounted, setIsMounted] = useState(false);
     'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg';
 
   const specialties = doctor.professionalDetails?.customSpecializedTreatment || 'N/A';
+  const specialization = doctor.professionalDetails?.specialization || 'N/A';
+  const specializedTreatment = doctor.professionalDetails?.specializedTreatment || 'N/A';
+  const yearsOfExperience = doctor.professionalDetails?.yearsOfExperience || 'N/A';
   const clinicName = doctor.practiceName || 'Unknown Clinic';
-  const yearsOfExperience = doctor.experience?.length || 'N/A';
   const userId = doctor.user?._id;
 
   return (
@@ -89,11 +91,19 @@ const [isMounted, setIsMounted] = useState(false);
             <Ionicons name="calendar" size={20} color={Colors.primary} />
             <Text style={styles.infoText}>{yearsOfExperience} years of experience</Text>
           </View>
+          <View style={styles.infoCard}>
+            <Ionicons name="medkit" size={20} color={Colors.primary} />
+            <Text style={styles.infoText}>{specialization}</Text>
+          </View>
+          <View style={styles.infoCard}>
+            <Ionicons name="medkit" size={20} color={Colors.primary} />
+            <Text style={styles.infoText}>{specializedTreatment}</Text>
+          </View>
         </View>
 
         <BookingSection
           doctorId={doctor._id}
-          userId={userId} // Use the userId of the selected doctor
+          userId={userId} 
           consultationFee={doctor.consultationFee || 'N/A'}
           insurances={doctor.insuranceProviders}
         />

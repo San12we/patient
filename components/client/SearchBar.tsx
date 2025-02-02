@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#f0f0f0',
+      backgroundColor: '#dcd6f7',
       borderRadius: 25,
       paddingHorizontal: 12,
       paddingVertical: 8,
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
       fontSize: 16,
       paddingHorizontal: 10,
       borderRadius: 25,
-      backgroundColor: '#fff',
+      backgroundColor: '#dcd6f7',
       color: '#333',
     },
     iconContainer: {

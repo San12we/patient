@@ -24,7 +24,7 @@ const ClientHeader: React.FC = () => {
 
 
   return (
-    <View style={[styles.container, { backgroundColor: Colors.SECONDARY}]}>
+    <View style={[styles.container, { backgroundColor: '#ffffff'}]}>
       <View style={styles.leftSection}>
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.profileImage} />

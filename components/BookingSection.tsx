@@ -41,7 +41,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   const toaster = useToast();
   const { insuranceProviders } = useInsurance();
   const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
-  const userInsuranceName = userInsurance; // Define userInsuranceName
+  const userInsuranceName = userInsurance; 
 
   useEffect(() => {
     console.log('BookingSection mounted with userId:', userId);
@@ -49,20 +49,20 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   }, [doctorId, userId]);
 
   useEffect(() => {
-    const fetchUserInsurance = async () => {
+    const loadUserInsurance = async () => {
       try {
-        const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
-        if (response.status === 200) {
-          const insuranceData = response.data;
+        const storedData = await AsyncStorage.getItem('insuranceData');
+        if (storedData) {
+          const insuranceData = JSON.parse(storedData);
           setUserInsurance(insuranceData.insuranceProvider);
-          console.log('User Insurance from backend:', insuranceData);
+          console.log('User Insurance from AsyncStorage:', insuranceData);
         }
       } catch (error) {
-        console.error('Error loading user insurance data:', error);
+        console.error('Error loading user insurance data from AsyncStorage:', error);
       }
     };
 
-    fetchUserInsurance();
+    loadUserInsurance();
   }, [userId]);
 
   useEffect(() => {
@@ -85,6 +85,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
     console.log('Is User Insurance Accepted:', isAccepted);
     if (isAccepted) {
       console.log('User insurance is supported:', userInsuranceName);
+      setSelectedInsurance(userInsuranceName); // Highlight the user's insurance provider
     }
     console.log('Accepted Insurances:', availableInsurances.map((insurance) => insurance.name));
   }, [userInsuranceName, availableInsurances]);
@@ -111,7 +112,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
     console.log('Patient Name:', patientName);
 
     setIsSubmitting(true);
-    toaster.show({ message: '', type: 'success' }); // Initialize toaster message
+    toaster.show({ message: '', type: 'success' });
 
     try {
       const subaccountCode = await fetchSubaccountCode(userId);

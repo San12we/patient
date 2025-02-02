@@ -15,33 +15,33 @@ import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Colors from '@/components/Shared/Colors';
-import { useToast } from 'react-native-paper-toast'; // Import useToast
+import { useToast } from 'react-native-paper-toast';
 import { theme } from '@/constants/theme';
-import axios from 'axios'; // Import axios
-import { useSelector } from 'react-redux'; // Import useSelector from react-redux
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const InsuranceScreen = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [insuranceData, setInsuranceData] = useState({
-    insuranceProvider: 'HealthPlus',
-    insuranceNumber: '123-456-789',
-    policyholderName: 'John Doe',
-    effectiveDate: '2024-01-01',
-    expirationDate: '2025-01-01',
+    insuranceProvider: '',
+    insuranceNumber: '',
+    policyholderName: '',
+    effectiveDate: '',
+    expirationDate: '',
   });
 
   const { insuranceProviders } = useInsurance();
   const router = useRouter();
-  const toaster = useToast(); // Initialize useToast
-  const userId = useSelector((state) => state.auth.user.user._id); // Retrieve userId from Redux state
+  const toaster = useToast();
+  const userId = useSelector((state) => state.auth.user.user._id);
 
   const saveInsuranceData = async (data) => {
     try {
       await AsyncStorage.setItem('insuranceData', JSON.stringify(data));
-      toaster.show({ message: 'Insurance data saved successfully.', type: 'success' }); // Show success toast
+      toaster.show({ message: 'Insurance data saved successfully.', type: 'success' });
     } catch (error) {
       console.error('Error saving data:', error);
-      toaster.show({ message: 'Failed to save insurance data.', type: 'error' }); // Show error toast
+      toaster.show({ message: 'Failed to save insurance data.', type: 'error' });
     }
   };
 
@@ -63,7 +63,7 @@ const InsuranceScreen = () => {
         const data = response.data;
         await AsyncStorage.setItem('insuranceData', JSON.stringify(data));
         setInsuranceData(data);
-        console.log('Fetched insurance data:', data); // Log data for debugging
+        console.log('Fetched insurance data:', data);
       }
     } catch (error) {
       console.error('Error fetching insurance data:', error);
@@ -72,7 +72,7 @@ const InsuranceScreen = () => {
 
   useEffect(() => {
     loadInsuranceData();
-    fetchInsuranceData(); // Fetch insurance data from backend
+    fetchInsuranceData();
   }, []);
 
   const handleUpdate = (field, value) => {
@@ -128,6 +128,18 @@ const InsuranceScreen = () => {
           <Text style={styles.cardLabel}>Policyholder:</Text>
           <Text style={styles.cardValue}>
             {isPrivate ? maskValue(insuranceData.policyholderName) : insuranceData.policyholderName}
+          </Text>
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardLabel}>Effective Date:</Text>
+          <Text style={styles.cardValue}>
+            {isPrivate ? maskValue(insuranceData.effectiveDate) : insuranceData.effectiveDate}
+          </Text>
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardLabel}>Expiration Date:</Text>
+          <Text style={styles.cardValue}>
+            {isPrivate ? maskValue(insuranceData.expirationDate) : insuranceData.expirationDate}
           </Text>
         </View>
       </View>
@@ -192,7 +204,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.backgroundColor,
     padding: 16,
-    paddingTop: 40, // Added paddingTop to prevent overlap with the status bar
+    paddingTop: 40,
   },
   header: {
     flexDirection: 'row',
@@ -206,15 +218,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    backgroundColor: Colors.SECONDARY,// Light cyan background color
-    
-    padding: 20, // Increased padding
+    backgroundColor: Colors.SECONDARY,
+    padding: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.4, // Increased shadow opacity
-    shadowRadius: 10, // Increased shadow radius
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
     shadowOffset: { width: 2, height: 4 },
-    elevation: 6, // Increased elevation
-  
+    elevation: 6,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -240,10 +250,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   editSection: {
-    
-    padding: 16, // Added padding
-    backgroundColor: '#ffffff', // White background
-    borderRadius: 16, // Border radius to match card
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 6,
