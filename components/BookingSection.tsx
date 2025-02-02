@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import moment from 'moment';
+import axios from 'axios';
 
 import Colors from './Shared/Colors';
 import { useSelector } from 'react-redux';
@@ -9,9 +10,8 @@ import { useToast } from 'react-native-paper-toast';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { fetchSubaccountCode, bookAppointment, confirmAppointment } from '../utils/bookingUtils';
 
-const BookingSection: React.FC<{ doctorId: string; userId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string } | null }> = ({
+const BookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string } | null }> = ({
   doctorId,
-  userId,
   consultationFee,
   selectedInsurance,
   selectedTimeSlot,
@@ -19,16 +19,37 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [userInsurance, setUserInsurance] = useState<string | null>(null);
+  const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false);
+  const [acceptedInsurances, setAcceptedInsurances] = useState<string[]>(['Tausi Assurance Company Limited', 'Other Insurance Company']);
 
   const user = useSelector(selectUser);
+  const userId = user.user?._id;
   const userEmail = user.user?.email;
   const patientName = user.user?.username || user.name;
   const toaster = useToast();
 
+  useEffect(() => {
+    const fetchUserInsurance = async () => {
+      try {
+        const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
+        if (response.status === 200) {
+          const data = response.data;
+          setUserInsurance(data.insuranceProvider);
+          setIsInsuranceAccepted(acceptedInsurances.includes(data.insuranceProvider));
+        }
+      } catch (error) {
+        console.error('Error fetching user insurance data:', error);
+      }
+    };
+
+    fetchUserInsurance();
+  }, [userId, selectedInsurance]);
+
   const handleBookPress = async (withInsurance: boolean) => {
     console.log(withInsurance ? 'Proceed with Insurance button pressed' : 'Proceed to Payment button pressed');
-    if (!selectedTimeSlot && !selectedInsurance) {
-      toaster.show({ message: 'Please select a time slot or insurance.', type: 'error' });
+    if (!selectedTimeSlot) {
+      toaster.show({ message: 'Please select a time slot.', type: 'error' });
       return;
     }
 
@@ -50,7 +71,7 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
     toaster.show({ message: '', type: 'success' });
 
     try {
-      const subaccountCode = await fetchSubaccountCode(userId);
+      const subaccountCode = await fetchSubaccountCode(doctorId); // Changed userId to doctorId
       if (!subaccountCode && !withInsurance) {
         throw new Error('Missing subaccount code.');
       }
@@ -131,13 +152,13 @@ const BookingSection: React.FC<{ doctorId: string; userId: string; consultationF
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(selectedInsurance !== undefined)} disabled={isSubmitting}>
+      <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(isInsuranceAccepted)} disabled={isSubmitting}>
         <Text style={styles.bookButtonText}>
-          {selectedInsurance ? 'Proceed with Insurance' : 'Book Appointment'}
+          {isInsuranceAccepted ? 'Proceed with Insurance' : 'Book Appointment'}
         </Text>
       </TouchableOpacity>
 
-      {!selectedInsurance ? (
+      {!isInsuranceAccepted ? (
         <Paystack
           paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
           billingEmail={userEmail}

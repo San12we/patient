@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import Colors from '../../components/Shared/Colors';
@@ -77,32 +77,34 @@ const ClinicProfile: React.FC = () => {
 
         {/* Doctors List */}
         <Text style={styles.sectionTitle}>Doctors</Text>
-        <FlatList
-          data={clinic.doctors}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.doctorCard}
-              onPress={() => handleDoctorPress(item)}
-              activeOpacity={0.8} // Smooth feedback on press
-            >
-              {/* Doctor Profile Image */}
-              <Image
-                source={{ uri: item.profileImage || 'https://via.placeholder.com/150' }} // Fallback image
-                style={styles.doctorImage}
-              />
-              {/* Doctor Details */}
-              <View style={styles.doctorDetails}>
-                <Text style={styles.doctorName}>
-                  {item.firstName} {item.lastName}
-                </Text>
-                <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
-              </View>
-              {/* Chevron Icon */}
-              <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
-            </TouchableOpacity>
-          )}
-        />
+        <View style={styles.doctorsListContainer}>
+          <FlatList
+            data={clinic.doctors}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.doctorCard}
+                onPress={() => handleDoctorPress(item)}
+                activeOpacity={0.8} // Smooth feedback on press
+              >
+                {/* Doctor Profile Image */}
+                <Image
+                  source={{ uri: item.profileImage || 'https://via.placeholder.com/150' }} // Fallback image
+                  style={styles.doctorImage}
+                />
+                {/* Doctor Details */}
+                <View style={styles.doctorDetails}>
+                  <Text style={styles.doctorName}>
+                    {item.firstName} {item.lastName}
+                  </Text>
+                  <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
+                </View>
+                {/* Chevron Icon */}
+                <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
+              </TouchableOpacity>
+            )}
+          />
+        </View>
       </View>
     </View>
   );
@@ -183,6 +185,9 @@ const styles = StyleSheet.create({
   insuranceProviderText: {
     fontSize: 14,
     color: Colors.text,
+  },
+  doctorsListContainer: {
+    height: Dimensions.get('window').height * 0.4, // Set a fixed height for the doctors list
   },
   doctorCard: {
     flexDirection: 'row',

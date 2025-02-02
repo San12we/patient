@@ -17,7 +17,6 @@ import { useDispatch } from "react-redux";
 import { registerUser } from "../(services)/api/api";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import Colors from "@/components/Shared/Colors";
 
 const RegisterSchema = Yup.object().shape({
@@ -40,28 +39,25 @@ export default function Register() {
     mutationKey: ["register"],
   });
 
-  const registerFunction = (values) => {
+  const registerFunction = async (values) => {
     setLoading(true);
-    const auth = getAuth();
-    createUserWithEmailAndPassword(auth, values.email, values.password)
-      .then((userCredential) => {
-        // Send verification email
-        sendEmailVerification(userCredential.user)
-          .then(() => {
-            // Email verification sent
-            console.log("Verification email sent.");
-            setIsVerificationSent(true);
-            Alert.alert("Verification email sent", "Please check your email for the verification code.");
-          })
-          .catch((error) => {
-            console.error("Error sending verification email:", error);
-            setLoading(false);
-          });
-      })
-      .catch((error) => {
-        console.error("Error registering user:", error);
-        setLoading(false);
+    try {
+      const response = await mutation.mutateAsync({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        userType: "patient", // or any other user type
       });
+      console.log("Registration successful:", response);
+      setIsVerificationSent(true);
+      Alert.alert("Registration successful", "Please check your email for the verification code.");
+    } catch (error) {
+      console.error("Error registering user:", error);
+      Alert.alert("Error", error.message || "An error occurred during registration.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const verifyEmail = () => {

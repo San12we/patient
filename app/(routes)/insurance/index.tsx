@@ -47,25 +47,21 @@ const InsuranceScreen = () => {
     }
   };
 
-  const loadInsuranceData = async () => {
-    try {
-      const storedData = await AsyncStorage.getItem('insuranceData');
-      if (storedData) {
-        setInsuranceData(JSON.parse(storedData));
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-  };
-
   const fetchInsuranceData = async () => {
     try {
       const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
       if (response.status === 200) {
         const data = response.data;
-        await AsyncStorage.setItem('insuranceData', JSON.stringify(data));
         setInsuranceData(data);
         console.log('Fetched insurance data:', data);
+      } else {
+        setInsuranceData({
+          insuranceProvider: '',
+          insuranceNumber: '',
+          policyholderName: '',
+          effectiveDate: '',
+          expirationDate: '',
+        });
       }
     } catch (error) {
       console.error('Error fetching insurance data:', error);
@@ -73,9 +69,8 @@ const InsuranceScreen = () => {
   };
 
   useEffect(() => {
-    loadInsuranceData();
     fetchInsuranceData();
-  }, []);
+  }, [userId]);
 
   const handleUpdate = (field, value) => {
     const updatedData = { ...insuranceData, [field]: value };

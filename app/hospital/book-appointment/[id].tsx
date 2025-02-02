@@ -21,6 +21,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setSelectedDoctor } from '../../../app/(redux)/doctorSlice'; // Import the action
 import useSchedule from '../../../hooks/useSchedule'; // Import the useSchedule hook
 import moment from 'moment';
+import Doctors from '@/components/client/Doctors';
 
 const ClinicProfileScreen = () => {
   const { id } = useLocalSearchParams();
@@ -209,18 +210,7 @@ const ClinicProfileScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <ClinicSubHeading subHeadingTitle="Medical Professionals" />
-        {doctorsData.length > 0 ? (
-          <FlatList
-            data={doctorsData}
-            horizontal
-            renderItem={({ item }) => renderDoctor(item)}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-          />
-        ) : (
-          <Text>No doctors available</Text>
-        )}
+       <Doctors />
       </View>
     </ScrollView>
   );

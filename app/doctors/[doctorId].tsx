@@ -21,7 +21,7 @@ import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
 import Doctors from '../../components/client/Doctors';
 import useSchedule from '../../hooks/useSchedule';
 import useInsurance from '../../hooks/useInsurance';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const DoctorProfile: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -29,13 +29,31 @@ const DoctorProfile: React.FC = () => {
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string } | null>(null);
-  const userId = doctor.user?._id;
+  const userId = useSelector((state) => state.auth.user.user._id);
   const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
   const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
   const [selectedInsurance, setSelectedInsurance] = useState<string>('');
   const [userInsurance, setUserInsurance] = useState<string | null>(null);
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
+  const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
+
+  useEffect(() => {
+    const fetchUserInsurance = async () => {
+      try {
+        const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
+        if (response.status === 200) {
+          const data = response.data;
+          setUserInsurance(data.insuranceProvider);
+          console.log('User Insurance from server:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching user insurance data from server:', error);
+      }
+    };
+
+    fetchUserInsurance();
+  }, [userId]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -51,23 +69,6 @@ const DoctorProfile: React.FC = () => {
       }
     }
   }, [doctor, router, isMounted]);
-
-  useEffect(() => {
-    const loadUserInsurance = async () => {
-      try {
-        const storedData = await AsyncStorage.getItem('insuranceData');
-        if (storedData) {
-          const insuranceData = JSON.parse(storedData);
-          setUserInsurance(insuranceData.insuranceProvider);
-          console.log('User Insurance from AsyncStorage:', insuranceData);
-        }
-      } catch (error) {
-        console.error('Error loading user insurance data from AsyncStorage:', error);
-      }
-    };
-
-    loadUserInsurance();
-  }, [userId]);
 
   useEffect(() => {
     const mappedInsurances = doctor.insuranceProviders
@@ -109,7 +110,14 @@ const DoctorProfile: React.FC = () => {
     return schedule[dayOfWeek] || [];
   };
 
+  const getSlotsForSelectedDay = () => {
+    return schedule[selectedDay] || [];
+  };
+
   const slotsForSelectedDate = getSlotsForSelectedDate();
+  const slotsForSelectedDay = getSlotsForSelectedDay();
+
+  const isToday = (day: string) => moment().format('dddd') === day;
 
   return (
     <View style={styles.container}>
@@ -156,6 +164,34 @@ const DoctorProfile: React.FC = () => {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.title}>Select a Day</Text>
+          <FlatList
+            horizontal
+            data={Object.keys(schedule)}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => setSelectedDay(item)}
+                style={[
+                  styles.dayButton,
+                  selectedDay === item ? styles.selectedDayButton : null,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.dayText,
+                    selectedDay === item ? styles.selectedDayText : null,
+                  ]}
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.title}>Available Slots</Text>
           {loading ? (
             <ActivityIndicator size="large" color={Colors.PRIMARY} />
@@ -164,11 +200,11 @@ const DoctorProfile: React.FC = () => {
           ) : (
             <FlatList
               horizontal
-              data={slotsForSelectedDate}
+              data={slotsForSelectedDay}
               keyExtractor={(item) => item._id}
               renderItem={({ item }) => {
                 const slotTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
-                const isPast = slotTime.isBefore(moment());
+                const isPast = isToday(selectedDay) && slotTime.isBefore(moment());
 
                 return (
                   <TouchableOpacity
@@ -205,33 +241,35 @@ const DoctorProfile: React.FC = () => {
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.acceptedInsurancesTitle}>Accepted Insurances</Text>
-          <FlatList
-            data={availableInsurances}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => setSelectedInsurance(item._id)}
-                style={[
-                  styles.insuranceCard,
-                  item._id === selectedInsurance ? styles.selectedInsuranceCard : null,
-                  item.name === userInsurance ? styles.userInsuranceCard : null
-                ]}
-                disabled={item.name !== userInsurance}
-              >
-                <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
-                <Text style={[
-                  styles.insuranceText,
-                  item._id === selectedInsurance ? styles.selectedInsuranceText : null,
-                  item.name === userInsurance ? styles.userInsuranceText : null
-                ]}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
+        {userInsurance && availableInsurances.some((insurance) => insurance.name === userInsurance) && (
+          <View style={styles.section}>
+            <Text style={styles.acceptedInsurancesTitle}>Accepted Insurances</Text>
+            <FlatList
+              data={availableInsurances}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => setSelectedInsurance(item._id)}
+                  style={[
+                    styles.insuranceCard,
+                    item._id === selectedInsurance ? styles.selectedInsuranceCard : null,
+                    item.name === userInsurance ? styles.userInsuranceCard : null
+                  ]}
+                  disabled={item.name !== userInsurance}
+                >
+                  <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
+                  <Text style={[
+                    styles.insuranceText,
+                    item._id === selectedInsurance ? styles.selectedInsuranceText : null,
+                    item.name === userInsurance ? styles.userInsuranceText : null
+                  ]}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        )}
 
         <BookingSection
           doctorId={doctor._id}
@@ -241,6 +279,8 @@ const DoctorProfile: React.FC = () => {
           selectedInsurance={selectedInsurance}
         />
 
+
+        <Doctors excludeDoctorId={doctor.id} />
        
       </ScrollView>
     </View>
@@ -351,5 +391,21 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 10,
+  },
+  dayButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    backgroundColor: Colors.primary,
+  },
+  selectedDayButton: {
+    backgroundColor: Colors.secondary,
+  },
+  dayText: {
+    fontSize: 14,
+    color: '#fff',
+  },
+  selectedDayText: {
+    fontWeight: 'bold',
   },
 });
