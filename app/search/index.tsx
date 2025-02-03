@@ -4,13 +4,17 @@ import React from 'react';
 import { Ionicons, AntDesign } from '@expo/vector-icons'; // Ensure this package is installed
 import useSearch from '@/hooks/useSearch';
 import { useRouter } from 'expo-router'; // Update this import
-
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchInsuranceProviders } from '../../app/(redux)/insuranceSlice';
+import { setSelectedClinic } from '../../app/(redux)/clinicSlice'; // Import the setSelectedClinic action
+import useClinics from '../../hooks/useClinics';
 const index = () => {
   const router = useRouter(); // Update this line
   const [searchQuery, setSearchQuery] = useState(''); // Initialize search query with an empty string
   const [showFilters, setShowFilters] = useState(false);
   const [currentFilter, setCurrentFilter] = useState('Category');
-
+  const dispatch = useDispatch();
+  const { clinics, loading, error } = useClinics();
   const {
     filteredClinics,
     handleSearchChange,
@@ -31,10 +35,13 @@ const index = () => {
     }
   }, [filteredClinics]);
 
-  const handlePress = useCallback((item) => {
+  const handlePress = useCallback((item: Clinic) => {
     console.log("Navigating to clinic with ID:", item._id);
-    router.push(`/hospital/book-appointment/${item._id}`);
-  }, [router]);
+    const fullClinicData = clinics.find(clinic => clinic._id === item._id);
+    console.log("Selected Clinic Data:", fullClinicData); // Log the selected clinic data
+    dispatch(setSelectedClinic(fullClinicData)); // Dispatch the selected clinic with full data
+    router.push(`/clinic/${item._id}`); // Navigate to the ClinicProfile screen using id
+  }, [router, dispatch, clinics]);
 
   const renderFilterOptions = () => {
     switch (currentFilter) {

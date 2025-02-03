@@ -48,6 +48,38 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
 
   const handleBookPress = async (withInsurance: boolean) => {
     console.log(withInsurance ? 'Proceed with Insurance button pressed' : 'Proceed to Payment button pressed');
+
+    if (isInsuranceAccepted) {
+      // If insurance is accepted, proceed without selecting a time slot
+      setIsSubmitting(true);
+      toaster.show({ message: 'Booking appointment with insurance...', type: 'success' });
+
+      try {
+        const newAppointmentId = await bookAppointment(
+          doctorId,
+          userId,
+          patientName,
+          new Date(),
+          selectedTimeSlot,
+          selectedInsurance,
+          null,
+          userEmail,
+          consultationFee,
+          withInsurance
+        );
+
+        setAppointmentId(newAppointmentId);
+        toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
+        setIsSubmitting(false);
+        return;
+      } catch (error) {
+        console.error('Failed to book appointment:', error);
+        toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     if (!selectedTimeSlot) {
       toaster.show({ message: 'Please select a time slot.', type: 'error' });
       return;
@@ -97,12 +129,6 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
 
       setAppointmentId(newAppointmentId);
       console.log('State after setting appointmentId:', { appointmentId: newAppointmentId });
-
-      if (withInsurance) {
-        toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
-        setIsSubmitting(false);
-        return;
-      }
 
       if (paystackWebViewRef.current) {
         paystackWebViewRef.current.startTransaction();
@@ -158,7 +184,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
         </Text>
       </TouchableOpacity>
 
-      {!isInsuranceAccepted ? (
+      {!isInsuranceAccepted && (
         <Paystack
           paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
           billingEmail={userEmail}
@@ -168,7 +194,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
           onSuccess={handlePaymentSuccess}
           ref={paystackWebViewRef}
         />
-      ) : null}
+      )}
     </View>
   );
 };

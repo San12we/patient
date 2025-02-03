@@ -121,8 +121,7 @@ const DoctorProfile: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollContainer}>
-        <StatusBar barStyle="dark-content" />
+       <StatusBar barStyle="dark-content" />
         <View style={styles.heroContainer}>
           <Image source={{ uri: profileImageUri }} style={styles.heroImage} />
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -132,7 +131,6 @@ const DoctorProfile: React.FC = () => {
             <Text style={styles.heroText}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
           </View>
         </View>
-
         <View style={styles.section}>
           <ClinicSubHeading subHeadingTitle={`${doctor.firstName} ${doctor.lastName}`} />
           <Text style={styles.descriptionText}>
@@ -162,7 +160,7 @@ const DoctorProfile: React.FC = () => {
             <Text style={styles.infoText}>{specializedTreatment}</Text>
           </View>
         </View>
-
+      <ScrollView style={styles.scrollContainer}>
         <View style={styles.section}>
           <Text style={styles.title}>Select a Day</Text>
           <FlatList
