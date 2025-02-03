@@ -96,7 +96,7 @@ const ClinicProfile: React.FC = () => {
         </View>
 
         <View style={styles.detailsContainer}>
-          <Text style={styles.title}>{clinic.name}</Text>
+          <Text style={styles.title}>{clinic.practiceName}</Text>
           <Text style={styles.subtitle}>{clinic.address}</Text>
           <Text style={styles.category}>{clinic.category}</Text>
 
@@ -146,7 +146,7 @@ const ClinicProfile: React.FC = () => {
           />
 
           <Text style={styles.sectionTitle}>Doctors</Text>
-          <ScrollView style={styles.doctorsListContainer} horizontal>
+          <ScrollView style={styles.doctorsListContainer}>
             <FlatList
               data={clinic.doctors}
               keyExtractor={(item) => item.id}
@@ -250,29 +250,34 @@ const styles = StyleSheet.create({
   insuranceCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 20,
     marginRight: 10,
+    marginBottom: 20,//Add marginBottom for spacing between rows
     backgroundColor: '#fff',
     borderRadius: 10,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  insuranceIcon: { width: 30, height: 30, marginRight: 10 },
+  insuranceIcon: { 
+    width: 40, // Increase icon size
+    height: 40, 
+    marginRight: 15 // Increase spacing between icon and text
+  },
   placeholderIcon: {
-    width: 30,
-    height: 30,
-    marginRight: 10,
+    width: 40, // Increase placeholder size
+    height: 40,
+    marginRight: 15, // Increase spacing between placeholder and text
     backgroundColor: Colors.SECONDARY,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 15,
+    borderRadius: 20,
   },
   placeholderText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   insuranceText: { fontSize: 14, color: '#555' },
   doctorsListContainer: {
-    height: Dimensions.get('window').height * 0.4, // Set a fixed height for the doctors list
+    // height: Dimensions.get('window').height * 0.4, // Remove fixed height
   },
   doctorCard: {
     flexDirection: 'row',
@@ -286,6 +291,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3, // For Android
+    width: '100%', // Make the card take up the full width
   },
   doctorImage: {
     width: 50,
