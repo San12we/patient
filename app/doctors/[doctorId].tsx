@@ -23,17 +23,24 @@ import useSchedule from '../../hooks/useSchedule';
 import useInsurance from '../../hooks/useInsurance';
 import axios from 'axios';
 
+type Slot = {
+  _id: string;
+  startTime: string;
+  endTime: string;
+  isBooked: boolean;
+};
+
 const DoctorProfile: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string; isBooked: boolean } | null>(null);
   const userId = useSelector((state) => state.auth.user.user._id);
   const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
   const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
-  const [selectedInsurance, setSelectedInsurance] = useState<string>('');
+  const [selectedInsurance, setSelectedInsurance] = useState<string | null>('');
   const [userInsurance, setUserInsurance] = useState<string | null>(null);
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
@@ -210,7 +217,7 @@ const DoctorProfile: React.FC = () => {
                       if (item.isBooked || isPast) {
                         Alert.alert(item.isBooked ? 'Slot already booked' : 'Invalid slot', item.isBooked ? 'Please choose another time slot.' : 'Cannot select a past time slot.');
                       } else {
-                        setSelectedTimeSlot({ id: item._id, time: `${item.startTime} - ${item.endTime}` });
+                        setSelectedTimeSlot({ id: item._id, time: `${item.startTime} - ${item.endTime}`, isBooked: item.isBooked });
                       }
                     }}
                     style={[
@@ -226,7 +233,7 @@ const DoctorProfile: React.FC = () => {
                       style={[
                         styles.slotText,
                         selectedTimeSlot && selectedTimeSlot.id === item._id
-                          ? { color: Colors.selectedText }
+                          ? { color: Colors.PRIMARY}
                           : {},
                       ]}
                     >
@@ -271,7 +278,6 @@ const DoctorProfile: React.FC = () => {
 
         <BookingSection
           doctorId={doctor._id}
-          userId={userId} 
           consultationFee={doctor.consultationFee || 'N/A'}
           selectedTimeSlot={selectedTimeSlot}
           selectedInsurance={selectedInsurance}
@@ -326,7 +332,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: '45%',
   },
-  infoText: { marginLeft: 8, fontSize: 14, color: Colors.text },
+  infoText: { marginLeft: 8, fontSize: 14, color: Colors.textPrimary },
   centered: {
     flex: 1,
     justifyContent: 'center',
@@ -378,11 +384,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   userInsuranceCard: {
-    borderColor: Colors.secondary,
+    borderColor: Colors.SECONDARY,
     borderWidth: 2,
   },
   userInsuranceText: {
-    color: Colors.secondary,
+    color: Colors.SECONDARY,
     fontWeight: 'bold',
   },
   insuranceIcon: {

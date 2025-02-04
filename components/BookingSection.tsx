@@ -60,7 +60,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
           userId,
           patientName,
           new Date(),
-          selectedTimeSlot,
+          selectedTimeSlot?.id ?? null, // Ensure timeSlotId is either a string or null
           selectedInsurance,
           null,
           userEmail,
@@ -119,7 +119,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
         userId,
         patientName,
         new Date(),
-        selectedTimeSlot,
+        selectedTimeSlot?.id ?? null, // Ensure timeSlotId is either a string or null
         selectedInsurance,
         subaccountCode,
         userEmail,

@@ -22,7 +22,7 @@ export const bookAppointment = async (
   userId: string,
   patientName: string,
   selectedDate: Date,
-  selectedTimeSlot: { id: string; time: string } | null,
+  timeSlotId: string | null,
   selectedInsurance: string,
   subaccountCode: string | null,
   userEmail: string,
@@ -31,20 +31,15 @@ export const bookAppointment = async (
 ): Promise<string | null> => {
   try {
     const appointmentData = {
-      doctorId: doctorId,
-      userId: userId,
-      patientName: patientName,
+      doctorId,
+      userId,
+      patientName,
       date: moment(selectedDate).format('YYYY-MM-DD'),
-      timeSlotId: selectedTimeSlot?.id || null,
-      time: selectedTimeSlot?.time || null,
+      timeSlotId,
+      time: timeSlotId ? null : 'defaultTime', // Set time to null if timeSlotId is provided
       status: 'pending',
       insurance: selectedInsurance,
     };
-
-    if (selectedInsurance) {
-      appointmentData.timeSlotId = appointmentData.timeSlotId || 'defaultTimeSlotId';
-      appointmentData.time = appointmentData.time || 'defaultTime';
-    }
 
     const appointmentResponse = await axios.post('https://medplus-health.onrender.com/api/appointments', appointmentData);
     const newAppointmentId = appointmentResponse.data.appointment._id;
@@ -65,7 +60,7 @@ export const bookAppointment = async (
         currency: 'KES',
         metadata: {
           appointmentId: newAppointmentId,
-          timeSlotId: selectedTimeSlot?.id || null,
+          timeSlotId,
         },
       },
       {
