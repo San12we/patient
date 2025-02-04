@@ -86,27 +86,16 @@ export const bookAppointment = async (
     throw error;
   }
 };
-const handlePaymentSuccess = async (response: any) => {
-  setIsSubmitting(false);
-  toaster.show({ message: 'Payment successful and appointment confirmed!', type: 'success' });
-  console.log('Payment successful:', response);
 
+export const confirmAppointment = async (appointmentId: string): Promise<void> => {
   try {
-    const currentAppointmentId = appointmentIdRef.current;
-    console.log('State before confirming appointment:', { appointmentId: currentAppointmentId });
-
-    if (!currentAppointmentId) {
-      throw new Error('No appointment ID available for status update.');
-    }
-
-    console.log('Confirming appointment with ID:', currentAppointmentId);
-
-    // Confirm appointment in the backend
-    await confirmAppointment(currentAppointmentId);
-
+    const confirmResponse = await axios.put(
+      `https://medplus-health.onrender.com/api/appointments/confirm/${appointmentId}`,
+      { status: 'confirmed' }
+    );
+    console.log('Confirm response:', confirmResponse.data);
   } catch (error) {
     console.error('Error updating appointment status:', error);
-    toaster.show({ message: 'Failed to update appointment status.', type: 'error' });
+    throw error;
   }
 };
-

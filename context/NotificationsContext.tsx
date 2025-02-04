@@ -16,16 +16,12 @@ interface NotificationContextType {
     error: Error | null;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(
-    undefined
-);
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const useNotification = () => {
     const context = useContext(NotificationContext);
     if (context === undefined) {
-        throw new Error(
-            "useNotification must be used within a NotificationProvider"
-        );
+        throw new Error("useNotification must be used within a NotificationProvider");
     }
     return context;
 };
@@ -34,12 +30,9 @@ interface NotificationProviderProps {
     children: ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({
-    children,
-}) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-    const [notification, setNotification] =
-        useState<Notifications.Notification | null>(null);
+    const [notification, setNotification] = useState<Notifications.Notification | null>(null);
     const [error, setError] = useState<Error | null>(null);
 
     const notificationListener = useRef<Notifications.EventSubscription>();
@@ -62,6 +55,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
             console.log('Push token sent to backend successfully');
         } catch (error) {
             console.error('Error sending push token to backend:', error);
+            setError(error);
         }
     };
 
@@ -70,39 +64,49 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
             await AsyncStorage.setItem('expoPushToken', token);
         } catch (error) {
             console.error('Error storing push token locally:', error);
+            setError(error);
+        }
+    };
+
+    const retrieveTokenLocally = async () => {
+        try {
+            const token = await AsyncStorage.getItem('expoPushToken');
+            if (token) {
+                setExpoPushToken(token);
+            }
+        } catch (error) {
+            console.error('Error retrieving push token from local storage:', error);
+            setError(error);
         }
     };
 
     useEffect(() => {
+        retrieveTokenLocally();
+
         registerForPushNotificationsAsync().then(
             (token) => {
-                setExpoPushToken(token);
-                storeTokenLocally(token); // Store the token locally
+                if (token) {
+                    setExpoPushToken(token);
+                    storeTokenLocally(token);
+                    sendTokenToBackend(token);
+                }
             },
             (error) => setError(error)
         );
 
-        notificationListener.current =
-            Notifications.addNotificationReceivedListener((notification) => {
-                console.log("🔔 Notification Received: ", notification);
-                setNotification(notification);
-            });
+        notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
+            console.log("🔔 Notification Received: ", notification);
+            setNotification(notification);
+        });
 
-        responseListener.current =
-            Notifications.addNotificationResponseReceivedListener((response) => {
-                console.log(
-                    "🔔 Notification Response: ",
-                    JSON.stringify(response, null, 2),
-                    JSON.stringify(response.notification.request.content.data, null, 2)
-                );
-                // Handle the notification response here
-            });
+        responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+            console.log("🔔 Notification Response: ", JSON.stringify(response, null, 2));
+            // Handle the notification response here
+        });
 
         return () => {
             if (notificationListener.current) {
-                Notifications.removeNotificationSubscription(
-                    notificationListener.current
-                );
+                Notifications.removeNotificationSubscription(notificationListener.current);
             }
             if (responseListener.current) {
                 Notifications.removeNotificationSubscription(responseListener.current);
@@ -111,9 +115,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }, []);
 
     return (
-        <NotificationContext.Provider
-            value={{ expoPushToken, notification, error }}
-        >
+        <NotificationContext.Provider value={{ expoPushToken, notification, error }}>
             {children}
         </NotificationContext.Provider>
     );
