@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import moment from 'moment';
 
 interface Slot {
   startTime: string;
@@ -36,7 +37,28 @@ const useSchedule = (doctorId: string, userId: string): UseScheduleHook => {
       console.log('Fetched schedule data:', response.data); // Log the fetched schedule data
 
       if (response.status === 200) {
-        setSchedule(response.data);
+        const scheduleData = response.data;
+        const currentDate = moment();
+
+        // Compute dates for each day of the week
+        const dayToDateMap: Record<string, string> = {};
+        for (let i = 0; i < 7; i++) {
+          const date = currentDate.clone().add(i, 'days');
+          const dayOfWeek = date.format('dddd');
+          dayToDateMap[dayOfWeek] = date.format('YYYY-MM-DD');
+        }
+
+        // Assign dates to each slot
+        const updatedSchedule: Record<string, Slot[]> = {};
+        for (const [day, slots] of Object.entries(scheduleData)) {
+          updatedSchedule[day] = slots.map((slot) => ({
+            ...slot,
+            date: dayToDateMap[day], // Assign the computed date
+          }));
+        }
+
+        console.log('Processed schedule data:', updatedSchedule); // Log the processed schedule data
+        setSchedule(updatedSchedule);
       }
       setLoading(false);
     } catch (error) {

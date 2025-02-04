@@ -15,24 +15,24 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
 import Colors from '../../components/Shared/Colors';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // For icons
-import { setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import the setSelectedDoctor action
-import axios from 'axios'; // Import axios for API calls
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { setSelectedDoctor } from '../../app/(redux)/doctorSlice';
+import axios from 'axios';
 import moment from 'moment';
-import useSchedule from '../../hooks/useSchedule'; // Import the useSchedule hook
+import useSchedule from '../../hooks/useSchedule';
 
 const ClinicProfile: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const clinic = useSelector((state) => state.clinics.selectedClinic);
-  const selectedDoctor = useSelector((state) => state.doctors.selectedDoctor); // Get the selected doctor from Redux store
-  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders); // Get insurance providers from Redux store
+  const selectedDoctor = useSelector((state) => state.doctors.selectedDoctor);
+  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
 
   const [currentImage, setCurrentImage] = useState(clinic?.clinicImages[0] || null);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string } | null>(null);
-  const { schedule, fetchSchedule, loading, error } = useSchedule(clinic?._id, 'userId'); // Replace 'userId' with actual user ID
+  const { schedule, fetchSchedule, loading, error } = useSchedule(clinic?._id, 'userId');
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
 
   useEffect(() => {
@@ -43,7 +43,7 @@ const ClinicProfile: React.FC = () => {
 
   useEffect(() => {
     if (selectedDoctor) {
-      dispatch(setSelectedDoctor(selectedDoctor)); // Set the selected doctor when the user routes to [clinicId]
+      dispatch(setSelectedDoctor(selectedDoctor));
     }
   }, [selectedDoctor, dispatch]);
 
@@ -59,8 +59,8 @@ const ClinicProfile: React.FC = () => {
     try {
       const response = await axios.get(`https://medplus-health.onrender.com/api/professionals/${doctor.id}`);
       const fullDoctorData = response.data;
-      dispatch(setSelectedDoctor(fullDoctorData)); // Dispatch the selected doctor with full data
-      router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
+      dispatch(setSelectedDoctor(fullDoctorData));
+      router.push(`/doctors/${doctor.id}`);
     } catch (error) {
       console.error('Error fetching doctor details:', error);
     }
@@ -71,7 +71,6 @@ const ClinicProfile: React.FC = () => {
     return provider ? { name: provider.name, icon: provider.icon } : { name: 'Unknown', icon: null };
   });
 
-  // Dummy data for services
   const services = [
     'General Consultation',
     'Pediatrics',
@@ -87,14 +86,13 @@ const ClinicProfile: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: clinic.profileImage }} style={styles.profileImage} />
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: clinic.profileImage }} style={styles.profileImage} />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.detailsContainer}>
           <Text style={styles.title}>{clinic.practiceName}</Text>
           <Text style={styles.subtitle}>{clinic.address}</Text>
@@ -111,8 +109,8 @@ const ClinicProfile: React.FC = () => {
             <MaterialIcons name="event" size={20} color={Colors.primary} />
             <Text style={styles.infoText}>{clinic.workingDays.join(', ')}</Text>
           </View>
-
-          <Text style={styles.sectionTitle}>Insurance Providers</Text>
+            <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Insurance Providers</Text>
           <FlatList
             data={insuranceDetails}
             renderItem={({ item }) => (
@@ -132,47 +130,49 @@ const ClinicProfile: React.FC = () => {
             showsHorizontalScrollIndicator={false}
           />
 
-          <Text style={styles.sectionTitle}>Services Offered</Text>
+            </View>
+         <View style={styles.section}>
+         <Text style={styles.sectionTitle}>Services Offered</Text>
           <FlatList
             horizontal
             data={services}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
-              <View style={styles.insuranceCard}>
-                <Text style={styles.insuranceText}>{item}</Text>
+              <View style={styles.serviceCard}>
+                <Text style={styles.serviceText}>{item}</Text>
               </View>
             )}
-            showsHorizontalScrollIndicator={false} // Hide the scroll bar
+            showsHorizontalScrollIndicator={false}
           />
+         </View>
+         
 
           <Text style={styles.sectionTitle}>Doctors</Text>
-          <ScrollView style={styles.doctorsListContainer}>
-            <FlatList
-              data={clinic.doctors}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.doctorCard}
-                  onPress={() => handleDoctorPress(item)}
-                  activeOpacity={0.8} // Smooth feedback on press
-                >
-                  <Image
-                    source={{ uri: item.profileImage || 'https://via.placeholder.com/150' }} // Fallback image
-                    style={styles.doctorImage}
-                  />
-                  <View style={styles.doctorDetails}>
-                    <Text style={styles.doctorName}>
-                      {item.firstName} {item.lastName}
-                    </Text>
-                    <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-              )}
-            />
-          </ScrollView>
+          <FlatList
+            data={clinic.doctors}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.doctorCard}
+                onPress={() => handleDoctorPress(item)}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={{ uri: item.profileImage || 'https://via.placeholder.com/150' }}
+                  style={styles.doctorImage}
+                />
+                <View style={styles.doctorDetails}>
+                  <Text style={styles.doctorName}>
+                    {item.firstName} {item.lastName}
+                  </Text>
+                  <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
+              </TouchableOpacity>
+            )}
+          />
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -187,6 +187,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fbfc',
+  },
+  section: {
+    marginBottom: 24,
   },
   imageContainer: {
     position: 'relative',
@@ -208,7 +211,6 @@ const styles = StyleSheet.create({
   detailsContainer: {
     flex: 1,
     padding: 20,
-   
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -20,
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     marginRight: 10,
-    marginBottom: 20,//Add marginBottom for spacing between rows
+    marginBottom: 20,
     backgroundColor: '#fff',
     borderRadius: 10,
     shadowColor: '#000',
@@ -260,24 +262,42 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  insuranceIcon: { 
-    width: 40, // Increase icon size
-    height: 40, 
-    marginRight: 15 // Increase spacing between icon and text
+  insuranceIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 15,
   },
   placeholderIcon: {
-    width: 40, // Increase placeholder size
+    width: 40,
     height: 40,
-    marginRight: 15, // Increase spacing between placeholder and text
+    marginRight: 15,
     backgroundColor: Colors.SECONDARY,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
   },
-  placeholderText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  insuranceText: { fontSize: 14, color: '#555' },
-  doctorsListContainer: {
-    // height: Dimensions.get('window').height * 0.4, // Remove fixed height
+  placeholderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  insuranceText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  serviceCard: {
+    padding: 20,
+    marginRight: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  serviceText: {
+    fontSize: 14,
+    color: '#555',
   },
   doctorCard: {
     flexDirection: 'row',
@@ -290,8 +310,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3, // For Android
-    width: '100%', // Make the card take up the full width
+    elevation: 3,
+    width: '100%',
   },
   doctorImage: {
     width: 50,
@@ -321,23 +341,5 @@ const styles = StyleSheet.create({
   noDataText: {
     fontSize: 18,
     color: Colors.text,
-  },
-  slotButton: {
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  slotText: {
-    fontSize: 14,
-  },
-  slotCard: {
-    padding: 10,
-    marginRight: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
   },
 });

@@ -65,7 +65,8 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
           null,
           userEmail,
           consultationFee,
-          withInsurance
+          withInsurance,
+          selectedTimeSlot?.time // Include the time in the payload
         );
 
         setAppointmentId(newAppointmentId);
@@ -85,7 +86,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
       return;
     }
 
-    const selectedDateTime = moment(`${moment().format('YYYY-MM-DD')} ${selectedTimeSlot?.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
+    const selectedDateTime = moment(`${selectedTimeSlot.date} ${selectedTimeSlot.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
     if (selectedTimeSlot && selectedDateTime.isBefore(moment())) {
       toaster.show({ message: 'Cannot book an appointment in the past.', type: 'error' });
       return;
@@ -124,7 +125,8 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
         subaccountCode,
         userEmail,
         consultationFee,
-        withInsurance
+        withInsurance,
+        selectedTimeSlot?.time // Include the time in the payload
       );
 
       setAppointmentId(newAppointmentId);

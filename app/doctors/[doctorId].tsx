@@ -40,7 +40,7 @@ const DoctorProfile: React.FC = () => {
   const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
   const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
-  const [selectedInsurance, setSelectedInsurance] = useState<string | null>('');
+  const [selectedInsurance, setSelectedInsurance] = useState<string | undefined>(undefined);
   const [userInsurance, setUserInsurance] = useState<string | null>(null);
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
@@ -93,6 +93,10 @@ const DoctorProfile: React.FC = () => {
       setSelectedInsurance(userInsurance);
     }
   }, [userInsurance, availableInsurances]);
+
+  useEffect(() => {
+    console.log('Schedule data:', schedule); // Log the schedule data
+  }, [schedule]);
 
   if (!doctor) {
     return (
@@ -208,7 +212,7 @@ const DoctorProfile: React.FC = () => {
               data={slotsForSelectedDay}
               keyExtractor={(item) => item._id}
               renderItem={({ item }) => {
-                const slotTime = moment(`${moment(selectedDate).format('YYYY-MM-DD')} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
+                const slotTime = moment(`${item.date} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
                 const isPast = isToday(selectedDay) && slotTime.isBefore(moment());
 
                 return (
@@ -217,7 +221,7 @@ const DoctorProfile: React.FC = () => {
                       if (item.isBooked || isPast) {
                         Alert.alert(item.isBooked ? 'Slot already booked' : 'Invalid slot', item.isBooked ? 'Please choose another time slot.' : 'Cannot select a past time slot.');
                       } else {
-                        setSelectedTimeSlot({ id: item._id, time: `${item.startTime} - ${item.endTime}`, isBooked: item.isBooked });
+                        setSelectedTimeSlot({ id: item._id, time: `${item.startTime} - ${item.endTime}`, date: item.date, isBooked: item.isBooked });
                       }
                     }}
                     style={[

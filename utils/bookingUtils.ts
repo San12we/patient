@@ -27,7 +27,8 @@ export const bookAppointment = async (
   subaccountCode: string | null,
   userEmail: string,
   consultationFee: number,
-  withInsurance: boolean
+  withInsurance: boolean,
+  time: string | null // Add time parameter
 ): Promise<string | null> => {
   try {
     const appointmentData = {
@@ -36,7 +37,7 @@ export const bookAppointment = async (
       patientName,
       date: moment(selectedDate).format('YYYY-MM-DD'),
       timeSlotId,
-      time: timeSlotId ? null : 'defaultTime', // Set time to null if timeSlotId is provided
+      time, // Include time in the payload
       status: 'pending',
       insurance: selectedInsurance,
     };
