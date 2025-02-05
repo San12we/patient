@@ -26,7 +26,7 @@ import axios from 'axios';
 type Slot = {
   _id: string;
   startTime: string;
-  endTime: string;
+  endTime: boolean;
   isBooked: boolean;
 };
 
@@ -72,7 +72,7 @@ const DoctorProfile: React.FC = () => {
         router.back();
       } else {
         console.log('Selected Doctor:', doctor);
-        fetchSchedule();
+        fetchSchedule(); // Fetch the schedule when the component mounts
       }
     }
   }, [doctor, router, isMounted]);

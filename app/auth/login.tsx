@@ -6,6 +6,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import React, { useState } from "react";
 import CustomBox from "react-native-customized-box";
@@ -79,117 +81,121 @@ export default function Login({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <Image
-        style={styles.loginImage}
-        source={{
-          uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1734536854/medplus/biif68j04kajkkwqub0r.png",
-        }}
-      />
-      {getError ? (
-        <View style={styles.errorCard}>
-          <TouchableOpacity
-            style={styles.cross}
-            onPress={() => {
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          <StatusBar barStyle="light-content" />
+          <Image
+            style={styles.loginImage}
+            source={{
+              uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1734536854/medplus/biif68j04kajkkwqub0r.png",
+            }}
+          />
+          {getError ? (
+            <View style={styles.errorCard}>
+              <TouchableOpacity
+                style={styles.cross}
+                onPress={() => {
+                  setError(false);
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>X</Text>
+              </TouchableOpacity>
+              <Text style={styles.errorCardText}>{throwError}</Text>
+            </View>
+          ) : null}
+          <CustomBox
+            placeholder={"Email"}
+            boxColor={"dodgerblue"}
+            focusColor={"#e65c40"}
+            keyboardType="email-address"
+            boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+            inputStyle={{
+              fontWeight: "bold",
+              color: "#30302e",
+              paddingLeft: 20,
+              borderRadius: 40,
+            }}
+            labelConfig={{
+              text: "Email",
+              style: {
+                color: "#0e0e21",
+                fontWeight: "bold",
+              },
+            }}
+            requiredConfig={{
+              text: <Text>{emailError}</Text>,
+            }}
+            values={getEmailId}
+            onChangeText={(value) => {
+              setEmailId(value);
               setError(false);
+              setEmailError("");
+            }}
+          />
+          <CustomBox
+            placeholder={"Password"}
+            toggle={true}
+            boxColor={"dodgerblue"}
+            focusColor={"#e65c40"}
+            boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+            inputStyle={{
+              fontWeight: "bold",
+              color: "#30302e",
+              paddingLeft: 20,
+              borderRadius: 40,
+            }}
+            labelConfig={{
+              text: "Password",
+              style: {
+                color: "#0e0e21",
+                fontWeight: "bold",
+              },
+            }}
+            requiredConfig={{
+              text: <Text>{passwordError}</Text>,
+            }}
+            values={getPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              setError(false);
+              setPasswordError("");
+            }}
+          />
+          {/* ForgotPassword */}
+          <TouchableOpacity
+            style={styles.forgotBtn}
+            onPress={() => {
+              router.push("/auth/resetPassword");
             }}
           >
-            <Text style={{ color: "white", fontWeight: "bold" }}>X</Text>
+            <Text style={styles.forgotBtnText}>Forgot Password?</Text>
           </TouchableOpacity>
-          <Text style={styles.errorCardText}>{throwError}</Text>
+
+          {/* Login Button */}
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={loginFunction}
+            disabled={getDisabled}
+          >
+            <Text style={styles.loginBtnText}>LogIn</Text>
+            {loading && loading ? (
+              <ActivityIndicator style={styles.indicator} color={"white"} />
+            ) : null}
+          </TouchableOpacity>
+
+          {/* Register Button */}
+          <View style={styles.createAccount}>
+            <Text style={styles.createAccountText}>
+              {`Don't have an Account? `}
+            </Text>
+            <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+              <Text style={styles.link}>Create!</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      ) : null}
-      <CustomBox
-        placeholder={"Email"}
-        boxColor={"dodgerblue"}
-        focusColor={"#e65c40"}
-        keyboardType="email-address"
-        boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-        inputStyle={{
-          fontWeight: "bold",
-          color: "#30302e",
-          paddingLeft: 20,
-          borderRadius: 40,
-        }}
-        labelConfig={{
-          text: "Email",
-          style: {
-            color: "#0e0e21",
-            fontWeight: "bold",
-          },
-        }}
-        requiredConfig={{
-          text: <Text>{emailError}</Text>,
-        }}
-        values={getEmailId}
-        onChangeText={(value) => {
-          setEmailId(value);
-          setError(false);
-          setEmailError("");
-        }}
-      />
-      <CustomBox
-        placeholder={"Password"}
-        toggle={true}
-        boxColor={"dodgerblue"}
-        focusColor={"#e65c40"}
-        boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-        inputStyle={{
-          fontWeight: "bold",
-          color: "#30302e",
-          paddingLeft: 20,
-          borderRadius: 40,
-        }}
-        labelConfig={{
-          text: "Password",
-          style: {
-            color: "#0e0e21",
-            fontWeight: "bold",
-          },
-        }}
-        requiredConfig={{
-          text: <Text>{passwordError}</Text>,
-        }}
-        values={getPassword}
-        onChangeText={(value) => {
-          setPassword(value);
-          setError(false);
-          setPasswordError("");
-        }}
-      />
-      {/* ForgotPassword */}
-      <TouchableOpacity
-        style={styles.forgotBtn}
-        onPress={() => {
-          router.push("/auth/resetPassword");
-        }}
-      >
-        <Text style={styles.forgotBtnText}>Forgot Password?</Text>
-      </TouchableOpacity>
-
-      {/* Login Button */}
-      <TouchableOpacity
-        style={styles.loginBtn}
-        onPress={loginFunction}
-        disabled={getDisabled}
-      >
-        <Text style={styles.loginBtnText}>LogIn</Text>
-        {loading && loading ? (
-          <ActivityIndicator style={styles.indicator} color={"white"} />
-        ) : null}
-      </TouchableOpacity>
-
-      {/* Register Button */}
-      <View style={styles.createAccount}>
-        <Text style={styles.createAccountText}>
-          {`Don't have an Account? `}
-        </Text>
-        <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-                  <Text style={styles.link}>Create!</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -150,6 +150,8 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
     appointmentIdRef.current = appointmentId;
   }, [appointmentId]);
 
+ 
+
   const handlePaymentSuccess = async (response: any) => {
     setIsSubmitting(false);
     toaster.show({ message: 'Payment successful and appointment confirmed!', type: 'success' });
@@ -164,9 +166,9 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
       }
       console.log('Confirming appointment with ID:', currentAppointmentId);
 
-      await confirmAppointment(currentAppointmentId);
+      await confirmAppointment(currentAppointmentId); // Confirm the appointment
 
-      fetchSchedule(doctorId);
+      // No need to fetch the schedule again, as it should be updated already
     } catch (error) {
       console.error('Error updating appointment status:', error);
       toaster.show({ message: 'Failed to update appointment status.', type: 'error' });

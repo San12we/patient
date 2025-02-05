@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 import React, { useState } from "react";
 import CustomBox from "react-native-customized-box";
@@ -68,236 +69,240 @@ export default function Register() {
   };
 
   return (
-    <View style={{ backgroundColor: "white" }}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={{ paddingTop: 20 }}>
-        <View style={styles.container}>
-          <Image
-            style={styles.registerImage}
-            source={{
-              uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1732035035/medplus/e4nxgjnackg7deiqetgp.jpg",
-            }}
-          />
-          <Formik
-            initialValues={{
-              email: "",
-              password: "",
-              confirmPassword: "",
-              firstName: "",
-              lastName: "",
-            }}
-            validationSchema={RegisterSchema}
-            onSubmit={registerFunction}
-          >
-            {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-            }) => (
-              <View style={styles.form}>
-                {!isVerificationSent ? (
-                  <>
-                    <CustomBox
-                      placeholder={"First Name"}
-                      boxColor={"silver"}
-                      focusColor={"#e07964"}
-                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-                      inputStyle={{
-                        fontWeight: "bold",
-                        color: "#30302e",
-                        paddingLeft: 20,
-                        borderRadius: 40,
-                      }}
-                      labelConfig={{
-                        text: "First Name",
-                        style: {
-                          color: "#0e0e21",
-                          fontWeight: "bold",
-                        },
-                      }}
-                      requiredConfig={{
-                        text: <Text>{touched.firstName && errors.firstName ? errors.firstName : ""}</Text>,
-                        style: {
-                          marginBottom: 10,
-                        },
-                      }}
-                      values={values.firstName}
-                      onChangeText={handleChange("firstName")}
-                      onBlur={handleBlur("firstName")}
-                    />
-                    <CustomBox
-                      placeholder={"Last Name"}
-                      boxColor={"silver"}
-                      focusColor={"#e07964"}
-                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-                      inputStyle={{
-                        fontWeight: "bold",
-                        color: "#30302e",
-                        paddingLeft: 20,
-                        borderRadius: 40,
-                      }}
-                      labelConfig={{
-                        text: "Last Name",
-                        style: {
-                          color: "#0e0e21",
-                          fontWeight: "bold",
-                        },
-                      }}
-                      requiredConfig={{
-                        text: <Text>{touched.lastName && errors.lastName ? errors.lastName : ""}</Text>,
-                        style: {
-                          marginBottom: 10,
-                        },
-                      }}
-                      values={values.lastName}
-                      onChangeText={handleChange("lastName")}
-                      onBlur={handleBlur("lastName")}
-                    />
-                    <CustomBox
-                      placeholder={"Email"}
-                      boxColor={"silver"}
-                      focusColor={"#e07964"}
-                      type={"email"}
-                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-                      inputStyle={{
-                        fontWeight: "bold",
-                        color: "#30302e",
-                        paddingLeft: 20,
-                        borderRadius: 40,
-                      }}
-                      labelConfig={{
-                        text: "Email",
-                        style: {
-                          color: "#0e0e21",
-                          fontWeight: "bold",
-                        },
-                      }}
-                      requiredConfig={{
-                        text: <Text>{touched.email && errors.email ? errors.email : ""}</Text>,
-                        style: {
-                          marginBottom: 10,
-                        },
-                      }}
-                      values={values.email}
-                      onChangeText={handleChange("email")}
-                      onBlur={handleBlur("email")}
-                    />
-                    <CustomBox
-                      placeholder={"Password"}
-                      boxColor={"silver"}
-                      focusColor={"#e07964"}
-                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-                      inputStyle={{
-                        fontWeight: "bold",
-                        color: "#30302e",
-                        paddingLeft: 20,
-                        borderRadius: 40,
-                        overflow: "hidden",
-                      }}
-                      labelConfig={{
-                        text: "Password",
-                        style: {
-                          color: "#0e0e21",
-                          fontWeight: "bold",
-                        },
-                      }}
-                      toggle={true}
-                      requiredConfig={{
-                        text: <Text>{touched.password && errors.password ? errors.password : ""}</Text>,
-                        style: {
-                          marginBottom: 10,
-                        },
-                      }}
-                      values={values.password}
-                      onChangeText={handleChange("password")}
-                      onBlur={handleBlur("password")}
-                    />
-                    <CustomBox
-                      placeholder={"Confirm Password"}
-                      boxColor={"silver"}
-                      focusColor={"#e07964"}
-                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-                      inputStyle={{
-                        fontWeight: "bold",
-                        color: "#30302e",
-                        paddingLeft: 20,
-                        borderRadius: 40,
-                        overflow: "hidden",
-                      }}
-                      labelConfig={{
-                        text: "Confirm Password",
-                        style: {
-                          color: "#0e0e21",
-                          fontWeight: "bold",
-                        },
-                      }}
-                      toggle={true}
-                      requiredConfig={{
-                        text: <Text>{touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""}</Text>,
-                        style: {
-                          marginBottom: 10,
-                        },
-                      }}
-                      values={values.confirmPassword}
-                      onChangeText={handleChange("confirmPassword")}
-                      onBlur={handleBlur("confirmPassword")}
-                    />
-                    <TouchableOpacity
-                      style={styles.registerbtn}
-                      onPress={handleSubmit}
-                    >
-                      <Text style={styles.registerBtnText}>Register</Text>
-                      {loading && loading ? (
-                        <ActivityIndicator style={styles.indicator} color={"white"} />
-                      ) : null}
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <CustomBox
-                      placeholder={"Verification Code"}
-                      boxColor={"silver"}
-                      focusColor={"#e07964"}
-                      boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-                      inputStyle={{
-                        fontWeight: "bold",
-                        color: "#30302e",
-                        paddingLeft: 20,
-                        borderRadius: 40,
-                      }}
-                      labelConfig={{
-                        text: "Verification Code",
-                        style: {
-                          color: "#0e0e21",
-                          fontWeight: "bold",
-                        },
-                      }}
-                      values={verificationCode}
-                      onChangeText={setVerificationCode}
-                    />
-                    <TouchableOpacity
-                      style={styles.registerbtn}
-                      onPress={verifyEmail}
-                    >
-                      <Text style={styles.registerBtnText}>Verify Email</Text>
-                    </TouchableOpacity>
-                  </>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ backgroundColor: "white" }}>
+          <StatusBar barStyle="light-content" />
+          <ScrollView style={{ paddingTop: 20 }}>
+            <View style={styles.container}>
+              <Image
+                style={styles.registerImage}
+                source={{
+                  uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1732035035/medplus/e4nxgjnackg7deiqetgp.jpg",
+                }}
+              />
+              <Formik
+                initialValues={{
+                  email: "",
+                  password: "",
+                  confirmPassword: "",
+                  firstName: "",
+                  lastName: "",
+                }}
+                validationSchema={RegisterSchema}
+                onSubmit={registerFunction}
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View style={styles.form}>
+                    {!isVerificationSent ? (
+                      <>
+                        <CustomBox
+                          placeholder={"First Name"}
+                          boxColor={"silver"}
+                          focusColor={"#e07964"}
+                          boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                          inputStyle={{
+                            fontWeight: "bold",
+                            color: "#30302e",
+                            paddingLeft: 20,
+                            borderRadius: 40,
+                          }}
+                          labelConfig={{
+                            text: "First Name",
+                            style: {
+                              color: "#0e0e21",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          requiredConfig={{
+                            text: <Text>{touched.firstName && errors.firstName ? errors.firstName : ""}</Text>,
+                            style: {
+                              marginBottom: 10,
+                            },
+                          }}
+                          values={values.firstName}
+                          onChangeText={handleChange("firstName")}
+                          onBlur={handleBlur("firstName")}
+                        />
+                        <CustomBox
+                          placeholder={"Last Name"}
+                          boxColor={"silver"}
+                          focusColor={"#e07964"}
+                          boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                          inputStyle={{
+                            fontWeight: "bold",
+                            color: "#30302e",
+                            paddingLeft: 20,
+                            borderRadius: 40,
+                          }}
+                          labelConfig={{
+                            text: "Last Name",
+                            style: {
+                              color: "#0e0e21",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          requiredConfig={{
+                            text: <Text>{touched.lastName && errors.lastName ? errors.lastName : ""}</Text>,
+                            style: {
+                              marginBottom: 10,
+                            },
+                          }}
+                          values={values.lastName}
+                          onChangeText={handleChange("lastName")}
+                          onBlur={handleBlur("lastName")}
+                        />
+                        <CustomBox
+                          placeholder={"Email"}
+                          boxColor={"silver"}
+                          focusColor={"#e07964"}
+                          type={"email"}
+                          boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                          inputStyle={{
+                            fontWeight: "bold",
+                            color: "#30302e",
+                            paddingLeft: 20,
+                            borderRadius: 40,
+                          }}
+                          labelConfig={{
+                            text: "Email",
+                            style: {
+                              color: "#0e0e21",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          requiredConfig={{
+                            text: <Text>{touched.email && errors.email ? errors.email : ""}</Text>,
+                            style: {
+                              marginBottom: 10,
+                            },
+                          }}
+                          values={values.email}
+                          onChangeText={handleChange("email")}
+                          onBlur={handleBlur("email")}
+                        />
+                        <CustomBox
+                          placeholder={"Password"}
+                          boxColor={"silver"}
+                          focusColor={"#e07964"}
+                          boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                          inputStyle={{
+                            fontWeight: "bold",
+                            color: "#30302e",
+                            paddingLeft: 20,
+                            borderRadius: 40,
+                            overflow: "hidden",
+                          }}
+                          labelConfig={{
+                            text: "Password",
+                            style: {
+                              color: "#0e0e21",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          toggle={true}
+                          requiredConfig={{
+                            text: <Text>{touched.password && errors.password ? errors.password : ""}</Text>,
+                            style: {
+                              marginBottom: 10,
+                            },
+                          }}
+                          values={values.password}
+                          onChangeText={handleChange("password")}
+                          onBlur={handleBlur("password")}
+                        />
+                        <CustomBox
+                          placeholder={"Confirm Password"}
+                          boxColor={"silver"}
+                          focusColor={"#e07964"}
+                          boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                          inputStyle={{
+                            fontWeight: "bold",
+                            color: "#30302e",
+                            paddingLeft: 20,
+                            borderRadius: 40,
+                            overflow: "hidden",
+                          }}
+                          labelConfig={{
+                            text: "Confirm Password",
+                            style: {
+                              color: "#0e0e21",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          toggle={true}
+                          requiredConfig={{
+                            text: <Text>{touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""}</Text>,
+                            style: {
+                              marginBottom: 10,
+                            },
+                          }}
+                          values={values.confirmPassword}
+                          onChangeText={handleChange("confirmPassword")}
+                          onBlur={handleBlur("confirmPassword")}
+                        />
+                        <TouchableOpacity
+                          style={styles.registerbtn}
+                          onPress={handleSubmit}
+                        >
+                          <Text style={styles.registerBtnText}>Register</Text>
+                          {loading && loading ? (
+                            <ActivityIndicator style={styles.indicator} color={"white"} />
+                          ) : null}
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <>
+                        <CustomBox
+                          placeholder={"Verification Code"}
+                          boxColor={"silver"}
+                          focusColor={"#e07964"}
+                          boxStyle={{ borderRadius: 40, borderWidth: 2 }}
+                          inputStyle={{
+                            fontWeight: "bold",
+                            color: "#30302e",
+                            paddingLeft: 20,
+                            borderRadius: 40,
+                          }}
+                          labelConfig={{
+                            text: "Verification Code",
+                            style: {
+                              color: "#0e0e21",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          values={verificationCode}
+                          onChangeText={setVerificationCode}
+                        />
+                        <TouchableOpacity
+                          style={styles.registerbtn}
+                          onPress={verifyEmail}
+                        >
+                          <Text style={styles.registerBtnText}>Verify Email</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                    <View style={styles.footer}>
+                      <Text>Already have an account?</Text>
+                      <TouchableOpacity onPress={() => router.push("/auth/login")}>
+                        <Text style={styles.link}> Login</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 )}
-                <View style={styles.footer}>
-                  <Text>Already have an account?</Text>
-                  <TouchableOpacity onPress={() => router.push("/auth/login")}>
-                    <Text style={styles.link}> Login</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </Formik>
+              </Formik>
+            </View>
+          </ScrollView>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
