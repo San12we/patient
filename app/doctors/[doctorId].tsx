@@ -22,6 +22,7 @@ import Doctors from '../../components/client/Doctors';
 import useSchedule from '../../hooks/useSchedule';
 import useInsurance from '../../hooks/useInsurance';
 import axios from 'axios';
+import UserBookingSection from '../../components/UserBookingSection'; // Import UserBookingSection
 
 type Slot = {
   _id: string;
@@ -35,7 +36,7 @@ const DoctorProfile: React.FC = () => {
   const router = useRouter();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string; isBooked: boolean } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string; isBooked: boolean; date: string } | null>(null);
   const userId = useSelector((state) => state.auth.user.user._id);
   const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
@@ -44,6 +45,7 @@ const DoctorProfile: React.FC = () => {
   const [userInsurance, setUserInsurance] = useState<string | null>(null);
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
+  const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false); // Add state for insurance acceptance
 
   useEffect(() => {
     const fetchUserInsurance = async () => {
@@ -53,6 +55,7 @@ const DoctorProfile: React.FC = () => {
           const data = response.data;
           setUserInsurance(data.insuranceProvider);
           console.log('User Insurance from server:', data);
+          setIsInsuranceAccepted(availableInsurances.some((insurance) => insurance.name === data.insuranceProvider)); // Set insurance acceptance state
         }
       } catch (error) {
         console.error('Error fetching user insurance data from server:', error);
@@ -60,7 +63,7 @@ const DoctorProfile: React.FC = () => {
     };
 
     fetchUserInsurance();
-  }, [userId]);
+  }, [userId, availableInsurances]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -72,7 +75,7 @@ const DoctorProfile: React.FC = () => {
         router.back();
       } else {
         console.log('Selected Doctor:', doctor);
-        fetchSchedule(); // Fetch the schedule when the component mounts
+        fetchSchedule();
       }
     }
   }, [doctor, router, isMounted]);
@@ -122,13 +125,16 @@ const DoctorProfile: React.FC = () => {
   };
 
   const getSlotsForSelectedDay = () => {
-    return schedule[selectedDay] || [];
+    const today = moment().startOf('day');
+    return schedule[selectedDay]?.filter(slot => moment(`${slot.date} ${slot.startTime}`, 'YYYY-MM-DD HH:mm').isSameOrAfter(today)) || [];
   };
+
+  const isToday = (day: string) => moment().format('dddd') === day;
+
+  const isTodayOrFuture = (day: string) => moment(day, 'dddd').isSameOrAfter(moment(), 'day');
 
   const slotsForSelectedDate = getSlotsForSelectedDate();
   const slotsForSelectedDay = getSlotsForSelectedDay();
-
-  const isToday = (day: string) => moment().format('dddd') === day;
 
   return (
     <View style={styles.container}>
@@ -180,16 +186,19 @@ const DoctorProfile: React.FC = () => {
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => setSelectedDay(item)}
+                onPress={() => isTodayOrFuture(item) && setSelectedDay(item)}
                 style={[
                   styles.dayButton,
                   selectedDay === item ? styles.selectedDayButton : null,
+                  !isTodayOrFuture(item) ? styles.disabledDayButton : null,
                 ]}
+                disabled={!isTodayOrFuture(item)}
               >
                 <Text
                   style={[
                     styles.dayText,
                     selectedDay === item ? styles.selectedDayText : null,
+                    !isTodayOrFuture(item) ? styles.disabledDayText : null,
                   ]}
                 >
                   {item}
@@ -213,7 +222,7 @@ const DoctorProfile: React.FC = () => {
               keyExtractor={(item) => item._id}
               renderItem={({ item }) => {
                 const slotTime = moment(`${item.date} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
-                const isPast = isToday(selectedDay) && slotTime.isBefore(moment());
+                const isPast = slotTime.isBefore(moment());
 
                 return (
                   <TouchableOpacity
@@ -280,13 +289,21 @@ const DoctorProfile: React.FC = () => {
           </View>
         )}
 
-        <BookingSection
-          doctorId={doctor._id}
-          consultationFee={doctor.consultationFee || 'N/A'}
-          selectedTimeSlot={selectedTimeSlot}
-          selectedInsurance={selectedInsurance}
-        />
-
+        {isInsuranceAccepted ? (
+          <UserBookingSection
+            doctorId={doctor._id}
+            consultationFee={doctor.consultationFee || 'N/A'}
+            selectedTimeSlot={selectedTimeSlot}
+            selectedInsurance={selectedInsurance}
+          />
+        ) : (
+          <BookingSection
+            doctorId={doctor._id}
+            consultationFee={doctor.consultationFee || 'N/A'}
+            selectedTimeSlot={selectedTimeSlot}
+            selectedInsurance={selectedInsurance}
+          />
+        )}
 
         <Doctors excludeDoctorId={doctor.id} />
        
@@ -404,16 +421,22 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginHorizontal: 5,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#ffffff',
   },
   selectedDayButton: {
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.PRIMARY,
   },
   dayText: {
     fontSize: 14,
-    color: '#fff',
+    color: '#333',
   },
   selectedDayText: {
     fontWeight: 'bold',
+  },
+  disabledDayButton: {
+    backgroundColor: Colors.disabledBackground,
+  },
+  disabledDayText: {
+    color: Colors.disabledText,
   },
 });

@@ -52,15 +52,14 @@ function AppWrapper() {
           options={{ title: "Edit Profile", headerShown: false }} 
         />
         <Stack.Screen 
-          name="(routes)/insurance" 
+          name="(routes)/insurance/[insuranceId]" 
           options={{ 
-            title: "Welcome", 
+            title: "Insurance Details", 
             headerShown: false,
             headerStyle: { backgroundColor: '#f4511e' },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold' }
           }} 
-
         />
         <Stack.Screen 
           name="(routes)/[slug]" 

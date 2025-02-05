@@ -10,7 +10,7 @@ import { useToast } from 'react-native-paper-toast';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { fetchSubaccountCode, bookAppointment, confirmAppointment } from '../utils/bookingUtils';
 
-const BookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string } | null }> = ({
+const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string; date: string } | null }> = ({
   doctorId,
   consultationFee,
   selectedInsurance,
@@ -19,9 +19,6 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [userInsurance, setUserInsurance] = useState<string | null>(null);
-  const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false);
-  const [acceptedInsurances, setAcceptedInsurances] = useState<string[]>(['Tausi Assurance Company Limited', 'Other Insurance Company']);
 
   const user = useSelector(selectUser);
   const userId = user.user?._id;
@@ -29,65 +26,49 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
   const patientName = user.user?.username || user.name;
   const toaster = useToast();
 
-  useEffect(() => {
-    const fetchUserInsurance = async () => {
-      try {
-        const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
-        if (response.status === 200) {
-          const data = response.data;
-          setUserInsurance(data.insuranceProvider);
-          setIsInsuranceAccepted(acceptedInsurances.includes(data.insuranceProvider));
-        }
-      } catch (error) {
-        console.error('Error fetching user insurance data:', error);
-      }
-    };
+  const handleBookWithInsurance = async () => {
+    console.log('Proceed with Insurance button pressed');
 
-    fetchUserInsurance();
-  }, [userId, selectedInsurance]);
+    setIsSubmitting(true);
+    toaster.show({ message: 'Booking appointment with insurance...', type: 'success' });
 
-  const handleBookPress = async (withInsurance: boolean) => {
-    console.log(withInsurance ? 'Proceed with Insurance button pressed' : 'Proceed to Payment button pressed');
+    try {
+      const selectedDateTime = moment(`${selectedTimeSlot?.date} ${selectedTimeSlot?.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
+      const newAppointmentId = await bookAppointment(
+        doctorId,
+        userId,
+        patientName,
+        selectedDateTime.toDate(), // Use the actual selected date
+        selectedTimeSlot?.id ?? null, // Ensure timeSlotId is either a string or null
+        selectedInsurance,
+        null,
+        userEmail,
+        consultationFee,
+        true, // withInsurance is true
+        selectedTimeSlot?.time // Include the time in the payload
+      );
 
-    if (isInsuranceAccepted) {
-      // If insurance is accepted, proceed without selecting a time slot
-      setIsSubmitting(true);
-      toaster.show({ message: 'Booking appointment with insurance...', type: 'success' });
-
-      try {
-        const newAppointmentId = await bookAppointment(
-          doctorId,
-          userId,
-          patientName,
-          new Date(),
-          selectedTimeSlot?.id ?? null, // Ensure timeSlotId is either a string or null
-          selectedInsurance,
-          null,
-          userEmail,
-          consultationFee,
-          withInsurance,
-          selectedTimeSlot?.time // Include the time in the payload
-        );
-
-        setAppointmentId(newAppointmentId);
-        toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
-        setIsSubmitting(false);
-        return;
-      } catch (error) {
-        console.error('Failed to book appointment:', error);
-        toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
-        setIsSubmitting(false);
-        return;
-      }
+      setAppointmentId(newAppointmentId);
+      toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Failed to book appointment:', error);
+      toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
+      setIsSubmitting(false);
     }
+  };
+
+  const handleBookWithoutInsurance = async () => {
+    console.log('Proceed to Payment button pressed');
 
     if (!selectedTimeSlot) {
       toaster.show({ message: 'Please select a time slot.', type: 'error' });
       return;
     }
 
+    // Ensure the date and time are correctly formatted and combined
     const selectedDateTime = moment(`${selectedTimeSlot.date} ${selectedTimeSlot.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
-    if (selectedTimeSlot && selectedDateTime.isBefore(moment())) {
+    if (selectedDateTime.isBefore(moment())) {
       toaster.show({ message: 'Cannot book an appointment in the past.', type: 'error' });
       return;
     }
@@ -105,7 +86,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
 
     try {
       const subaccountCode = await fetchSubaccountCode(doctorId); // Changed userId to doctorId
-      if (!subaccountCode && !withInsurance) {
+      if (!subaccountCode) {
         throw new Error('Missing subaccount code.');
       }
       if (!userEmail) {
@@ -125,7 +106,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
         subaccountCode,
         userEmail,
         consultationFee,
-        withInsurance,
+        false, // withInsurance is false
         selectedTimeSlot?.time // Include the time in the payload
       );
 
@@ -164,9 +145,9 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
       }
       console.log('Confirming appointment with ID:', currentAppointmentId);
 
-      await confirmAppointment(currentAppointmentId);
+      await confirmAppointment(currentAppointmentId); // Confirm the appointment
 
-      fetchSchedule(doctorId);
+      // No need to fetch the schedule again, as it should be updated already
     } catch (error) {
       console.error('Error updating appointment status:', error);
       toaster.show({ message: 'Failed to update appointment status.', type: 'error' });
@@ -180,23 +161,37 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.bookButton} onPress={() => handleBookPress(isInsuranceAccepted)} disabled={isSubmitting}>
-        <Text style={styles.bookButtonText}>
-          {isInsuranceAccepted ? 'Proceed with Insurance' : 'Book Appointment'}
-        </Text>
-      </TouchableOpacity>
-
-      {!isInsuranceAccepted && (
-        <Paystack
-          paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
-          billingEmail={userEmail}
-          amount={consultationFee}
-          currency='KES'
-          onCancel={handlePaymentCancel}
-          onSuccess={handlePaymentSuccess}
-          ref={paystackWebViewRef}
-        />
+      {selectedInsurance ? (
+        <TouchableOpacity
+          style={styles.bookButton}
+          onPress={handleBookWithInsurance}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.bookButtonText}>
+            Proceed with Insurance
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.bookButton}
+          onPress={handleBookWithoutInsurance}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.bookButtonText}>
+            Proceed to Payment
+          </Text>
+        </TouchableOpacity>
       )}
+
+      <Paystack
+        paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
+        billingEmail={userEmail}
+        amount={consultationFee}
+        currency='KES'
+        onCancel={handlePaymentCancel}
+        onSuccess={handlePaymentSuccess}
+        ref={paystackWebViewRef}
+      />
     </View>
   );
 };
@@ -223,5 +218,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BookingSection;
-
+export default UserBookingSection;

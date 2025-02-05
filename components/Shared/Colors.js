@@ -14,4 +14,10 @@ export default {
     background: '#F8F9FA',
     textPrimary: '#002D62', 
     textSecondary: '#a6a4a4',
+    disabledBackground: '#F8F9FA',
+    debugger: '#FF0000',
+    disabledText: '#a6a4a4',
+    error: '#FF0000',
+    success: '#4BB543',
+    
 }
