@@ -8,8 +8,10 @@ import {
   View,
   KeyboardAvoidingView,
   ScrollView,
+  Animated,
+  Easing,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CustomBox from "react-native-customized-box";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
@@ -25,13 +27,35 @@ export default function Login({ navigation }) {
   const [getError, setError] = useState(false);
   const [throwError, setThrowError] = useState("");
   const [getDisabled, setDisabled] = useState(false);
-
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const spinValue = useRef(new Animated.Value(0)).current; // For spinner animation
+
   const dispatch = useDispatch();
   const router = useRouter();
+
+  // Spinner animation
+  useEffect(() => {
+    if (loading) {
+      Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      spinValue.setValue(0); // Reset animation when loading is false
+    }
+  }, [loading]);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
   const loginFunction = async () => {
     setDisabled(true);
@@ -54,7 +78,6 @@ export default function Login({ navigation }) {
         console.log('Sending token to the backend:', token);
         if (token) {
           // Send the token to the backend
-         
           await fetch('https://medplus-health.onrender.com/api/push-token', {
             method: 'POST',
             headers: {
@@ -179,9 +202,9 @@ export default function Login({ navigation }) {
             disabled={getDisabled}
           >
             <Text style={styles.loginBtnText}>LogIn</Text>
-            {loading && loading ? (
-              <ActivityIndicator style={styles.indicator} color={"white"} />
-            ) : null}
+            {loading && (
+              <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]} />
+            )}
           </TouchableOpacity>
 
           {/* Register Button */}
@@ -206,12 +229,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
   link: {
     color: Colors.primary,
   },
-
-
   errorCard: {
     width: 300,
     height: 50,
@@ -240,9 +260,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: 200,
     height: 200,
-  },
-  header: {
-    fontSize: 25,
   },
   loginBtn: {
     marginTop: 10,
@@ -279,17 +296,13 @@ const styles = StyleSheet.create({
   createAccountText: {
     color: "grey",
   },
-  registerBtn: {},
-  registerBtnText: {
-    color: "#e65c40",
-    textDecorationLine: "underline",
-  },
-  myLogo: {
-    width: 100,
-    height: 70,
-    borderRadius: 40,
-    left: 150,
-    top: 10,
-    marginBottom: 10,
+  spinner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "white",
+    borderTopColor: "transparent",
+    marginLeft: 10,
   },
 });

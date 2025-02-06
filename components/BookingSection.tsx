@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import moment from 'moment';
 import axios from 'axios';
+import io from 'socket.io-client';
 
 import Colors from './Shared/Colors';
 import { useSelector } from 'react-redux';
@@ -28,6 +29,22 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
   const userEmail = user.user?.email;
   const patientName = user.user?.username || user.name;
   const toaster = useToast();
+
+  const socket = useRef(null);
+
+  useEffect(() => {
+    socket.current = io('https://medplus-health.onrender.com'); // Replace with your backend URL
+
+    socket.current.on('slotUpdated', (data) => {
+      console.log('Slot updated:', data);
+      // Update the state of the slots here based on the received data
+      // For example, you can fetch the updated schedule or update the specific slot in the state
+    });
+
+    return () => {
+      socket.current.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchUserInsurance = async () => {

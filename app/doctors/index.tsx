@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect } from 'react';
 import { useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDoctors } from '../../app/(redux)/doctorSlice';
+import { getDoctors } from '../../app/(redux)/doctorSlice';
 import { RootState } from '../../app/(redux)/store';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
@@ -24,7 +24,7 @@ const DoctorProfile: React.FC = () => {
   const [selectedInsurance, setSelectedInsurance] = useState('');
 
   useEffect(() => {
-    dispatch(fetchDoctors()); 
+    dispatch(getDoctors()); 
   }, [dispatch]);
 
   if (loading) {

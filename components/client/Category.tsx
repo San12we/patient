@@ -1,13 +1,13 @@
-import { View, Text, Image, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import SubHeading from './SubHeading';
 import Colors from '../Shared/Colors';
-import GlobalApi from '../../Services/GlobalApi';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router'; // Reintroduce this import
 
 interface CategoryProps {
-  // Remove searchQuery prop
+  categories: Category[];
+  loading: boolean;
+  error: string | null;
 }
 
 interface Category {
@@ -15,77 +15,53 @@ interface Category {
   icon: string;
 }
 
-export default function Category() {
-  const [categoryList, setCategoryList] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+const Category: React.FC<CategoryProps> = ({ categories, loading, error }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null); // State to track active index
   const router = useRouter(); // Reintroduce this line
 
-  useEffect(() => {
-    getCategories();
-  }, []);
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
-  const getCategories = async () => {
-    try {
-      // Check AsyncStorage for cached categories
-      const cachedCategories = await AsyncStorage.getItem('categories');
-      if (cachedCategories) {
-        setCategoryList(JSON.parse(cachedCategories));
-        setLoading(false);
-        return;
-      }
-
-      // Fetch categories from API if not in AsyncStorage
-      const resp = await GlobalApi.getCategories();
-      const categories: Category[] = resp.data || [];
-      setCategoryList(categories);
-
-      // Store categories in AsyncStorage
-      await AsyncStorage.setItem('categories', JSON.stringify(categories));
-    } catch (error) {
-      setCategoryList([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (error) {
+    return <Text>Error loading categories: {error}</Text>;
+  }
 
   return (
     <View style={{ marginTop: 10 }}>
       <SubHeading subHeadingTitle={"Let's Find You a Specialist"} />
-      {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={Colors.PRIMARY} />
-        </View>
-      ) : (
-        <FlatList
-          data={categoryList}
-          horizontal={true} // Enable horizontal scrolling
-          showsHorizontalScrollIndicator={false} // Hide horizontal scroll indicator
-          style={styles.flatList}
-          contentContainerStyle={styles.contentContainer}
-          renderItem={({ item, index }: { item: Category; index: number }) => (
-            <TouchableOpacity 
-              style={styles.categoryItem} 
-              onPress={() => {
-                setActiveIndex(index); // Set active index on press
-                router.push('/search'); // Navigate to the search screen without parameters
-              }}
-            >
-              <View style={activeIndex == index ? styles.categoryIconContainerActive : styles.categoryIconContainer}>
-                <Image
-                  source={{ uri: item.icon }}
-                  style={styles.categoryIcon}
-                />
-              </View>
-              <Text style={activeIndex == index ? styles.categoryBtnActive : styles.categoryBtnTxt}>{item.name}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item.name}
-        />
-      )}
+      <FlatList
+        data={categories}
+        horizontal={true} // Enable horizontal scrolling
+        showsHorizontalScrollIndicator={false} // Hide horizontal scroll indicator
+        style={styles.flatList}
+        contentContainerStyle={styles.contentContainer}
+        renderItem={({ item, index }: { item: Category; index: number }) => (
+          <TouchableOpacity 
+            style={styles.categoryItem} 
+            onPress={() => {
+              setActiveIndex(index); // Set active index on press
+              router.push('/search'); // Navigate to the search screen without parameters
+            }}
+          >
+            <View style={activeIndex == index ? styles.categoryIconContainerActive : styles.categoryIconContainer}>
+              <Image
+                source={{ uri: item.icon }}
+                style={styles.categoryIcon}
+              />
+            </View>
+            <Text style={activeIndex == index ? styles.categoryBtnActive : styles.categoryBtnTxt}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item) => item.name}
+      />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   centered: {
@@ -127,4 +103,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: Colors.PRIMARY, // Change text color for active state
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
+
+export default Category;

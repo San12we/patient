@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
@@ -23,6 +23,10 @@ import useSchedule from '../../hooks/useSchedule';
 import useInsurance from '../../hooks/useInsurance';
 import axios from 'axios';
 import UserBookingSection from '../../components/UserBookingSection'; // Import UserBookingSection
+import { getDoctors, setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import actions
+import { BlurView } from 'expo-blur'; // Import BlurView from expo-blur
+import CustomLoadingScreen from '../../components/CustomLoadingScreen'; // Import CustomLoadingScreen
+import io from 'socket.io-client';
 
 type Slot = {
   _id: string;
@@ -33,12 +37,14 @@ type Slot = {
 
 const DoctorProfile: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
+  const dispatch = useDispatch();
   const router = useRouter();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string; isBooked: boolean; date: string } | null>(null);
   const userId = useSelector((state) => state.auth.user.user._id);
-  const { schedule, fetchSchedule, updateSlot, loading, error } = useSchedule(doctor._id, userId);
+  const { schedule, fetchSchedule, updateSlot, loading: scheduleLoading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
   const [availableInsurances, setAvailableInsurances] = useState<any[]>([]);
   const [selectedInsurance, setSelectedInsurance] = useState<string | undefined>(undefined);
@@ -46,39 +52,37 @@ const DoctorProfile: React.FC = () => {
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
   const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false); // Add state for insurance acceptance
+  const socket = useRef(null);
 
   useEffect(() => {
-    const fetchUserInsurance = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
-        if (response.status === 200) {
-          const data = response.data;
-          setUserInsurance(data.insuranceProvider);
-          console.log('User Insurance from server:', data);
-          setIsInsuranceAccepted(availableInsurances.some((insurance) => insurance.name === data.insuranceProvider)); // Set insurance acceptance state
+        await dispatch<any>(getDoctors());
+        if (!doctor) {
+          router.back();
+        } else {
+          dispatch(setSelectedDoctor(doctor));
+          await fetchSchedule();
+          const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
+          if (response.status === 200) {
+            const data = response.data;
+            setUserInsurance(data.insuranceProvider);
+            setIsInsuranceAccepted(availableInsurances.some((insurance) => insurance.name === data.insuranceProvider));
+          }
         }
       } catch (error) {
-        console.error('Error fetching user insurance data from server:', error);
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUserInsurance();
-  }, [userId, availableInsurances]);
+    fetchData();
+  }, [dispatch, doctor, router, userId, availableInsurances]);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (isMounted) {
-      if (!doctor) {
-        router.back();
-      } else {
-        console.log('Selected Doctor:', doctor);
-        fetchSchedule();
-      }
-    }
-  }, [doctor, router, isMounted]);
 
   useEffect(() => {
     const mappedInsurances = doctor.insuranceProviders
@@ -86,8 +90,6 @@ const DoctorProfile: React.FC = () => {
       .filter((provider) => provider);
 
     setAvailableInsurances(mappedInsurances);
-    console.log('Mapped Insurances in DoctorProfile:', mappedInsurances);
-    console.log('Accepted Insurances:', mappedInsurances.map((insurance) => insurance.name));
   }, [doctor.insuranceProviders, insuranceProviders]);
 
   useEffect(() => {
@@ -98,15 +100,21 @@ const DoctorProfile: React.FC = () => {
   }, [userInsurance, availableInsurances]);
 
   useEffect(() => {
-    console.log('Schedule data:', schedule); // Log the schedule data
-  }, [schedule]);
+    socket.current = io('https://medplus-health.onrender.com'); // Replace with your backend URL
 
-  if (!doctor) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-      </View>
-    );
+    socket.current.on('slotUpdated', (data) => {
+      console.log('Slot updated:', data);
+      // Fetch the updated schedule or update the specific slot in the state
+      fetchSchedule();
+    });
+
+    return () => {
+      socket.current.disconnect();
+    };
+  }, [fetchSchedule]);
+
+  if (loading) {
+    return <CustomLoadingScreen />;
   }
 
   const profileImageUri =
@@ -138,6 +146,7 @@ const DoctorProfile: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {loading && <CustomLoadingScreen />}
        <StatusBar barStyle="dark-content" />
         <View style={styles.heroContainer}>
           <Image source={{ uri: profileImageUri }} style={styles.heroImage} />
@@ -438,5 +447,11 @@ const styles = StyleSheet.create({
   },
   disabledDayText: {
     color: Colors.disabledText,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent background
   },
 });

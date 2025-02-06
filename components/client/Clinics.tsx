@@ -10,14 +10,9 @@ import {
 } from 'react-native';
 import SubHeading from '../../components/client/SubHeading';
 import Colors from '../Shared/Colors';
-import * as SplashScreen from 'expo-splash-screen';
 import { useRouter } from 'expo-router';
-import useClinics from '../../hooks/useClinics'; // Import the useClinics hook
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchInsuranceProviders } from '../../app/(redux)/insuranceSlice';
+import { useDispatch } from 'react-redux';
 import { setSelectedClinic } from '../../app/(redux)/clinicSlice'; // Import the setSelectedClinic action
-
-SplashScreen.preventAutoHideAsync();
 
 interface Clinic {
   _id: string;
@@ -28,18 +23,18 @@ interface Clinic {
 }
 
 interface ClinicsProps {
+  clinics: Clinic[];
+  loading: boolean;
+  error: string | null;
 }
 
-const Clinics: React.FC<ClinicsProps> = () => {
+const Clinics: React.FC<ClinicsProps> = ({ clinics, loading, error }) => {
   const router = useRouter();
-  const { clinics, loading, error } = useClinics(); // Use the useClinics hook
-  const insuranceProviders = useSelector((state) => state.insurance.insuranceProviders);
   const dispatch = useDispatch();
   const initialLoad = useRef(true);
 
   useEffect(() => {
     if (initialLoad.current) {
-      SplashScreen.hideAsync();
       initialLoad.current = false;
     }
     console.log("Clinics data:", clinics); // Log the clinics data
@@ -47,12 +42,6 @@ const Clinics: React.FC<ClinicsProps> = () => {
       console.log(`Clinic: ${clinic.name}, Doctors:`, clinic.doctors); // Log each clinic's doctors
     });
   }, [clinics]);
-
-  useEffect(() => {
-    if (insuranceProviders.length === 0) {
-      dispatch(fetchInsuranceProviders());
-    }
-  }, [insuranceProviders, dispatch]);
 
   const handlePress = useCallback((item: Clinic) => {
     console.log("Navigating to clinic with ID:", item._id);

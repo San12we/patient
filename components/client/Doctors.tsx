@@ -1,13 +1,11 @@
-import React, { useRef, useEffect, useMemo } from 'react';
-import { View, FlatList, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import React, { useMemo, useEffect } from 'react';
+import { View, FlatList, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import SubHeading from './SubHeading';
 import Colors from '../../components/Shared/Colors';
-import useInsurance from '../../hooks/useInsurance';
-import { useDoctors } from '../../hooks/useDoctors';
 import { useDispatch } from 'react-redux';
-import { setSelectedDoctor, getDoctors } from '../../app/(redux)/doctorSlice'; // Import the actions
+import { setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import the setSelectedDoctor action
 
 interface Doctor {
   id: string;
@@ -33,29 +31,20 @@ interface Doctor {
 }
 
 interface DoctorsProps {
-  // Remove searchQuery and excludeDoctorId props
+  doctors: Doctor[];
+  error: string | null;
 }
 
-const Doctors: React.FC<DoctorsProps> = () => {
+const Doctors: React.FC<DoctorsProps> = ({ doctors, error }) => {
   const router = useRouter();
-  const { insuranceProviders } = useInsurance();
-  const { doctors, loading, error } = useDoctors();
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(getDoctors()); // Always fetch the latest doctors' data from the API
-  }, [dispatch]);
-
-  useEffect(() => {
-    console.log('Doctors component rendered');
-  });
 
   const handleConsult = (doctor: Doctor) => {
     console.log('Consulting doctor:', doctor);
     dispatch(setSelectedDoctor(doctor)); // Dispatch the selected doctor
     router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
   };
-  
+
   const filteredDoctors = useMemo(() => {
     return doctors; // No filtering based on searchQuery or excludeDoctorId
   }, [doctors]);
@@ -63,14 +52,6 @@ const Doctors: React.FC<DoctorsProps> = () => {
   useEffect(() => {
     console.log('Filtered doctors:', filteredDoctors); // Log the filtered data
   }, [filteredDoctors]);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-      </View>
-    );
-  }
 
   if (error) {
     return <Text>Error loading doctors: {error}</Text>;
