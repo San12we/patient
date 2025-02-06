@@ -83,7 +83,8 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
           userEmail,
           consultationFee,
           withInsurance,
-          selectedTimeSlot?.time // Include the time in the payload
+          selectedTimeSlot?.time, // Include the time in the payload
+          true // Pass true for skipPayment to skip the payment process
         );
 
         setAppointmentId(newAppointmentId);

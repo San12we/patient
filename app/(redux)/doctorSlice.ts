@@ -46,3 +46,4 @@ const doctorSlice = createSlice({
 
 export const { setSelectedDoctor, setDoctorsFromStorage } = doctorSlice.actions; // Export the actions
 export default doctorSlice.reducer;
+export { getDoctors }; // Export the getDoctors function

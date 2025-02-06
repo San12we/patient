@@ -32,7 +32,8 @@ type Slot = {
   _id: string;
   startTime: string;
   endTime: boolean;
-  isBooked: boolean;
+  dayOfWeek: string;
+  slotId: string;
 };
 
 const DoctorProfile: React.FC = () => {
@@ -132,6 +133,8 @@ const DoctorProfile: React.FC = () => {
     return schedule[dayOfWeek] || [];
   };
 
+  const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
   const getSlotsForSelectedDay = () => {
     const today = moment().startOf('day');
     return schedule[selectedDay]?.filter(slot => moment(`${slot.date} ${slot.startTime}`, 'YYYY-MM-DD HH:mm').isSameOrAfter(today)) || [];
@@ -191,23 +194,22 @@ const DoctorProfile: React.FC = () => {
           <Text style={styles.title}>Select a Day</Text>
           <FlatList
             horizontal
-            data={Object.keys(schedule)}
+            data={weekdays}
             keyExtractor={(item) => item}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => isTodayOrFuture(item) && setSelectedDay(item)}
+                onPress={() => setSelectedDay(item)}
                 style={[
                   styles.dayButton,
                   selectedDay === item ? styles.selectedDayButton : null,
-                  !isTodayOrFuture(item) ? styles.disabledDayButton : null,
+                  schedule[item] ? styles.availableDayButton : styles.unavailableDayButton,
                 ]}
-                disabled={!isTodayOrFuture(item)}
               >
                 <Text
                   style={[
                     styles.dayText,
                     selectedDay === item ? styles.selectedDayText : null,
-                    !isTodayOrFuture(item) ? styles.disabledDayText : null,
+                    schedule[item] ? styles.availableDayText : styles.unavailableDayText,
                   ]}
                 >
                   {item}
@@ -220,11 +222,11 @@ const DoctorProfile: React.FC = () => {
 
         <View style={styles.section}>
           <Text style={styles.title}>Available Slots</Text>
-          {loading ? (
+          {scheduleLoading ? (
             <ActivityIndicator size="large" color={Colors.PRIMARY} />
           ) : error ? (
             <Text>Error loading schedule: {error}</Text>
-          ) : (
+          ) : slotsForSelectedDay.length > 0 ? (
             <FlatList
               horizontal
               data={slotsForSelectedDay}
@@ -265,6 +267,8 @@ const DoctorProfile: React.FC = () => {
                 );
               }}
             />
+          ) : (
+            <Text style={styles.noSlotsText}>The doctor is not available for the selected day.</Text>
           )}
         </View>
 
@@ -435,6 +439,12 @@ const styles = StyleSheet.create({
   selectedDayButton: {
     backgroundColor: Colors.PRIMARY,
   },
+  availableDayButton: {
+    backgroundColor: Colors.availableBackground,
+  },
+  unavailableDayButton: {
+    backgroundColor: Colors.unavailableBackground,
+  },
   dayText: {
     fontSize: 14,
     color: '#333',
@@ -442,11 +452,17 @@ const styles = StyleSheet.create({
   selectedDayText: {
     fontWeight: 'bold',
   },
-  disabledDayButton: {
-    backgroundColor: Colors.disabledBackground,
+  availableDayText: {
+    color: Colors.availableText,
   },
-  disabledDayText: {
-    color: Colors.disabledText,
+  unavailableDayText: {
+    color: Colors.unavailableText,
+  },
+  noSlotsText: {
+    fontSize: 16,
+    color: Colors.unavailableText,
+    textAlign: 'center',
+    marginTop: 20,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

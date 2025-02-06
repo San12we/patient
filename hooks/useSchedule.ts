@@ -48,14 +48,18 @@ const useSchedule = (doctorId: string, userId: string): UseScheduleHook => {
           dayToDateMap[dayOfWeek] = date.format('YYYY-MM-DD');
         }
 
-        // Assign dates to each slot
+        // Group slots by dayOfWeek
         const updatedSchedule: Record<string, Slot[]> = {};
-        for (const [day, slots] of Object.entries(scheduleData)) {
-          updatedSchedule[day] = slots.map((slot) => ({
+        scheduleData.forEach((slot: Slot) => {
+          const day = slot.dayOfWeek;
+          if (!updatedSchedule[day]) {
+            updatedSchedule[day] = [];
+          }
+          updatedSchedule[day].push({
             ...slot,
             date: dayToDateMap[day], // Assign the computed date
-          }));
-        }
+          });
+        });
 
         console.log('Processed schedule data:', updatedSchedule); // Log the processed schedule data
         setSchedule(updatedSchedule);

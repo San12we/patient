@@ -89,20 +89,17 @@ const Index: React.FC = () => {
   }
 
   return (
-    // Replace LinearGradient with a View
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.innerContainer}>
-          <SearchBar
-            setSearchQuery={setSearchQuery}
-            onSubmit={handleSearchSubmit}
-          />
-          <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
-          <Doctors doctors={doctors} loading={doctorsLoading} error={doctorsError} />
-          <Clinics clinics={clinics} loading={clinicsLoading} error={clinicsError} />
-        </View>
-      </ScrollView>
-    </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.innerContainer}>
+        <SearchBar
+          setSearchQuery={setSearchQuery}
+          onSubmit={handleSearchSubmit}
+        />
+        <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
+        <Doctors doctors={doctors} loading={doctorsLoading} error={doctorsError} />
+        <Clinics clinics={clinics} loading={clinicsLoading} error={clinicsError} />
+      </View>
+    </ScrollView>
   );
 };
 
@@ -110,17 +107,13 @@ export default Index;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#e3f6f5', // Set the background color
-  },
-  scrollContainer: {
     flexGrow: 1,
-    // Remove backgroundColor to allow the gradient to be visible
+    backgroundColor: '#e3f6f5', // Set the background color
+    padding: 20,
+    paddingBottom: 40, // Add padding to the bottom
   },
   innerContainer: {
     flex: 1,
-    padding: 20,
-    paddingBottom: 40, // Add padding to the bottom
   },
   heading: {
     fontSize: 24,
