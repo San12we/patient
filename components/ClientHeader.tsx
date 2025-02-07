@@ -7,6 +7,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { Badge } from 'react-native-elements';
 import { theme } from '@/constants/theme'; // Import theme
 import Colors from './Shared/Colors';
+import socket from '../Services/socket'; // Import socket instance
 
 const ClientHeader: React.FC = () => {
   const dispatch = useDispatch();
@@ -17,11 +18,28 @@ const ClientHeader: React.FC = () => {
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
+    // Listen for new appointment notifications
+    socket.on('newAppointment', () => {
+      setNotificationCount((prevCount) => prevCount + 1);
+    });
+
+    // Listen for slot updates
+    socket.on('slotUpdated', (data) => {
+      console.log('Slot updated:', data);
+      setNotificationCount((prevCount) => prevCount + 1);
+    });
+
+    // Clean up the connection on component unmount
+    return () => {
+      socket.off('newAppointment');
+      socket.off('slotUpdated');
+    };
+  }, []);
+
+  useEffect(() => {
     return () => {
     };
   }, [user]);
-
-
 
   return (
     <View style={[styles.container, { backgroundColor: '#e3f6f5'}]}>

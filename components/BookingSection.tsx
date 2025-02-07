@@ -9,7 +9,8 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
 import { useToast } from 'react-native-paper-toast';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
-import { fetchSubaccountCode, bookAppointment, confirmAppointment } from '../utils/bookingUtils';
+import { fetchSubaccountCode, bookAppointment } from '../utils/bookingUtils';
+import socket from '../Services/socket';
 
 const BookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string } | null }> = ({
   doctorId,
@@ -30,19 +31,15 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
   const patientName = user.user?.username || user.name;
   const toaster = useToast();
 
-  const socket = useRef(null);
-
   useEffect(() => {
-    socket.current = io('https://medplus-health.onrender.com'); // Replace with your backend URL
-
-    socket.current.on('slotUpdated', (data) => {
+    socket.on('slotUpdated', (data) => {
       console.log('Slot updated:', data);
       // Update the state of the slots here based on the received data
       // For example, you can fetch the updated schedule or update the specific slot in the state
     });
 
     return () => {
-      socket.current.disconnect();
+      socket.off('slotUpdated');
     };
   }, []);
 
@@ -173,22 +170,16 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
     toaster.show({ message: 'Payment successful and appointment confirmed!', type: 'success' });
     console.log('Payment successful:', response);
 
-    try {
-      const currentAppointmentId = appointmentIdRef.current;
-      console.log('State before confirming appointment:', { appointmentId: currentAppointmentId });
+    const currentAppointmentId = appointmentIdRef.current;
+    console.log('State before confirming appointment:', { appointmentId: currentAppointmentId });
 
-      if (!currentAppointmentId) {
-        throw new Error('No appointment ID available for status update.');
-      }
-      console.log('Confirming appointment with ID:', currentAppointmentId);
-
-      await confirmAppointment(currentAppointmentId);
-
-      fetchSchedule(doctorId);
-    } catch (error) {
-      console.error('Error updating appointment status:', error);
-      toaster.show({ message: 'Failed to update appointment status.', type: 'error' });
+    if (!currentAppointmentId) {
+      console.error('No appointment ID available for status update.');
+      return;
     }
+    console.log('Appointment confirmed successfully with ID:', currentAppointmentId);
+
+    fetchSchedule(doctorId);
   };
 
   const handlePaymentCancel = () => {

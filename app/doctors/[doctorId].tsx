@@ -26,7 +26,7 @@ import UserBookingSection from '../../components/UserBookingSection'; // Import 
 import { getDoctors, setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import actions
 import { BlurView } from 'expo-blur'; // Import BlurView from expo-blur
 import CustomLoadingScreen from '../../components/CustomLoadingScreen'; // Import CustomLoadingScreen
-import io from 'socket.io-client';
+import socket from '../../Services/socket';
 
 type Slot = {
   _id: string;
@@ -53,7 +53,6 @@ const DoctorProfile: React.FC = () => {
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
   const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false); // Add state for insurance acceptance
-  const socket = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,16 +100,14 @@ const DoctorProfile: React.FC = () => {
   }, [userInsurance, availableInsurances]);
 
   useEffect(() => {
-    socket.current = io('https://medplus-health.onrender.com'); // Replace with your backend URL
-
-    socket.current.on('slotUpdated', (data) => {
+    socket.on('slotUpdated', (data) => {
       console.log('Slot updated:', data);
       // Fetch the updated schedule or update the specific slot in the state
       fetchSchedule();
     });
 
     return () => {
-      socket.current.disconnect();
+      socket.off('slotUpdated');
     };
   }, [fetchSchedule]);
 
