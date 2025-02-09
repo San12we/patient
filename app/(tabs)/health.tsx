@@ -1,36 +1,49 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, ScrollView, FlatList } from 'react-native';
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchPosts } from '../(redux)/postSlice';
-import { RootState } from '../(redux)/store';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React from 'react';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons, FontAwesome5, Ionicons, Feather } from '@expo/vector-icons';
+import { LineChart, BarChart } from 'react-native-chart-kit';
 
 const health = () => {
-  const dispatch = useDispatch();
-  const { posts, loading } = useSelector((state: RootState) => state.posts);
   const router = useRouter();
 
-  useEffect(() => {
-    if (posts.length === 0) {
-      dispatch(fetchPosts());
-    }
-  }, [dispatch, posts.length]);
-
   const segments = [
-    { title: 'Consultations', route: '/consultation' },
-    { title: 'Labs Reports', route: '/labs' },
-    { title: 'Diagnosis', route: '/diagnosis' },
-    { title: 'Health Monitor', route: '/monitor' },
+    { title: 'Consultations', route: '/consultation', icon: <MaterialIcons name="medical-services" size={24} color="#1dad9b" /> },
+    { title: 'Labs Reports', route: '/labs', icon: <FontAwesome5 name="vial" size={24} color="#1dad9b" /> },
+    { title: 'Diagnosis', route: '/diagnosis', icon: <Ionicons name="document-text" size={24} color="#1dad9b" /> },
+    { title: 'Health Monitor', route: '/monitor', icon: <Feather name="activity" size={24} color="#1dad9b" /> },
   ];
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6200ee" />
-      </View>
-    );
-  }
+  const screenWidth = Dimensions.get('window').width;
+
+  // Lab Data Analysis (Line Chart)
+  const labData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        data: [20, 45, 28, 80, 99, 43],
+        color: (opacity = 1) => `rgba(29, 173, 155, ${opacity})`, // Line color
+        strokeWidth: 2, // Line thickness
+      },
+    ],
+  };
+
+  // Health Metrics (Bar Chart)
+  const healthMetrics = {
+    labels: ['Heart Rate', 'Blood Pressure', 'Glucose', 'Cholesterol'],
+    datasets: [
+      {
+        data: [72, 120, 90, 200],
+        colors: [
+          (opacity = 1) => `rgba(255, 107, 107, ${opacity})`, // Heart Rate
+          (opacity = 1) => `rgba(75, 123, 236, ${opacity})`, // Blood Pressure
+          (opacity = 1) => `rgba(46, 204, 113, ${opacity})`, // Glucose
+          (opacity = 1) => `rgba(230, 126, 34, ${opacity})`, // Cholesterol
+        ],
+      },
+    ],
+  };
 
   return (
     <LinearGradient colors={['#bae8e8', '#faf9f9', '#ffffff', '#1dad9b']} style={styles.background}>
@@ -42,32 +55,62 @@ const health = () => {
               style={styles.segment}
               onPress={() => router.push(segment.route)}
             >
+              {segment.icon}
               <Text style={styles.segmentText}>{segment.title}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-        
-        <FlatList
-          data={posts}
-          horizontal
-          renderItem={({ item }) => (
-            <View style={styles.postContainer}>
-              <TouchableOpacity onPress={() => router.push(`/${item.slug}`)}>
-                <Image
-                  source={{ uri: item.thumbnail }}
-                  style={styles.thumbnail}
-                  onError={(error) => console.log('Error loading image:', error)}
-                />
-              </TouchableOpacity>
-              <View style={styles.nameCategoryContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-              </View>
-            </View>
-          )}
-          keyExtractor={(item, index) => `${item.slug}-${index}`}
-          showsHorizontalScrollIndicator={false}
-          nestedScrollEnabled={true}
-        />
+
+        {/* Lab Data Analysis (Line Chart) */}
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>Lab Data Analysis (Last 6 Months)</Text>
+          <LineChart
+            data={labData}
+            width={screenWidth - 32}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#ffffff',
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(29, 173, 155, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+              propsForDots: {
+                r: '6',
+                strokeWidth: '2',
+                stroke: '#1dad9b',
+              },
+            }}
+            bezier
+            style={styles.chart}
+          />
+        </View>
+
+        {/* Health Metrics (Bar Chart) */}
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>Health Metrics Overview</Text>
+          <BarChart
+            data={healthMetrics}
+            width={screenWidth - 32}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#ffffff',
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+              barColors: healthMetrics.datasets[0].colors,
+            }}
+            style={styles.chart}
+          />
+        </View>
       </View>
     </LinearGradient>
   );
@@ -83,61 +126,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   segmentsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   segment: {
     backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     marginRight: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   segmentText: {
     fontSize: 14,
     fontWeight: '500',
+    marginTop: 8,
   },
-  subtitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
+  chartContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  postContainer: {
-    marginRight: 10,
-    borderRadius: 15,
-    padding: 10,
-    width: 220,
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: '#1dad9b',
   },
-  thumbnail: {
-    width: '100%',
-    height: 120,
-    borderRadius: 15,
-  },
-  nameCategoryContainer: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  title: {
-    fontWeight: 'bold',
-    color: '#6200ee',
-  },
-  description: {
-    color: '#333',
+  chart: {
+    borderRadius: 16,
   },
 });

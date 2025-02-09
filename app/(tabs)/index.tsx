@@ -15,6 +15,9 @@ import { fetchInsuranceProviders } from '../../app/(redux)/insuranceSlice';
 import { fetchClinics } from '../../app/(redux)/clinicSlice'; // Import fetchClinics action
 import GlobalApi from '../../Services/GlobalApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Posts from '@/components/client/Posts';
+import SubHeading from '@/components/client/SubHeading';
+import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
 
 const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -98,6 +101,8 @@ const Index: React.FC = () => {
         <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
         <Doctors doctors={doctors} loading={doctorsLoading} error={doctorsError} />
         <Clinics clinics={clinics} loading={clinicsLoading} error={clinicsError} />
+        <ClinicSubHeading subHeadingTitle='Explore Insights' />
+        <Posts />
       </View>
     </ScrollView>
   );

@@ -86,13 +86,20 @@ const ClinicProfile: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Fixed Profile Image */}
       <View style={styles.imageContainer}>
         <Image source={{ uri: clinic.profileImage }} style={styles.profileImage} />
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.detailsContainer}>
           <Text style={styles.title}>{clinic.practiceName}</Text>
           <Text style={styles.subtitle}>{clinic.address}</Text>
@@ -109,43 +116,43 @@ const ClinicProfile: React.FC = () => {
             <MaterialIcons name="event" size={20} color={Colors.primary} />
             <Text style={styles.infoText}>{clinic.workingDays.join(', ')}</Text>
           </View>
-            <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Insurance Providers</Text>
-          <FlatList
-            data={insuranceDetails}
-            renderItem={({ item }) => (
-              <View style={styles.insuranceCard}>
-                {item.icon ? (
-                  <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
-                ) : (
-                  <View style={styles.placeholderIcon}>
-                    <Text style={styles.placeholderText}>{item.name.charAt(0)}</Text>
-                  </View>
-                )}
-                <Text style={styles.insuranceText}>{item.name}</Text>
-              </View>
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
 
-            </View>
-         <View style={styles.section}>
-         <Text style={styles.sectionTitle}>Services Offered</Text>
-          <FlatList
-            horizontal
-            data={services}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.serviceCard}>
-                <Text style={styles.serviceText}>{item}</Text>
-              </View>
-            )}
-            showsHorizontalScrollIndicator={false}
-          />
-         </View>
-         
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Insurance Providers</Text>
+            <FlatList
+              data={insuranceDetails}
+              renderItem={({ item }) => (
+                <View style={styles.insuranceCard}>
+                  {item.icon ? (
+                    <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
+                  ) : (
+                    <View style={styles.placeholderIcon}>
+                      <Text style={styles.placeholderText}>{item.name.charAt(0)}</Text>
+                    </View>
+                  )}
+                  <Text style={styles.insuranceText}>{item.name}</Text>
+                </View>
+              )}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Services Offered</Text>
+            <FlatList
+              horizontal
+              data={services}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.serviceCard}>
+                  <Text style={styles.serviceText}>{item}</Text>
+                </View>
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
 
           <Text style={styles.sectionTitle}>Doctors</Text>
           <FlatList
@@ -177,26 +184,18 @@ const ClinicProfile: React.FC = () => {
   );
 };
 
-export default ClinicProfile;
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9fbfc',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fbfc',
-  },
-  section: {
-    marginBottom: 24,
+    backgroundColor: Colors.white,
   },
   imageContainer: {
+    height: 200,
     position: 'relative',
   },
   profileImage: {
     width: '100%',
-    height: 250,
+    height: '100%',
     resizeMode: 'cover',
   },
   backButton: {
@@ -206,112 +205,101 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 20,
     padding: 10,
-    zIndex: 10,
+  },
+  scrollContainer: {
+    flex: 1,
+    marginTop: 20, // Offset to account for the fixed profile image
+  },
+  scrollContent: {
+    paddingBottom: 20, // Add padding to avoid content being cut off
   },
   detailsContainer: {
-    flex: 1,
     padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    marginTop: -20,
-    backgroundColor: '#f9fbfc',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: Colors.primary,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 18,
-    color: Colors.secondary,
-    marginBottom: 16,
+    fontSize: 16,
+    color: Colors.gray,
+    marginBottom: 4,
   },
   category: {
-    fontSize: 16,
-    color: Colors.text,
+    fontSize: 14,
+    color: Colors.SECONDARY,
     marginBottom: 16,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   infoText: {
-    fontSize: 16,
-    color: Colors.text,
+    fontSize: 14,
+    color: Colors.gray,
     marginLeft: 8,
   },
+  section: {
+    marginTop: 20,
+  },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: Colors.primary,
-    marginTop: 24,
     marginBottom: 16,
   },
   insuranceCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    marginRight: 10,
-    marginBottom: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    marginRight: 16,
   },
   insuranceIcon: {
     width: 40,
     height: 40,
-    marginRight: 15,
+    borderRadius: 20,
   },
   placeholderIcon: {
     width: 40,
     height: 40,
-    marginRight: 15,
-    backgroundColor: Colors.SECONDARY,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
   },
   placeholderText: {
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: Colors.white,
   },
   insuranceText: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: 12,
+    color: Colors.gray,
+    marginTop: 8,
   },
   serviceCard: {
-    padding: 20,
-    marginRight: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    borderColor: '#ffe9e3',
+    borderRadius: 8,
+    padding: 12,
+    marginRight: 12,
   },
   serviceText: {
     fontSize: 14,
-    color: '#555',
+    color: Colors.primary,
   },
   doctorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.lightBackground,
-    borderRadius: 10,
+    backgroundColor: Colors.white,
+  
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: '#fff',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    width: '100%',
+    shadowRadius: 1,
+    elevation: 2,
   },
   doctorImage: {
     width: 50,
@@ -324,22 +312,22 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text,
+    fontWeight: 'bold',
+    color: Colors.primary,
   },
   doctorSpecialty: {
     fontSize: 14,
-    color: Colors.secondary,
-    marginTop: 4,
+    color: Colors.gray,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
   noDataText: {
-    fontSize: 18,
-    color: Colors.text,
+    fontSize: 16,
+    color: Colors.gray,
   },
 });
+
+export default ClinicProfile;

@@ -11,11 +11,10 @@ import Colors from '@/components/Shared/Colors';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const backgroundColor = '#bae8e8'; // Use theme color
+  const backgroundColor = '#e3f6f5'; // Use theme color
 
   return (
     <>
-      <StatusBar backgroundColor={backgroundColor} barStyle="light-content" /> {/* Extend color to status bar */}
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: theme.colors.textColor,
