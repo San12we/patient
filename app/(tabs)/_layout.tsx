@@ -41,18 +41,18 @@ export default function TabLayout() {
           },
         }}>
         <Tabs.Screen
-          name="index"
-          options={{
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="home-outline" size={24} color={theme.colors.textColor} />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="health"
           options={{
             tabBarIcon: ({ color }) => (
               <Ionicons name="heart-outline" size={24} color={theme.colors.textColor} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="index"
+          options={{
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="home-outline" size={24} color={theme.colors.textColor} />
             ),
           }}
         />

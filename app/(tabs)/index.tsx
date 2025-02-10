@@ -1,8 +1,7 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-// Remove the LinearGradient import
-// import { LinearGradient } from 'expo-linear-gradient';
+
 import Doctors from '../../components/client/Doctors';
 import Category from '@/components/client/Category';
 import SearchBar from '@/components/client/SearchBar';

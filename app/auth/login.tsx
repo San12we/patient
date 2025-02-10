@@ -87,7 +87,7 @@ export default function Login({ navigation }) {
           });
         }
 
-        router.push("/(tabs)");
+        router.push("/(tabs)/health");
       } catch (err) {
         setDisabled(false);
         setLoading(false);
