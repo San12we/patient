@@ -23,7 +23,7 @@ function AppWrapper() {
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.goofy} barStyle="light-content" />
+      <StatusBar backgroundColor={Colors.goody} barStyle="light-content" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen
           name="index"

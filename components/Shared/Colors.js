@@ -11,6 +11,7 @@ export default {
     selectedBackground: '#91d690',
     gray: '#388e3c',
     goofy: '#8bffff',
+    goody: '#e3f6f5',
     background: '#F8F9FA',
     textPrimary: '#002D62', 
     textSecondary: '#a6a4a4',
