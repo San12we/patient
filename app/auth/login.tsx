@@ -77,7 +77,7 @@ export default function Login({ navigation }) {
         // Retrieve the token from AsyncStorage and send it to the backend
         const token = await AsyncStorage.getItem('expoPushToken');
         if (token) {
-          await sendTokenToBackend(userData.id);
+          await sendTokenToBackend(userData.userId); // Pass the userId from the login response
         }
 
         router.push("/(tabs)/health");
