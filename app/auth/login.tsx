@@ -70,6 +70,7 @@ export default function Login({ navigation }) {
     if (getEmailId !== "" && getPassword !== "") {
       try {
         const userData = await loginUser({ email: getEmailId, password: getPassword });
+        console.log('User Data:', userData); // Log userData
         dispatch(loginAction(userData));
         setEmailId("");
         setPassword("");
@@ -80,7 +81,7 @@ export default function Login({ navigation }) {
           await sendTokenToBackend(userData.userId); // Pass the userId from the login response
         }
 
-        router.push("/(tabs)/health");
+        router.push("/(tabs)");
       } catch (err) {
         setDisabled(false);
         setLoading(false);
