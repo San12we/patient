@@ -3,7 +3,7 @@ import axios from 'axios';
 
 export const sendTokenToBackend = async (userId: string) => {
     try {
-        const token = await AsyncStorage.getItem('fcm_token');
+        const token = await AsyncStorage.getItem('expoPushToken');
         if (token) {
             await axios.post('https://project03-rj91.onrender.com/store-token', {
                 userId,
@@ -11,7 +11,7 @@ export const sendTokenToBackend = async (userId: string) => {
             });
             console.log('Token sent to backend successfully');
         } else {
-            console.log('No FCM token found');
+            console.log('No Expo push token found');
         }
     } catch (error) {
         console.log('Error sending token to backend:', error);
