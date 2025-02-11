@@ -20,6 +20,7 @@ import { loginAction } from "../(redux)/authSlice";
 import Colors from "@/components/Shared/Colors";
 import { theme } from "@/constants/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 
 export default function Login({ navigation }) {
   const [getEmailId, setEmailId] = useState("");
@@ -73,18 +74,10 @@ export default function Login({ navigation }) {
         setEmailId("");
         setPassword("");
 
-        // Retrieve the token from AsyncStorage
+        // Retrieve the token from AsyncStorage and send it to the backend
         const token = await AsyncStorage.getItem('expoPushToken');
-        console.log('Sending token to the backend:', token);
         if (token) {
-          // Send the token to the backend
-          await fetch('https://medplus-health.onrender.com/api/push-token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token }),
-          });
+          await sendTokenToBackend(userData.id);
         }
 
         router.push("/(tabs)/health");
