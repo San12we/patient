@@ -5,20 +5,23 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "client",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.medplus.client"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.medplus.client",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.gidy50b.client"
     },
     "web": {
       "bundler": "metro",
@@ -56,7 +59,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "8a6f5b68-9751-41ae-becb-e0e36f618b26"
+        "projectId": "4134871a-5111-48f6-ad56-6cbd759bf96f"
       }
     }
   }
