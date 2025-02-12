@@ -12,6 +12,17 @@ const loadUserFromStorage = async () => {
   }
 };
 
+// Function to clear the Expo Push Token from AsyncStorage
+const clearPushToken = async () => {
+  try {
+    await AsyncStorage.removeItem("expoPushToken");
+    // Optionally, notify your backend to remove the token for the current user
+    // await api.removeUserPushToken();
+  } catch (error) {
+    console.error("Error clearing push token:", error);
+  }
+};
+
 const initialState = {
   user: null,
   loading: true,
@@ -33,6 +44,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       AsyncStorage.removeItem("userInfo");
+      clearPushToken(); // Clear the Expo Push Token on logout
     },
     setUser: (state, action) => {
       state.user = action.payload;
