@@ -22,10 +22,24 @@ export default function Index() {
     try {
       const token = await registerForPushNotificationsAsync();
       if (token) {
+        // Store the token in AsyncStorage
         await AsyncStorage.setItem('expoPushToken', token);
+        // Optionally, send the token to your backend to associate it with the current user
+        // await api.updateUserPushToken(token);
       }
     } catch (error) {
       console.error('Error registering for push notifications:', error);
+    }
+  };
+
+  // Clear the token when a user logs out
+  const clearPushToken = async () => {
+    try {
+      await AsyncStorage.removeItem('expoPushToken');
+      // Optionally, notify your backend to remove the token for the current user
+      // await api.removeUserPushToken();
+    } catch (error) {
+      console.error('Error clearing push token:', error);
     }
   };
 
