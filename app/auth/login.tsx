@@ -8,36 +8,32 @@ import {
   View,
   KeyboardAvoidingView,
   ScrollView,
-  Animated,
-  Easing,
+  TextInput,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
-import CustomBox from "react-native-customized-box";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { loginUser } from "../(services)/api/api";
 import { loginAction } from "../(redux)/authSlice";
-import Colors from "@/components/Shared/Colors";
-import { theme } from "@/constants/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 import { useNotification } from '../../context/NotificationsContext';
-import LottieView from 'lottie-react-native'; // Import LottieView
+import LottieView from 'lottie-react-native';
+import { emailValidator } from "@/helpers/emailValidator"; // Import emailValidator
+import { passwordValidator } from "@/helpers/passwordValidator"; // Import passwordValidator
 
 export default function Login({ navigation }) {
-  const [getEmailId, setEmailId] = useState("");
-  const [getPassword, setPassword] = useState("");
+  const [getEmailId, setEmailId] = useState({ value: "", error: "" });
+  const [getPassword, setPassword] = useState({ value: "", error: "" });
   const [getError, setError] = useState(false);
   const [throwError, setThrowError] = useState("");
   const [getDisabled, setDisabled] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
   const router = useRouter();
   const { expoPushToken } = useNotification();
-  const animation = useRef<LottieView>(null); // Add ref for LottieView
+  const animation = useRef<LottieView>(null);
 
   useEffect(() => {
     if (loading && animation.current) {
@@ -46,142 +42,80 @@ export default function Login({ navigation }) {
   }, [loading]);
 
   const loginFunction = async () => {
+    const emailError = emailValidator(getEmailId.value);
+    const passwordError = passwordValidator(getPassword.value);
+    if (emailError || passwordError) {
+      setEmailId({ ...getEmailId, error: emailError });
+      setPassword({ ...getPassword, error: passwordError });
+      return;
+    }
+
     setDisabled(true);
     setLoading(true);
-    if (getEmailId === "") {
-      setEmailError("*This is Required");
-    }
-    if (getPassword === "") {
-      setPasswordError("*This is Required");
-    }
-    if (getEmailId !== "" && getPassword !== "") {
-      try {
-        const userData = await loginUser({ email: getEmailId, password: getPassword });
-        console.log('User Data:', userData); // Log userData
-        dispatch(loginAction(userData));
-        setEmailId("");
-        setPassword("");
+    try {
+      const userData = await loginUser({ email: getEmailId.value, password: getPassword.value });
+      console.log('User Data:', userData);
+      dispatch(loginAction(userData));
+      setEmailId({ value: "", error: "" });
+      setPassword({ value: "", error: "" });
 
-        // Send the token to the backend
-        if (expoPushToken) {
-          await sendTokenToBackend(userData.user._id, expoPushToken); // Pass the correct userId and token from the context
-        }
-
-        router.push("/(tabs)");
-      } catch (err) {
-        setDisabled(false);
-        setLoading(false);
-        setError(true);
-        setThrowError("Sorry! User not found / Incorrect Password");
-        setPassword("");
+      if (expoPushToken) {
+        await sendTokenToBackend(userData.user._id, expoPushToken);
       }
-    } else {
+
+      router.push("/(tabs)");
+    } catch (err) {
       setDisabled(false);
       setLoading(false);
       setError(true);
-      setThrowError("Please Enter the Email and Password carefully");
+      setThrowError("Sorry! User not found / Incorrect Password");
+      setPassword({ value: "", error: "" });
     }
   };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={styles.container}>
-          <StatusBar barStyle="light-content" />
-          <Image
-            style={styles.loginImage}
-            source={{
-              uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1739456710/log_fjcgwt.jpg",
-            }}
-          />
-          {getError ? (
-            <View style={styles.errorCard}>
-              <TouchableOpacity
-                style={styles.cross}
-                onPress={() => {
-                  setError(false);
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>X</Text>
-              </TouchableOpacity>
-              <Text style={styles.errorCardText}>{throwError}</Text>
-            </View>
-          ) : null}
-          <CustomBox
-            placeholder={"Email"}
-            boxColor={"dodgerblue"}
-            focusColor={"#e65c40"}
-            keyboardType="email-address"
-            boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-            inputStyle={{
-              fontWeight: "bold",
-              color: "#30302e",
-              paddingLeft: 20,
-              borderRadius: 40,
-            }}
-            labelConfig={{
-              text: "Email",
-              style: {
-                color: "#0e0e21",
-                fontWeight: "bold",
-              },
-            }}
-            requiredConfig={{
-              text: <Text>{emailError}</Text>,
-            }}
-            values={getEmailId}
-            onChangeText={(value) => {
-              setEmailId(value);
-              setError(false);
-              setEmailError("");
-            }}
-          />
-          <CustomBox
-            placeholder={"Password"}
-            toggle={true}
-            boxColor={"dodgerblue"}
-            focusColor={"#e65c40"}
-            boxStyle={{ borderRadius: 40, borderWidth: 2 }}
-            inputStyle={{
-              fontWeight: "bold",
-              color: "#30302e",
-              paddingLeft: 20,
-              borderRadius: 40,
-            }}
-            labelConfig={{
-              text: "Password",
-              style: {
-                color: "#0e0e21",
-                fontWeight: "bold",
-              },
-            }}
-            requiredConfig={{
-              text: <Text>{passwordError}</Text>,
-            }}
-            values={getPassword}
-            onChangeText={(value) => {
-              setPassword(value);
-              setError(false);
-              setPasswordError("");
-            }}
-          />
-          {/* ForgotPassword */}
+      <ScrollView contentContainerStyle={styles.loginContainer}>
+        <Image
+          source={{ uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1739456710/log_fjcgwt.jpg" }}
+          style={styles.loginImg}
+        />
+        <View style={styles.mainContainer}>
+          <Text style={styles.welComeText}>Hello, {"\n"} Welcome back</Text>
+          <View style={styles.loginInputView}>
+            <TextInput
+              placeholder="Email"
+              style={styles.loginInput}
+              value={getEmailId.value}
+              onChangeText={(text) => setEmailId({ value: text, error: "" })}
+              autoCapitalize="none"
+              textContentType="emailAddress"
+              keyboardType="email-address"
+            />
+          </View>
+          {getEmailId.error ? <Text style={styles.feedbackText}>{getEmailId.error}</Text> : null}
+          <View style={styles.loginInputView}>
+            <TextInput
+              placeholder="Password"
+              style={styles.loginInput}
+              value={getPassword.value}
+              onChangeText={(text) => setPassword({ value: text, error: "" })}
+              secureTextEntry
+            />
+          </View>
+          {getPassword.error ? <Text style={styles.feedbackText}>{getPassword.error}</Text> : null}
           <TouchableOpacity
-            style={styles.forgotBtn}
-            onPress={() => {
-              router.push("/auth/resetPassword");
-            }}
+            style={styles.forgotPassword}
+            onPress={() => router.push("/auth/resetPassword")}
           >
             <Text style={styles.forgotBtnText}>Forgot Password?</Text>
           </TouchableOpacity>
-
-          {/* Login Button */}
           <TouchableOpacity
-            style={styles.loginBtn}
+            style={[styles.btn, loading && { backgroundColor: '#ccc' }]}
             onPress={loginFunction}
             disabled={getDisabled}
           >
-            <Text style={styles.loginBtnText}>LogIn</Text>
+            <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
             {loading && (
               <LottieView
                 autoPlay
@@ -191,95 +125,83 @@ export default function Login({ navigation }) {
               />
             )}
           </TouchableOpacity>
-
-          {/* Register Button */}
-          <View style={styles.createAccount}>
-            <Text style={styles.createAccountText}>
-              {`Don't have an Account? `}
-            </Text>
-            <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-              <Text style={styles.link}>Create!</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.contiueText}>or continue with</Text>
         </View>
+        <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+          <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: "center",
-    justifyContent: "center",
+  loginContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
   },
-  link: {
-    color: Colors.primary,
-  },
-  errorCard: {
-    width: 300,
-    height: 50,
-    backgroundColor: "#de3138",
-    justifyContent: "center",
-    paddingLeft: 15,
-    borderRadius: 40,
-  },
-  errorCardText: {
-    paddingLeft: 15,
-    color: "white",
-    fontSize: 12,
-    fontWeight: "500",
-    position: "absolute",
-  },
-  cross: {
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: -20,
-    left: 250,
-    position: "relative",
-  },
-  loginImage: {
-    marginTop: 20,
+  loginImg: {
     width: 200,
     height: 200,
+    marginBottom: 20,
   },
-  loginBtn: {
-    marginTop: 10,
-    backgroundColor: Colors.SECONDARY,
-    width: 300,
-    height: 50,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
+  mainContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
-  loginBtnText: {
-    color: "white",
-    fontSize: 22,
+  welComeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
   },
-  forgotBtn: {
-    marginTop: -20,
-    width: 280,
-    height: 20,
-    justifyContent: "center",
+  loginInputView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+  },
+  loginInput: {
+    flex: 1,
+    height: 40,
+  },
+  feedbackText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
   },
   forgotBtnText: {
-    color: "#c29700",
-    fontSize: 12,
-    alignSelf: "flex-end",
-    textDecorationLine: "underline",
+    color: '#007bff',
   },
-  createAccount: {
-    marginTop: 10,
-    width: 280,
-    height: 20,
-    flexDirection: "row",
+  btn: {
+    width: '100%',
+    padding: 15,
+    backgroundColor: '#c5f0a4',
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  createAccountText: {
-    color: "grey",
+  btnText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  contiueText: {
+    marginBottom: 20,
+    color: '#a9a9a9',
+  },
+  signupText: {
+    color: '#007bff',
+    marginTop: 20,
   },
   lottieAnimation: {
     width: 50,
