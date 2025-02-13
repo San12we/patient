@@ -91,7 +91,7 @@ export default function Login({ navigation }) {
           <Image
             style={styles.loginImage}
             source={{
-              uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1739452187/med_l8gyq4.jpg",
+              uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1739456710/log_fjcgwt.jpg",
             }}
           />
           {getError ? (
