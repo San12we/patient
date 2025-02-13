@@ -125,7 +125,7 @@ const DoctorProfile: React.FC = () => {
           autoPlay
           ref={animation}
           style={styles.lottieAnimation}
-          source={require('../../assets/animations/loading.json')}
+          source={require('../../assets/animations/loading2.json')}
         />
       </View>
     );
