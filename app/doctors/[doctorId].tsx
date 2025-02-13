@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -26,6 +26,7 @@ import UserBookingSection from '../../components/UserBookingSection'; // Import 
 import { getDoctors, setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import actions
 import { BlurView } from 'expo-blur'; // Import BlurView from expo-blur
 import socket from '../../Services/socket';
+import LottieView from 'lottie-react-native';
 
 type Slot = {
   _id: string;
@@ -52,6 +53,7 @@ const DoctorProfile: React.FC = () => {
   const dateOptions = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd')); // Add state for selected day
   const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false); // Add state for insurance acceptance
+  const animation = useRef<LottieView>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,10 +112,21 @@ const DoctorProfile: React.FC = () => {
     };
   }, [fetchSchedule]);
 
+  useEffect(() => {
+    if (loading && animation.current) {
+      animation.current.play();
+    }
+  }, [loading]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+        <LottieView
+          autoPlay
+          ref={animation}
+          style={styles.lottieAnimation}
+          source={require('../../assets/animations/loading.json')}
+        />
       </View>
     );
   }
@@ -466,6 +479,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#e3f6f5',
+  },
+  lottieAnimation: {
+    width: 200,
+    height: 200,
   },
 });
 

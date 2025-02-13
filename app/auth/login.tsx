@@ -22,6 +22,7 @@ import { theme } from "@/constants/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 import { useNotification } from '../../context/NotificationsContext';
+import LottieView from 'lottie-react-native'; // Import LottieView
 
 export default function Login({ navigation }) {
   const [getEmailId, setEmailId] = useState("");
@@ -33,32 +34,16 @@ export default function Login({ navigation }) {
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const spinValue = useRef(new Animated.Value(0)).current; // For spinner animation
-
   const dispatch = useDispatch();
   const router = useRouter();
   const { expoPushToken } = useNotification();
+  const animation = useRef<LottieView>(null); // Add ref for LottieView
 
-  // Spinner animation
   useEffect(() => {
-    if (loading) {
-      Animated.loop(
-        Animated.timing(spinValue, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      ).start();
-    } else {
-      spinValue.setValue(0); // Reset animation when loading is false
+    if (loading && animation.current) {
+      animation.current.play();
     }
   }, [loading]);
-
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
 
   const loginFunction = async () => {
     setDisabled(true);
@@ -198,7 +183,12 @@ export default function Login({ navigation }) {
           >
             <Text style={styles.loginBtnText}>LogIn</Text>
             {loading && (
-              <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]} />
+              <LottieView
+                autoPlay
+                ref={animation}
+                style={styles.lottieAnimation}
+                source={require('../../assets/animations/loading.json')}
+              />
             )}
           </TouchableOpacity>
 
@@ -291,13 +281,9 @@ const styles = StyleSheet.create({
   createAccountText: {
     color: "grey",
   },
-  spinner: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "white",
-    borderTopColor: "transparent",
+  lottieAnimation: {
+    width: 50,
+    height: 50,
     marginLeft: 10,
   },
 });
