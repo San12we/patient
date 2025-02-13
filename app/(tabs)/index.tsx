@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 
 import Doctors from '../../components/client/Doctors';
@@ -7,7 +7,6 @@ import Category from '@/components/client/Category';
 import SearchBar from '@/components/client/SearchBar';
 import { theme } from '@/constants/theme';
 import Clinics from '@/components/client/Clinics';
-import CustomLoadingScreen from '../../components/CustomLoadingScreen';
 import { useDispatch, useSelector } from 'react-redux';
 import { getDoctors } from '../../app/(redux)/doctorSlice';
 import { fetchInsuranceProviders } from '../../app/(redux)/insuranceSlice';
@@ -17,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Posts from '@/components/client/Posts';
 import SubHeading from '@/components/client/SubHeading';
 import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
+import LottieView from 'lottie-react-native'; // Import LottieView
 
 const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -28,6 +28,7 @@ const Index: React.FC = () => {
   const { doctors, loading: doctorsLoading, error: doctorsError } = useSelector((state) => state.doctors);
   const { clinics, loading: clinicsLoading, error: clinicsError } = useSelector((state) => state.clinics);
   const { insuranceProviders } = useSelector((state) => state.insurance);
+  const animation = useRef<LottieView>(null); // Add ref for LottieView
 
   const handleSearchSubmit = () => {
     router.push(`/search?query=${searchQuery}`);
@@ -74,8 +75,23 @@ const Index: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if ((doctorsLoading || clinicsLoading || categoriesLoading) && animation.current) {
+      animation.current.play();
+    }
+  }, [doctorsLoading, clinicsLoading, categoriesLoading]);
+
   if (doctorsLoading || clinicsLoading || categoriesLoading) {
-    return <CustomLoadingScreen message="Loading content..." />;
+    return (
+      <View style={styles.loadingContainer}>
+        <LottieView
+          autoPlay
+          ref={animation}
+          style={styles.lottieAnimation}
+          source={require('../../assets/animations/loading.json')}
+        />
+      </View>
+    );
   }
 
   if (doctorsError) {
@@ -126,5 +142,15 @@ const styles = StyleSheet.create({
   },
   clinics: {
     marginBottom: 20, // Add margin to the bottom of Clinics component
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e3f6f5',
+  },
+  lottieAnimation: {
+    width: 200,
+    height: 200,
   },
 });
