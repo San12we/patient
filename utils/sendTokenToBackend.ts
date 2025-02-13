@@ -1,9 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-export const sendTokenToBackend = async (userId: string) => {
+export const sendTokenToBackend = async (userId: string, token: string) => {
     try {
-        const token = await AsyncStorage.getItem('expoPushToken');
         if (token) {
             await axios.post('https://project03-rj91.onrender.com/store-token', {
                 userId,
