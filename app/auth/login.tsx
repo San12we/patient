@@ -19,8 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 import { useNotification } from '../../context/NotificationsContext';
 import LottieView from 'lottie-react-native';
-import { emailValidator } from "@/helpers/emailValidator"; // Import emailValidator
-import { passwordValidator } from "@/helpers/passwordValidator"; // Import passwordValidator
+import { emailValidator } from "../../helpers/emailValidator"; // Import emailValidator
+import { passwordValidator } from "../../helpers/passwordValidator"; // Import passwordValidator
 
 export default function Login({ navigation }) {
   const [getEmailId, setEmailId] = useState({ value: "", error: "" });
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   loginImg: {
     width: 200,

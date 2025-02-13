@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { loginAction } from "..//(redux)/authSlice";
 import { LoginImg, UserImg, PasswordImg } from "../../theme/Images";
-import { emailValidator } from "@/helpers/emailValidator";
+import { emailValidator } from "../";
 import { passwordValidator } from "@/helpers/passwordValidator";
 import LoadingScreen from "../../screens/Loader/LoadingScreen"; // Import LoadingScreen
 
