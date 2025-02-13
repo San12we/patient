@@ -21,6 +21,7 @@ import Colors from "@/components/Shared/Colors";
 import { theme } from "@/constants/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
+import { useNotification } from '../../context/NotificationsContext';
 
 export default function Login({ navigation }) {
   const [getEmailId, setEmailId] = useState("");
@@ -36,6 +37,7 @@ export default function Login({ navigation }) {
 
   const dispatch = useDispatch();
   const router = useRouter();
+  const { expoPushToken } = useNotification();
 
   // Spinner animation
   useEffect(() => {
@@ -75,10 +77,9 @@ export default function Login({ navigation }) {
         setEmailId("");
         setPassword("");
 
-        // Retrieve the token from AsyncStorage and send it to the backend
-        const token = await AsyncStorage.getItem('expoPushToken');
-        if (token) {
-          await sendTokenToBackend(userData.user._id); // Pass the correct userId from the login response
+        // Send the token to the backend
+        if (expoPushToken) {
+          await sendTokenToBackend(userData.user._id, expoPushToken); // Pass the correct userId and token from the context
         }
 
         router.push("/(tabs)");

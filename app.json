@@ -1,27 +1,25 @@
 {
   "expo": {
-    "name": "client",
-    "slug": "client",
+    "name": "crono",
+    "slug": "crono",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "client",
+    "scheme": "crono",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.crono.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+
       },
-      "googleServicesFile": "./google-services.json",
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.RECORD_AUDIO"
-      ],
-      "package": "com.gidy50b.client"
+      "package": "com.crono.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -59,8 +57,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "4134871a-5111-48f6-ad56-6cbd759bf96f"
+        "projectId": "cc4eba1e-d664-4a4b-afb8-0d0c42ceffa3"
       }
-    }
+    },
+    "owner": "gidy50b"
   }
 }

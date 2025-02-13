@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "799741250837",
+    "project_id": "crono-adf50",
+    "storage_bucket": "crono-adf50.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:799741250837:android:e6b477f5b7e67ba5a26d1c",
+        "android_client_info": {
+          "package_name": "com.crono.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEKMSV9-owL0pkTrdjqQ9vyORZ98i6ACE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
