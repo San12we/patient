@@ -11,9 +11,10 @@ import * as Notifications from 'expo-notifications';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true, // Show an alert when a notification is received
-    shouldPlaySound: false, // Disable sound for notifications
-    shouldSetBadge: false, // Disable badge count for notifications
+    shouldShowAlert: true,     // This makes the notification appear as an alert when app is open
+    shouldPlaySound: true,     // Enable sound
+    shouldSetBadge: true,      // Enable badge counting
+    priority: Notifications.AndroidNotificationPriority.HIGH, // High priority for Android
   }),
 });
 

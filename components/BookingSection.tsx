@@ -173,20 +173,26 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
     console.log('Payment successful:', response);
 
     try {
-        if (expoPushToken && userId) {
-            await axios.post('https://project03-rj91.onrender.com/send-notification', {
-                token: expoPushToken,
-                userId: userId, // Add userId to the request
-                title: 'Appointment Confirmed',
-                body: `Your appointment has been confirmed`,
-            });
-            console.log('Notification sent successfully');
-        } else {
-            console.log('Missing push token or userId, notification not sent');
-        }
+      if (expoPushToken && userId) {
+        const notificationData = {
+          token: expoPushToken,
+          userId: userId,
+          title: 'Appointment Confirmed',
+          body: `Appointment scheduled for ${selectedTimeSlot?.time}`,
+          data: {
+            appointmentId: currentAppointmentId,
+            appointmentTime: selectedTimeSlot?.time,
+            type: 'APPOINTMENT_CONFIRMATION',
+            doctorId: doctorId,
+            patientName: patientName
+          }
+        };
+
+        await axios.post('https://project03-rj91.onrender.com/send-notification', notificationData);
+        console.log('Notification sent successfully');
+      }
     } catch (error) {
-        console.error('Error sending notification:', error);
-        // Don't show error to user since appointment was successful
+      console.error('Error sending notification:', error);
     }
 
     const currentAppointmentId = appointmentIdRef.current;

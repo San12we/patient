@@ -51,20 +51,34 @@ import React, {
         (error) => setError(error)
       );
   
+      // Configure foreground notification behavior
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+
       notificationListener.current =
         Notifications.addNotificationReceivedListener((notification) => {
-          console.log("🔔 Notification Received: ", notification);
+          console.log("🔔 Notification Received in Foreground: ", notification);
           setNotification(notification);
+          
+          // Optionally trigger the notification display even in foreground
+          Notifications.presentNotificationAsync({
+            title: notification.request.content.title,
+            body: notification.request.content.body,
+            data: notification.request.content.data,
+            sound: true,
+          });
         });
   
       responseListener.current =
         Notifications.addNotificationResponseReceivedListener((response) => {
-          console.log(
-            "🔔 Notification Response: ",
-            JSON.stringify(response, null, 2),
-            JSON.stringify(response.notification.request.content.data, null, 2)
-          );
-          // Handle the notification response here
+          const data = response.notification.request.content.data;
+          console.log("🔔 Notification Tapped: ", data);
+          // Handle notification tap here
         });
   
       return () => {
@@ -87,4 +101,3 @@ import React, {
       </NotificationContext.Provider>
     );
   };
-  
