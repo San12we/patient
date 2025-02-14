@@ -11,6 +11,7 @@ import { useToast } from 'react-native-paper-toast';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { fetchSubaccountCode, bookAppointment } from '../utils/bookingUtils';
 import socket from '../Services/socket';
+import { useNotification } from '../context/NotificationsContext';
 
 const BookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string } | null }> = ({
   doctorId,
@@ -18,6 +19,7 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
   selectedInsurance,
   selectedTimeSlot,
 }) => {
+  const { expoPushToken } = useNotification();
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -169,6 +171,23 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
     setIsSubmitting(false);
     toaster.show({ message: 'Payment successful and appointment confirmed!', type: 'success' });
     console.log('Payment successful:', response);
+
+    try {
+        if (expoPushToken && userId) {
+            await axios.post('https://project03-rj91.onrender.com/send-notification', {
+                token: expoPushToken,
+                userId: userId, // Add userId to the request
+                title: 'Appointment Confirmed',
+                body: `Your appointment has been confirmed`,
+            });
+            console.log('Notification sent successfully');
+        } else {
+            console.log('Missing push token or userId, notification not sent');
+        }
+    } catch (error) {
+        console.error('Error sending notification:', error);
+        // Don't show error to user since appointment was successful
+    }
 
     const currentAppointmentId = appointmentIdRef.current;
     console.log('State before confirming appointment:', { appointmentId: currentAppointmentId });

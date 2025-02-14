@@ -10,7 +10,7 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { loginUser } from "../(services)/api/api";
@@ -18,7 +18,6 @@ import { loginAction } from "../(redux)/authSlice";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 import { useNotification } from '../../context/NotificationsContext';
-import LottieView from 'lottie-react-native';
 import { emailValidator } from "../../helpers/emailValidator"; // Import emailValidator
 import { passwordValidator } from "../../helpers/passwordValidator"; // Import passwordValidator
 
@@ -33,13 +32,6 @@ export default function Login({ navigation }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { expoPushToken } = useNotification();
-  const animation = useRef<LottieView>(null);
-
-  useEffect(() => {
-    if (loading && animation.current) {
-      animation.current.play();
-    }
-  }, [loading]);
 
   const loginFunction = async () => {
     const emailError = emailValidator(getEmailId.value);
@@ -117,12 +109,7 @@ export default function Login({ navigation }) {
           >
             <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
             {loading && (
-              <LottieView
-                autoPlay
-                ref={animation}
-                style={styles.lottieAnimation}
-                source={require('../../assets/animations/loading.json')}
-              />
+              <ActivityIndicator size="small" color="#fff" style={styles.loadingIndicator} />
             )}
           </TouchableOpacity>
           <Text style={styles.contiueText}>or continue with</Text>
@@ -203,9 +190,7 @@ const styles = StyleSheet.create({
     color: '#007bff',
     marginTop: 20,
   },
-  lottieAnimation: {
-    width: 50,
-    height: 50,
+  loadingIndicator: {
     marginLeft: 10,
   },
 });

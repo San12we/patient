@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 
 import Doctors from '../../components/client/Doctors';
@@ -16,7 +16,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Posts from '@/components/client/Posts';
 import SubHeading from '@/components/client/SubHeading';
 import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
-import LottieView from 'lottie-react-native'; // Import LottieView
 
 const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -28,7 +27,6 @@ const Index: React.FC = () => {
   const { doctors, loading: doctorsLoading, error: doctorsError } = useSelector((state) => state.doctors);
   const { clinics, loading: clinicsLoading, error: clinicsError } = useSelector((state) => state.clinics);
   const { insuranceProviders } = useSelector((state) => state.insurance);
-  const animation = useRef<LottieView>(null); // Add ref for LottieView
 
   const handleSearchSubmit = () => {
     router.push(`/search?query=${searchQuery}`);
@@ -75,21 +73,10 @@ const Index: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if ((doctorsLoading || clinicsLoading || categoriesLoading) && animation.current) {
-      animation.current.play();
-    }
-  }, [doctorsLoading, clinicsLoading, categoriesLoading]);
-
   if (doctorsLoading || clinicsLoading || categoriesLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <LottieView
-          autoPlay
-          ref={animation}
-          style={styles.lottieAnimation}
-          source={require('../../assets/animations/loading2.json')}
-        />
+        <ActivityIndicator size="large" color="#c5f0a4" />
       </View>
     );
   }
@@ -148,9 +135,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#e3f6f5',
-  },
-  lottieAnimation: {
-    width: 200,
-    height: 200,
   },
 });
