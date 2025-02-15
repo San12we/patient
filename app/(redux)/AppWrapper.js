@@ -6,7 +6,7 @@ import { StatusBar } from "react-native"; // Import StatusBar
 import { theme } from "@/constants/theme"; // Import theme
 import Colors from "@/components/Shared/Colors";
 import Toast from "react-native-toast-message"; // Import Toast
-import { useNotification } from "../context/NotificationsContext"; // Import useNotification
+import { useNotification } from "../../context/NotificationsContext"; // Import useNotification
 
 function AppWrapper() {
   const dispatch = useDispatch();
