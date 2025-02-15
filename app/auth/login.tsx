@@ -55,12 +55,6 @@ export default function Login({ navigation }) {
         await sendTokenToBackend(userData.user._id, expoPushToken);
       }
 
-      showNotification({
-        title: 'Success',
-        message: 'Login successful!',
-        type: 'success'
-      });
-
       router.push("/(tabs)");
     } catch (err) {
       setDisabled(false);

@@ -35,7 +35,7 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
       console.log('Slot updated:', data);
       // Update the state of the slots here based on the received data
       // For example, you can fetch the updated schedule or update the specific slot in the state
-    });
+    }); 
 
     return () => {
       socket.off('slotUpdated');
