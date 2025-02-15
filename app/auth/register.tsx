@@ -25,7 +25,7 @@ const RegisterSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
   password: Yup.string().min(6, "Too Short!").required("Required"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password"), null], "Passwords must match")
+    .oneOf([Yup.ref("password"), undefined], "Passwords must match")
     .required("Required"),
 });
 
@@ -63,7 +63,7 @@ export default function Register() {
       console.error("Error registering user:", error);
       showNotification({
         title: 'Error',
-        message: error.message || 'Registration failed',
+        message: (error instanceof Error ? error.message : 'Registration failed'),
         type: 'error'
       });
     } finally {
@@ -132,14 +132,13 @@ export default function Register() {
                             },
                           }}
                           requiredConfig={{
-                            text: <Text>{touched.firstName && errors.firstName ? errors.firstName : ""}</Text>,
+                            text: touched.firstName && errors.firstName ? errors.firstName : "",
                             style: {
                               marginBottom: 10,
                             },
                           }}
                           values={values.firstName}
                           onChangeText={handleChange("firstName")}
-                          onBlur={handleBlur("firstName")}
                         />
                         <CustomBox
                           placeholder={"Last Name"}
@@ -249,18 +248,17 @@ export default function Register() {
                           }}
                           toggle={true}
                           requiredConfig={{
-                            text: <Text>{touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ""}</Text>,
+                            text: touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : "",
                             style: {
                               marginBottom: 10,
                             },
                           }}
                           values={values.confirmPassword}
                           onChangeText={handleChange("confirmPassword")}
-                          onBlur={handleBlur("confirmPassword")}
                         />
                         <TouchableOpacity
                           style={styles.registerbtn}
-                          onPress={handleSubmit}
+                          onPress={() => handleSubmit()}
                         >
                           <Text style={styles.registerBtnText}>Register</Text>
                           {loading && loading ? (
@@ -324,6 +322,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  form: {
+    width: '100%',
+    padding: 20,
+  },
   errorCard: {
     width: 300,
     height: 50,
@@ -377,6 +379,9 @@ const styles = StyleSheet.create({
   registerBtnText: {
     color: "white",
     fontSize: 22,
+  },
+  indicator: {
+    marginLeft: 10,
   },
   footer: {
     marginTop: 15,
