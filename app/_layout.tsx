@@ -5,9 +5,7 @@ import store from "./(redux)/store";
 import { Provider as ReduxProvider } from "react-redux";
 import AppWrapper from "./(redux)/AppWrapper";
 import { Provider as PaperProvider } from 'react-native-paper';
-import { ToastProvider } from 'react-native-paper-toast'; // Import ToastProvider
 import { NotificationProvider } from '../context/NotificationsContext';
-import * as Notifications from 'expo-notifications';
 
 export default function RootLayout() {
   return (
@@ -15,10 +13,7 @@ export default function RootLayout() {
       <ReduxProvider store={store}>
         <QueryClientProvider client={queryClient}>
           <PaperProvider>
-            <ToastProvider>
-              {/* AppWrapper contains the main navigation and app logic */}
-              <AppWrapper />
-            </ToastProvider>
+            <AppWrapper />
           </PaperProvider>
         </QueryClientProvider>
       </ReduxProvider>

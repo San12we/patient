@@ -3,11 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import moment from 'moment';
 import axios from 'axios';
 import io from 'socket.io-client';
+import Toast from 'react-native-toast-message';
 
 import Colors from './Shared/Colors';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
-import { useToast } from 'react-native-paper-toast';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { fetchSubaccountCode, bookAppointment } from '../utils/bookingUtils';
 import socket from '../Services/socket';
@@ -31,7 +31,6 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
   const userId = user.user?._id;
   const userEmail = user.user?.email;
   const patientName = user.user?.username || user.name;
-  const toaster = useToast();
 
   useEffect(() => {
     socket.on('slotUpdated', (data) => {
@@ -68,7 +67,11 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
     if (isInsuranceAccepted) {
       // If insurance is accepted, proceed without selecting a time slot
       setIsSubmitting(true);
-      toaster.show({ message: 'Booking appointment with insurance...', type: 'success' });
+      Toast.show({
+        type: 'info',
+        text1: 'Booking Appointment',
+        text2: 'Booking appointment with insurance...'
+      });
 
       try {
         const newAppointmentId = await bookAppointment(
@@ -87,25 +90,41 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
         );
 
         setAppointmentId(newAppointmentId);
-        toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Appointment booked successfully with insurance.'
+        });
         setIsSubmitting(false);
         return;
       } catch (error) {
         console.error('Failed to book appointment:', error);
-        toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to book appointment. Please try again.'
+        });
         setIsSubmitting(false);
         return;
       }
     }
 
     if (!selectedTimeSlot) {
-      toaster.show({ message: 'Please select a time slot.', type: 'error' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please select a time slot.'
+      });
       return;
     }
 
     const selectedDateTime = moment(`${selectedTimeSlot.date} ${selectedTimeSlot.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
     if (selectedTimeSlot && selectedDateTime.isBefore(moment())) {
-      toaster.show({ message: 'Cannot book an appointment in the past.', type: 'error' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Cannot book an appointment in the past.'
+      });
       return;
     }
 
@@ -118,7 +137,11 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
     console.log('Patient Name:', patientName);
 
     setIsSubmitting(true);
-    toaster.show({ message: '', type: 'success' });
+    Toast.show({
+      type: 'info',
+      text1: 'Booking Appointment',
+      text2: 'Booking appointment...'
+    });
 
     try {
       const subaccountCode = await fetchSubaccountCode(doctorId); // Changed userId to doctorId
@@ -156,7 +179,11 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
       setIsSubmitting(false);
     } catch (error) {
       console.error('Failed to book appointment:', error);
-      toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to book appointment. Please try again.'
+      });
       setIsSubmitting(false);
     }
   };
@@ -169,7 +196,11 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
 
   const handlePaymentSuccess = async (response: any) => {
     setIsSubmitting(false);
-    toaster.show({ message: 'Payment successful and appointment confirmed!', type: 'success' });
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: 'Payment successful and appointment confirmed!'
+    });
     console.log('Payment successful:', response);
 
     try {
@@ -209,7 +240,11 @@ const BookingSection: React.FC<{ doctorId: string; consultationFee: number; sele
 
   const handlePaymentCancel = () => {
     setIsSubmitting(false);
-    toaster.show({ message: 'Payment was canceled.', type: 'error' });
+    Toast.show({
+      type: 'error',
+      text1: 'Payment Cancelled',
+      text2: 'Payment was canceled.'
+    });
   };
 
   return (
