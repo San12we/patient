@@ -4,7 +4,8 @@ import doctorReducer from "./doctorSlice";
 import clinicReducer from "./clinicSlice";
 import appointmentsReducer from "./appointmentSlice";
 import insuranceReducer from "./insuranceSlice";
-import postsReducer from './postSlice'; // Import the posts reducer
+import postsReducer from './postSlice';
+import notificationsReducer from './notificationSlice'; // Add this import
 
 const store = configureStore({
   reducer: {
@@ -13,7 +14,8 @@ const store = configureStore({
     clinics: clinicReducer,
     appointments: appointmentsReducer,
     insurance: insuranceReducer,
-    posts: postsReducer, // Add the posts reducer
+    posts: postsReducer,
+    notifications: notificationsReducer, // Add this line
   },
 });
 

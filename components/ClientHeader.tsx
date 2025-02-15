@@ -8,38 +8,55 @@ import { Badge } from 'react-native-elements';
 import { theme } from '@/constants/theme'; // Import theme
 import Colors from './Shared/Colors';
 import socket from '../Services/socket'; // Import socket instance
+import { addNotification } from '@/app/(redux)/notificationSlice';
 
 const ClientHeader: React.FC = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector((state) => state.auth.user);
+  const unreadCount = useSelector((state) => state.notifications.unreadCount);
   const profileImage = user?.user?.profileImage; // Add optional chaining
   const name = user ? `${user?.user?.firstName} ${user?.user?.lastName}` : ''; // Add optional chaining and fallback
-  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     // Listen for new appointment notifications
-    socket.on('newAppointment', () => {
-      setNotificationCount((prevCount) => prevCount + 1);
+    socket.on('newAppointment', (data) => {
+      dispatch(addNotification({
+        id: `appointment-${Date.now()}`,
+        title: 'New Appointment',
+        message: `New appointment scheduled for ${data.date}`,
+        type: 'appointment',
+        read: false,
+        createdAt: new Date().toISOString(),
+        appointmentId: data.appointmentId,
+        data: data
+      }));
     });
 
     // Listen for slot updates
     socket.on('slotUpdated', (data) => {
-      console.log('Slot updated:', data);
-      setNotificationCount((prevCount) => prevCount + 1);
+      dispatch(addNotification({
+        id: `slot-${Date.now()}`,
+        title: 'Appointment Update',
+        message: `Your appointment time has been updated to ${data.newTime}`,
+        type: 'slot',
+        read: false,
+        createdAt: new Date().toISOString(),
+        appointmentId: data.appointmentId,
+        data: data
+      }));
     });
 
-    // Clean up the connection on component unmount
+    // Cleanup socket listeners on unmount
     return () => {
       socket.off('newAppointment');
       socket.off('slotUpdated');
     };
-  }, []);
+  }, [dispatch]);
 
-  useEffect(() => {
-    return () => {
-    };
-  }, [user]);
+  const handleNotificationPress = () => {
+    router.push('/notifications');
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: '#e3f6f5'}]}>
@@ -53,11 +70,14 @@ const ClientHeader: React.FC = () => {
         )}
       </View>
       <View style={styles.rightSection}>
-        <TouchableOpacity style={styles.notificationButton}>
+        <TouchableOpacity 
+          style={styles.notificationButton}
+          onPress={handleNotificationPress}
+        >
           <AntDesign name="bells" size={24} color="black" />
-          {notificationCount > 0 && (
+          {unreadCount > 0 && (
             <Badge
-              value={notificationCount}
+              value={unreadCount}
               status="error"
               containerStyle={styles.badgeContainer}
             />
