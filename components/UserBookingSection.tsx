@@ -3,13 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import moment from 'moment';
 import axios from 'axios';
 import socket from '../Services/socket';
-
 import Colors from './Shared/Colors';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
-import { useToast } from 'react-native-paper-toast';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { fetchSubaccountCode, bookAppointment, confirmAppointment } from '../utils/bookingUtils';
+import CustomToast from './CustomToast';
 
 const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string; date: string } | null }> = ({
   doctorId,
@@ -20,12 +19,16 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    visible: false,
+    message: '',
+    type: 'info'
+  });
 
   const user = useSelector(selectUser);
   const userId = user.user?._id;
   const userEmail = user.user?.email;
   const patientName = user.user?.username || user.name;
-  const toaster = useToast();
 
   useEffect(() => {
     socket.on('slotUpdated', (data) => {
@@ -39,11 +42,15 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
     };
   }, []);
 
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ visible: true, message, type });
+  };
+
   const handleBookWithInsurance = async () => {
     console.log('Proceed with Insurance button pressed');
 
     setIsSubmitting(true);
-    toaster.show({ message: 'Booking appointment with insurance...', type: 'success' });
+    showToast('Booking appointment with insurance...', 'info');
 
     try {
       const selectedDateTime = moment(`${selectedTimeSlot?.date} ${selectedTimeSlot?.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
@@ -62,11 +69,11 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
       );
 
       setAppointmentId(newAppointmentId);
-      toaster.show({ message: 'Appointment booked successfully with insurance.', type: 'success' });
+      showToast('Appointment booked successfully with insurance.', 'success');
       setIsSubmitting(false);
     } catch (error) {
       console.error('Failed to book appointment:', error);
-      toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
+      showToast('Failed to book appointment. Please try again.', 'error');
       setIsSubmitting(false);
     }
   };
@@ -75,14 +82,14 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
     console.log('Proceed to Payment button pressed');
 
     if (!selectedTimeSlot) {
-      toaster.show({ message: 'Please select a time slot.', type: 'error' });
+      showToast('Please select a time slot.', 'error');
       return;
     }
 
     // Ensure the date and time are correctly formatted and combined
     const selectedDateTime = moment(`${selectedTimeSlot.date} ${selectedTimeSlot.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
     if (selectedDateTime.isBefore(moment())) {
-      toaster.show({ message: 'Cannot book an appointment in the past.', type: 'error' });
+      showToast('Cannot book an appointment in the past.', 'error');
       return;
     }
 
@@ -95,7 +102,7 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
     console.log('Patient Name:', patientName);
 
     setIsSubmitting(true);
-    toaster.show({ message: '', type: 'success' });
+    showToast('', 'info');
 
     try {
       const subaccountCode = await fetchSubaccountCode(doctorId); // Changed userId to doctorId
@@ -133,7 +140,7 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
       setIsSubmitting(false);
     } catch (error) {
       console.error('Failed to book appointment:', error);
-      toaster.show({ message: 'Failed to book appointment. Please try again.', type: 'error' });
+      showToast('Failed to book appointment. Please try again.', 'error');
       setIsSubmitting(false);
     }
   };
@@ -146,7 +153,7 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
 
   const handlePaymentSuccess = async (response: any) => {
     setIsSubmitting(false);
-    toaster.show({ message: 'Payment successful and appointment confirmed!', type: 'success' });
+    showToast('Payment successful and appointment confirmed!', 'success');
     console.log('Payment successful:', response);
 
     try {
@@ -163,13 +170,13 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
       // No need to fetch the schedule again, as it should be updated already
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      toaster.show({ message: 'Failed to update appointment status.', type: 'error' });
+      showToast('Failed to update appointment status.', 'error');
     }
   };
 
   const handlePaymentCancel = () => {
     setIsSubmitting(false);
-    toaster.show({ message: 'Payment was canceled.', type: 'error' });
+    showToast('Payment was canceled.', 'error');
   };
 
   return (
@@ -205,6 +212,14 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
         onSuccess={handlePaymentSuccess}
         ref={paystackWebViewRef}
       />
+
+      {toast.visible && (
+        <CustomToast
+          message={toast.message}
+          type={toast.type}
+          onHide={() => setToast({ ...toast, visible: false })}
+        />
+      )}
     </View>
   );
 };

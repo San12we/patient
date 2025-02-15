@@ -19,6 +19,7 @@ import { registerUser } from "../(services)/api/api";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import Colors from "@/components/Shared/Colors";
+import { useNotification } from '../../context/NotificationsContext';
 
 const RegisterSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -34,6 +35,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerificationSent, setIsVerificationSent] = useState(false);
+  const { showNotification } = useNotification();
 
   const mutation = useMutation({
     mutationFn: registerUser,
@@ -52,10 +54,18 @@ export default function Register() {
       });
       console.log("Registration successful:", response);
       setIsVerificationSent(true);
-      Alert.alert("Registration successful", "Please check your email for the verification code.");
+      showNotification({
+        title: 'Success',
+        message: 'Registration successful!',
+        type: 'success'
+      });
     } catch (error) {
       console.error("Error registering user:", error);
-      Alert.alert("Error", error.message || "An error occurred during registration.");
+      showNotification({
+        title: 'Error',
+        message: error.message || 'Registration failed',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }

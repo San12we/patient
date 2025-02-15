@@ -46,12 +46,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     useState<Notifications.Notification | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [currentNotification, setCurrentNotification] = useState<NotificationData | null>(null);
+  const [lastNotificationId, setLastNotificationId] = useState<string>("");
 
   const notificationListener = useRef<Subscription>();
   const responseListener = useRef<Subscription>();
 
   const showNotification = (data: NotificationData) => {
-    setCurrentNotification(data);
+    // Generate a unique ID for the notification based on content and timestamp
+    const notificationId = `${data.title}-${data.message}-${Date.now()}`;
+    
+    // Only show if it's a different notification
+    if (notificationId !== lastNotificationId) {
+      setLastNotificationId(notificationId);
+      setCurrentNotification(data);
+    }
   };
 
   const hideNotification = () => {
@@ -76,16 +84,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     // Listen for notifications received in the foreground
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
-        console.log("🔔 Notification Received in Foreground: ", notification);
-        setNotification(notification);
+        const notificationId = `${notification.request.identifier}-${Date.now()}`;
         
-        // Convert push notification to in-app notification
-        showNotification({
-          title: notification.request.content.title ?? "No Title",
-          message: notification.request.content.body ?? "No Message",
-          type: 'info',
-          data: notification.request.content.data
-        });
+        // Prevent duplicate notifications
+        if (notificationId !== lastNotificationId) {
+          setLastNotificationId(notificationId);
+          setNotification(notification);
+          
+          showNotification({
+            title: notification.request.content.title ?? "No Title",
+            message: notification.request.content.body ?? "No Message",
+            type: 'info',
+            data: notification.request.content.data
+          });
+        }
       });
 
     // Listen for notification responses (user taps on notification)
@@ -106,7 +118,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         Notifications.removeNotificationSubscription(responseListener.current);
       }
     };
-  }, []);
+  }, [lastNotificationId]);
 
   return (
     <NotificationContext.Provider

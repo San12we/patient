@@ -31,7 +31,7 @@ export default function Login({ navigation }) {
 
   const dispatch = useDispatch();
   const router = useRouter();
-  const { expoPushToken } = useNotification();
+  const { expoPushToken, showNotification } = useNotification();
 
   const loginFunction = async () => {
     const emailError = emailValidator(getEmailId.value);
@@ -55,6 +55,12 @@ export default function Login({ navigation }) {
         await sendTokenToBackend(userData.user._id, expoPushToken);
       }
 
+      showNotification({
+        title: 'Success',
+        message: 'Login successful!',
+        type: 'success'
+      });
+
       router.push("/(tabs)");
     } catch (err) {
       setDisabled(false);
@@ -62,6 +68,12 @@ export default function Login({ navigation }) {
       setError(true);
       setThrowError("Sorry! User not found / Incorrect Password");
       setPassword({ value: "", error: "" });
+
+      showNotification({
+        title: 'Error',
+        message: err.message || 'Login failed',
+        type: 'error'
+      });
     }
   };
 

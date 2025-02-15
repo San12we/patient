@@ -1,17 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Stack } from "expo-router";
 import { loadUser } from "./authSlice";
-import { StatusBar } from "react-native"; // Import StatusBar
-import { theme } from "@/constants/theme"; // Import theme
+import { StatusBar } from "react-native";
 import Colors from "@/components/Shared/Colors";
-import Toast from "react-native-toast-message"; // Import Toast
-import { useNotification } from "../../context/NotificationsContext"; // Import useNotification
+import { useNotification } from "../../context/NotificationsContext";
+import CustomToast from "@/components/CustomToast";
 
 function AppWrapper() {
   const dispatch = useDispatch();
   const error = useSelector((state) => state.auth.error);
-  const { notification } = useNotification(); // Get notification from context
+  const { notification } = useNotification();
+  const [lastToastId, setLastToastId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   // Load user on mount
   useEffect(() => {
@@ -22,11 +23,9 @@ function AppWrapper() {
   useEffect(() => {
     if (error) {
       console.error("Error loading user:", error);
-      // Show error toast
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: error.message || "An error occurred while loading user data.",
+      setToast({
+        message: error.message || "An error occurred while loading user data.",
+        type: "error"
       });
     }
   }, [error]);
@@ -34,15 +33,17 @@ function AppWrapper() {
   // Handle notifications
   useEffect(() => {
     if (notification) {
-      // Show notification toast
-      Toast.show({
-        type: "success", // You can use 'success', 'error', 'info', etc.
-        text1: notification.request.content.title || "Notification",
-        text2: notification.request.content.body || "",
-        visibilityTime: 3000, // Auto-dismiss after 3 seconds
-      });
+      const toastId = `${notification.request.identifier}-${Date.now()}`;
+      
+      if (toastId !== lastToastId) {
+        setLastToastId(toastId);
+        setToast({
+          message: notification.request.content.body || "",
+          type: "success"
+        });
+      }
     }
-  }, [notification]);
+  }, [notification, lastToastId]);
 
   return (
     <>
@@ -106,8 +107,14 @@ function AppWrapper() {
         />
       </Stack>
 
-      {/* Render Toast component at the root level */}
-      <Toast />
+      {/* Custom Toast */}
+      {toast && (
+        <CustomToast
+          message={toast.message}
+          type={toast.type}
+          onHide={() => setToast(null)}
+        />
+      )}
     </>
   );
 }
