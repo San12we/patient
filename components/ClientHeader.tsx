@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutAction, selectUser } from '../app/(redux)/authSlice';
@@ -17,12 +17,16 @@ const ClientHeader: React.FC = () => {
   const unreadCount = useSelector((state) => state.notifications.unreadCount);
   const profileImage = user?.user?.profileImage; // Add optional chaining
   const name = user ? `${user?.user?.firstName} ${user?.user?.lastName}` : ''; // Add optional chaining and fallback
+  const lastNotificationRef = useRef<string>('');
 
-  useEffect(() => {
-    // Listen for new appointment notifications
-    socket.on('newAppointment', (data) => {
+  const handleNewAppointment = useCallback((data: any) => {
+    const notificationId = `appointment-${data.appointmentId}-${Date.now()}`;
+    
+    // Prevent duplicate notifications
+    if (lastNotificationRef.current !== notificationId) {
+      lastNotificationRef.current = notificationId;
       dispatch(addNotification({
-        id: `appointment-${Date.now()}`,
+        id: notificationId,
         title: 'New Appointment',
         message: `New appointment scheduled for ${data.date}`,
         type: 'appointment',
@@ -31,12 +35,17 @@ const ClientHeader: React.FC = () => {
         appointmentId: data.appointmentId,
         data: data
       }));
-    });
+    }
+  }, [dispatch]);
 
-    // Listen for slot updates
-    socket.on('slotUpdated', (data) => {
+  const handleSlotUpdate = useCallback((data: any) => {
+    const notificationId = `slot-${data.appointmentId}-${Date.now()}`;
+    
+    // Prevent duplicate notifications
+    if (lastNotificationRef.current !== notificationId) {
+      lastNotificationRef.current = notificationId;
       dispatch(addNotification({
-        id: `slot-${Date.now()}`,
+        id: notificationId,
         title: 'Appointment Update',
         message: `Your appointment time has been updated to ${data.newTime}`,
         type: 'slot',
@@ -45,14 +54,20 @@ const ClientHeader: React.FC = () => {
         appointmentId: data.appointmentId,
         data: data
       }));
-    });
-
-    // Cleanup socket listeners on unmount
-    return () => {
-      socket.off('newAppointment');
-      socket.off('slotUpdated');
-    };
+    }
   }, [dispatch]);
+
+  useEffect(() => {
+    // Set up socket listeners
+    socket.on('newAppointment', handleNewAppointment);
+    socket.on('slotUpdated', handleSlotUpdate);
+
+    // Cleanup socket listeners
+    return () => {
+      socket.off('newAppointment', handleNewAppointment);
+      socket.off('slotUpdated', handleSlotUpdate);
+    };
+  }, [handleNewAppointment, handleSlotUpdate]);
 
   const handleNotificationPress = () => {
     router.push('/notifications');
