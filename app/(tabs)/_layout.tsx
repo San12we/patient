@@ -43,6 +43,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
+            tabBarLabel: 'Dashboard',
             tabBarIcon: ({ color }) => (
               <Ionicons name="home-outline" size={24} color={theme.colors.textColor} />
             ),
@@ -51,6 +52,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="health"
           options={{
+            tabBarLabel: 'Health',
             tabBarIcon: ({ color }) => (
               <Ionicons name="heart-outline" size={24} color={theme.colors.textColor} />
             ),
@@ -59,6 +61,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="appointments"
           options={{
+            tabBarLabel: 'Activities',
             tabBarIcon: ({ color }) => (
               <Ionicons name="calendar-outline" size={24} color={theme.colors.textColor} />
             ),
@@ -67,6 +70,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="settings"
           options={{
+            tabBarLabel: 'Profile',
             tabBarIcon: ({ color }) => (
               <Ionicons name="settings-outline" size={24} color={theme.colors.textColor} />
             ),
