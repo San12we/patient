@@ -9,15 +9,6 @@ import { ToastProvider } from 'react-native-paper-toast'; // Import ToastProvide
 import { NotificationProvider } from '../context/NotificationsContext';
 import * as Notifications from 'expo-notifications';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,     // This makes the notification appear as an alert when app is open
-    shouldPlaySound: true,     // Enable sound
-    shouldSetBadge: true,      // Enable badge counting
-    priority: Notifications.AndroidNotificationPriority.HIGH, // High priority for Android
-  }),
-});
-
 export default function RootLayout() {
   return (
     <NotificationProvider>
