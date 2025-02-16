@@ -89,7 +89,7 @@ const UserBookingSection: React.FC<{
         return;
       }
 
-      const response = await bookAppointment(
+      const newAppointmentId = await bookAppointment(
         doctorId,
         userId,
         patientName,
@@ -103,7 +103,8 @@ const UserBookingSection: React.FC<{
         selectedTimeSlot.time
       );
 
-      const newAppointmentId = response.data.appointment._id; // Retrieve the appointment ID from the response
+      console.log('Booking response:', newAppointmentId); // Log the response to check its structure
+
       setAppointmentId(newAppointmentId);
       showToast('Appointment booked successfully with insurance.', 'success');
 
