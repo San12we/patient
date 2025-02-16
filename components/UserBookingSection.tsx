@@ -1,41 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import moment from 'moment';
 import axios from 'axios';
 import socket from '../Services/socket';
 import Colors from './Shared/Colors';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
-import { Paystack, paystackProps } from 'react-native-paystack-webview';
-import { fetchSubaccountCode, bookAppointment, confirmAppointment } from '../utils/bookingUtils';
+import { bookAppointment } from '../utils/bookingUtils';
 import CustomToast from './CustomToast';
+import { useNotification } from '../context/NotificationsContext'; // Import useNotification
 
-const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; selectedInsurance?: string; selectedTimeSlot?: { id: string; time: string; date: string } | null }> = ({
-  doctorId,
-  consultationFee,
-  selectedInsurance,
-  selectedTimeSlot,
-}) => {
+const UserBookingSection: React.FC<{
+  doctorId: string;
+  consultationFee: number;
+  selectedInsurance?: string;
+  selectedTimeSlot?: { id: string; time: string; date: string } | null;
+}> = ({ doctorId, consultationFee, selectedInsurance, selectedTimeSlot }) => {
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
-  const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
     visible: false,
     message: '',
-    type: 'info'
+    type: 'info',
   });
 
   const user = useSelector(selectUser);
   const userId = user.user?._id;
   const userEmail = user.user?.email;
   const patientName = user.user?.username || user.name;
+  const { expoPushToken } = useNotification(); // Get the Expo push token
 
   useEffect(() => {
     socket.on('slotUpdated', (data) => {
       console.log('Slot updated:', data);
       // Update the state of the slots here based on the received data
-      // For example, you can fetch the updated schedule or update the specific slot in the state
-    }); 
+    });
 
     return () => {
       socket.off('slotUpdated');
@@ -46,172 +45,82 @@ const UserBookingSection: React.FC<{ doctorId: string; consultationFee: number; 
     setToast({ visible: true, message, type });
   };
 
+  const sendNotification = async () => {
+    try {
+      if (!expoPushToken || !userId || !appointmentId) {
+        throw new Error('Missing required data for notification.');
+      }
+
+      const notificationData = {
+        token: expoPushToken,
+        title: 'Appointment Confirmed',
+        body: `Appointment scheduled for ${selectedTimeSlot?.time}`,
+        userId: userId,
+      };
+
+      await axios.post('https://project03-rj91.onrender.com/send-notification', notificationData);
+      console.log('Notification sent successfully');
+      showToast('Appointment confirmed! You will receive a notification shortly.', 'success');
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      showToast('Appointment booked, but failed to send confirmation notification.', 'error');
+    }
+  };
+
   const handleBookWithInsurance = async () => {
-    console.log('Proceed with Insurance button pressed');
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     showToast('Booking appointment with insurance...', 'info');
 
     try {
-      const selectedDateTime = moment(`${selectedTimeSlot?.date} ${selectedTimeSlot?.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
+      if (!selectedTimeSlot) {
+        showToast('Please select a time slot.', 'error');
+        return;
+      }
+
+      const selectedDateTime = moment(`${selectedTimeSlot.date} ${selectedTimeSlot.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
+      if (selectedDateTime.isBefore(moment())) {
+        showToast('Cannot book an appointment in the past.', 'error');
+        return;
+      }
+
       const newAppointmentId = await bookAppointment(
         doctorId,
         userId,
         patientName,
-        selectedDateTime.toDate(), // Use the actual selected date
-        selectedTimeSlot?.id ?? null, // Ensure timeSlotId is either a string or null
+        selectedDateTime.toDate(),
+        selectedTimeSlot.id,
         selectedInsurance,
-        null,
+        null, // No subaccount code for insurance bookings
         userEmail,
         consultationFee,
         true, // withInsurance is true
-        selectedTimeSlot?.time // Include the time in the payload
+        selectedTimeSlot.time
       );
 
       setAppointmentId(newAppointmentId);
       showToast('Appointment booked successfully with insurance.', 'success');
-      setIsSubmitting(false);
+
+      // Send notification after successful booking
+      await sendNotification();
     } catch (error) {
       console.error('Failed to book appointment:', error);
       showToast('Failed to book appointment. Please try again.', 'error');
+    } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleBookWithoutInsurance = async () => {
-    console.log('Proceed to Payment button pressed');
-
-    if (!selectedTimeSlot) {
-      showToast('Please select a time slot.', 'error');
-      return;
-    }
-
-    // Ensure the date and time are correctly formatted and combined
-    const selectedDateTime = moment(`${selectedTimeSlot.date} ${selectedTimeSlot.time.split(' - ')[0]}`, 'YYYY-MM-DD HH:mm');
-    if (selectedDateTime.isBefore(moment())) {
-      showToast('Cannot book an appointment in the past.', 'error');
-      return;
-    }
-
-    if (isSubmitting) {
-      return;
-    }
-
-    console.log('Selected Time Slot:', selectedTimeSlot);
-    console.log('User Email:', userEmail);
-    console.log('Patient Name:', patientName);
-
-    setIsSubmitting(true);
-    showToast('', 'info');
-
-    try {
-      const subaccountCode = await fetchSubaccountCode(doctorId); // Changed userId to doctorId
-      if (!subaccountCode) {
-        throw new Error('Missing subaccount code.');
-      }
-      if (!userEmail) {
-        throw new Error('Missing user email.');
-      }
-      if (!patientName) {
-        throw new Error('Missing patient name.');
-      }
-
-      const newAppointmentId = await bookAppointment(
-        doctorId,
-        userId,
-        patientName,
-        selectedDateTime.toDate(), // Use the actual selected date
-        selectedTimeSlot?.id ?? null, // Ensure timeSlotId is either a string or null
-        selectedInsurance,
-        subaccountCode,
-        userEmail,
-        consultationFee,
-        false, // withInsurance is false
-        selectedTimeSlot?.time // Include the time in the payload
-      );
-
-      setAppointmentId(newAppointmentId);
-      console.log('State after setting appointmentId:', { appointmentId: newAppointmentId });
-
-      if (paystackWebViewRef.current) {
-        paystackWebViewRef.current.startTransaction();
-      }
-
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error('Failed to book appointment:', error);
-      showToast('Failed to book appointment. Please try again.', 'error');
-      setIsSubmitting(false);
-    }
-  };
-
-  const appointmentIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    appointmentIdRef.current = appointmentId;
-  }, [appointmentId]);
-
-  const handlePaymentSuccess = async (response: any) => {
-    setIsSubmitting(false);
-    showToast('Payment successful and appointment confirmed!', 'success');
-    console.log('Payment successful:', response);
-
-    try {
-      const currentAppointmentId = appointmentIdRef.current;
-      console.log('State before confirming appointment:', { appointmentId: currentAppointmentId });
-
-      if (!currentAppointmentId) {
-        throw new Error('No appointment ID available for status update.');
-      }
-      console.log('Confirming appointment with ID:', currentAppointmentId);
-
-      await confirmAppointment(currentAppointmentId); // Confirm the appointment
-
-      // No need to fetch the schedule again, as it should be updated already
-    } catch (error) {
-      console.error('Error updating appointment status:', error);
-      showToast('Failed to update appointment status.', 'error');
-    }
-  };
-
-  const handlePaymentCancel = () => {
-    setIsSubmitting(false);
-    showToast('Payment was canceled.', 'error');
   };
 
   return (
     <View style={styles.container}>
-      {selectedInsurance ? (
-        <TouchableOpacity
-          style={styles.bookButton}
-          onPress={handleBookWithInsurance}
-          disabled={isSubmitting}
-        >
-          <Text style={styles.bookButtonText}>
-            Proceed with Insurance
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.bookButton}
-          onPress={handleBookWithoutInsurance}
-          disabled={isSubmitting}
-        >
-          <Text style={styles.bookButtonText}>
-            Proceed to Payment
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      <Paystack
-        paystackKey="pk_test_81ffccf3c88b1a2586f456c73718cfd715ff02b0"
-        billingEmail={userEmail}
-        amount={consultationFee}
-        currency='KES'
-        onCancel={handlePaymentCancel}
-        onSuccess={handlePaymentSuccess}
-        ref={paystackWebViewRef}
-      />
+      <TouchableOpacity
+        style={styles.bookButton}
+        onPress={handleBookWithInsurance}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.bookButtonText}>Proceed with Insurance</Text>
+      </TouchableOpacity>
 
       {toast.visible && (
         <CustomToast

@@ -7,7 +7,7 @@ export default {
     LIGHT_GRAY: '#F8F9FA',
     ligh_gray: '#a3de83',
     lit: '#FBFF8F',
-    light_gray: '#dce775',
+    light_gray: '#ececec',
     selectedBackground: '#91d690',
     gray: '#388e3c',
     goofy: '#8bffff',
