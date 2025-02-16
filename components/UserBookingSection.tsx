@@ -47,6 +47,10 @@ const UserBookingSection: React.FC<{
 
   const sendNotification = async () => {
     try {
+      console.log('expoPushToken:', expoPushToken);
+      console.log('userId:', userId);
+      console.log('appointmentId:', appointmentId);
+
       if (!expoPushToken || !userId || !appointmentId) {
         throw new Error('Missing required data for notification.');
       }
