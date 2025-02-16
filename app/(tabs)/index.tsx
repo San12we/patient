@@ -95,6 +95,5 @@ const styles = StyleSheet.create({
     lottieAnimation: {
         width: 200,
         height: 200,
-        backgroundColor: '#e3f6f5',
     },
 });
