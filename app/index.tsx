@@ -22,10 +22,13 @@ export default function Index() {
     try {
       const token = await registerForPushNotificationsAsync();
       if (token) {
-        // Store the token in AsyncStorage
-        await AsyncStorage.setItem('expoPushToken', token);
-        // Optionally, send the token to your backend to associate it with the current user
-        // await api.updateUserPushToken(token);
+        const storedToken = await AsyncStorage.getItem('expoPushToken');
+        if (storedToken !== token) {
+          // Store the new token in AsyncStorage
+          await AsyncStorage.setItem('expoPushToken', token);
+          // Optionally, send the token to your backend to associate it with the current user
+          // await api.updateUserPushToken(token);
+        }
       }
     } catch (error) {
       console.error('Error registering for push notifications:', error);
