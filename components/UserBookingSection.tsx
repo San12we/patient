@@ -45,7 +45,7 @@ const UserBookingSection: React.FC<{
     setToast({ visible: true, message, type });
   };
 
-  const sendNotification = async () => {
+  const sendNotification = async (appointmentId: string) => {
     try {
       console.log('expoPushToken:', expoPushToken);
       console.log('userId:', userId);
@@ -109,7 +109,7 @@ const UserBookingSection: React.FC<{
       showToast('Appointment booked successfully with insurance.', 'success');
 
       // Send notification after successful booking
-      await sendNotification();
+      await sendNotification(newAppointmentId); // Pass the newAppointmentId directly
     } catch (error) {
       console.error('Failed to book appointment:', error);
       showToast('Failed to book appointment. Please try again.', 'error');
