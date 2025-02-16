@@ -61,6 +61,11 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async ({ in
   return transformedData;
 });
 
+export const fetchClinicsFromStorage = createAsyncThunk('clinics/fetchClinicsFromStorage', async () => {
+  const clinics = await AsyncStorage.getItem('clinics');
+  return clinics ? JSON.parse(clinics) : [];
+});
+
 const clinicSlice = createSlice({
   name: 'clinics',
   initialState,
@@ -87,6 +92,9 @@ const clinicSlice = createSlice({
       .addCase(fetchClinics.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      })
+      .addCase(fetchClinicsFromStorage.fulfilled, (state, action) => {
+        state.clinics = action.payload;
       });
   },
 });

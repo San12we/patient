@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   StyleSheet,
   Text,
   View,
-  ActivityIndicator,
   TouchableOpacity,
   ScrollView,
   Image,
@@ -25,6 +24,7 @@ import axios from 'axios';
 import UserBookingSection from '../../components/UserBookingSection';
 import { getDoctors, setSelectedDoctor } from '../../app/(redux)/doctorSlice';
 import socket from '../../Services/socket';
+import LottieView from 'lottie-react-native';
 
 const DoctorProfile: React.FC = () => {
   const router = useRouter();
@@ -46,6 +46,10 @@ const DoctorProfile: React.FC = () => {
   const specialization = doctor.professionalDetails?.specialization || 'N/A';
   const yearsOfExperience = doctor.professionalDetails?.yearsOfExperience || 'N/A';
   const clinicName = doctor.practiceName || 'Unknown Clinic';
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const animation = useRef<LottieView>(null);
 
   // Fetch doctor data, schedule, and user insurance
   useEffect(() => {
@@ -87,7 +91,7 @@ const DoctorProfile: React.FC = () => {
   }, [fetchSchedule]);
 
   // Filter slots for the selected day
-  const getSlotsForSelectedDay = useCallback(() => {
+  const getSlotsForSelectedDay = useMemo(() => {
     const today = moment().startOf('day');
     return schedule[selectedDay]?.filter((slot) => moment(`${slot.date} ${slot.startTime}`, 'YYYY-MM-DD HH:mm').isSameOrAfter(today)) || [];
   }, [schedule, selectedDay]);
@@ -120,14 +124,72 @@ const DoctorProfile: React.FC = () => {
         <Text style={[styles.slotText, selectedTimeSlot?.id === item._id && { color: Colors.PRIMARY }]}>
           {`${item.startTime} - ${item.endTime}`}
         </Text>
+        {selectedTimeSlot?.id === item._id && (
+          <Ionicons name="checkmark-circle" size={20} color={Colors.PRIMARY} style={styles.checkIcon} />
+        )}
       </TouchableOpacity>
     );
   }, [selectedTimeSlot]);
 
+  const renderDayButton = (day) => {
+    const today = moment().startOf('day');
+    const isPastDay = moment(day, 'dddd').isBefore(today, 'day');
+    const hasSlots = schedule[day]?.length > 0;
+    const isDisabled = isPastDay || !hasSlots;
+    const isToday = moment(day, 'dddd').isSame(moment(), 'day');
+
+    return (
+      <TouchableOpacity
+        key={day}
+        onPress={() => setSelectedDay(day)}
+        style={[
+          styles.dayButton,
+          selectedDay === day && styles.selectedDayButton,
+          isToday && !isDisabled && styles.todayButton,
+          isDisabled && styles.disabledDayButton,
+        ]}
+        disabled={isDisabled}
+        onPress={() => {
+          if (isPastDay) {
+            Alert.alert('Past Day', 'You cannot select a day that has already passed.');
+          } else if (!hasSlots) {
+            Alert.alert('No Slots', 'The doctor is not available on this day.');
+          } else {
+            setSelectedDay(day);
+          }
+        }}
+      >
+        <Text
+          style={[
+            styles.dayText,
+            selectedDay === day && styles.selectedDayText,
+            isToday && !isDisabled && styles.todayText,
+            isDisabled && styles.disabledDayText,
+          ]}
+        >
+          {day}
+        </Text>
+        {isDisabled && (
+          <Ionicons
+            name="information-circle-outline"
+            size={16}
+            color={Colors.GRAY}
+            style={styles.infoIcon}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+        <LottieView
+          autoPlay
+          ref={animation}
+          style={styles.lottieAnimation}
+          source={require('../../assets/animations/loading2.json')}
+        />
       </View>
     );
   }
@@ -169,22 +231,9 @@ const DoctorProfile: React.FC = () => {
           <Text style={styles.title}>Select a Day</Text>
           <FlatList
             horizontal
-            data={Object.keys(schedule)}
+            data={daysOfWeek}
             keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => setSelectedDay(item)}
-                style={[
-                  styles.dayButton,
-                  selectedDay === item && styles.selectedDayButton,
-                  schedule[item] ? styles.availableDayButton : styles.unavailableDayButton,
-                ]}
-              >
-                <Text style={[styles.dayText, selectedDay === item && styles.selectedDayText]}>
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) => renderDayButton(item)}
             showsHorizontalScrollIndicator={false}
           />
         </View>
@@ -195,16 +244,20 @@ const DoctorProfile: React.FC = () => {
             <ActivityIndicator size="large" color={Colors.PRIMARY} />
           ) : error ? (
             <Text>Error loading schedule: {error}</Text>
-          ) : getSlotsForSelectedDay().length > 0 ? (
+          ) : getSlotsForSelectedDay.length > 0 ? (
             <FlatList
               horizontal
-              data={getSlotsForSelectedDay()}
+              data={getSlotsForSelectedDay}
               keyExtractor={(item) => item._id}
               renderItem={renderSlot}
               showsHorizontalScrollIndicator={false}
             />
           ) : (
-            <Text style={styles.noSlotsText}>The doctor is not available for the selected day.</Text>
+            <Text style={styles.noSlotsText}>
+              {schedule[selectedDay]?.length === 0
+                ? 'The doctor is not available for the selected day.'
+                : 'No slots available for the selected day.'}
+            </Text>
           )}
         </View>
 
@@ -233,7 +286,7 @@ const DoctorProfile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: '#e3f6f5',
   },
   heroContainer: {
     height: 200,
@@ -302,25 +355,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedDayButton: {
-    backgroundColor: Colors.SECONDARY,
+    backgroundColor: '#ffebbb',
   },
   availableDayButton: {
-    backgroundColor: Colors.light_gray,
+    backgroundColor: '#ffebbb',
   },
   unavailableDayButton: {
-    backgroundColor: Colors.light_gray,
+    backgroundColor: '#ffebbb',
   },
   dayText: {
     fontSize: 16,
   },
   selectedDayText: {
-    color: Colors.white,
+    color: Colors.primary,
   },
   availableDayText: {
-    color: Colors.PRIMARY,
+    color: Colors.primary,
   },
   unavailableDayText: {
-    color: Colors.white,
+    color: Colors.primary,
   },
   slotButton: {
     padding: 10,
@@ -334,12 +387,39 @@ const styles = StyleSheet.create({
   },
   noSlotsText: {
     fontSize: 16,
-    color: Colors.GRAY,
+    color: Colors.primary,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  disabledDayButton: {
+    backgroundColor: Colors.light_gray,
+  },
+  disabledDayText: {
+    color: Colors.GRAY,
+  },
+  todayButton: {
+    borderColor: Colors.ligh_gray,
+    borderWidth: 1,
+  },
+  todayText: {
+    color: Colors.primary,
+    fontWeight: 'bold',
+  },
+  infoIcon: {
+    marginLeft: 5,
+  },
+  checkIcon: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+  },
+  lottieAnimation: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#e3f6f5',
   },
 });
 

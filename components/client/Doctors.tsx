@@ -1,11 +1,11 @@
-import React, { useMemo, useEffect } from 'react';
-import { View, FlatList, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, FlatList, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import SubHeading from './SubHeading';
 import Colors from '../../components/Shared/Colors';
-import { useDispatch } from 'react-redux';
-import { setSelectedDoctor } from '../../app/(redux)/doctorSlice'; // Import the setSelectedDoctor action
+import { useDispatch, useSelector } from 'react-redux';
+import { setSelectedDoctor } from '../../app/(redux)/doctorSlice';
 
 interface Doctor {
   id: string;
@@ -26,32 +26,41 @@ interface Doctor {
   specializedTreatment?: string;
   certifications?: string[];
   user: {
-    profileImage?: string; // Add profileImage in the nested user object
+    profileImage?: string;
   };
 }
 
-interface DoctorsProps {
-  doctors: Doctor[];
-  error: string | null;
-}
-
-const Doctors: React.FC<DoctorsProps> = ({ doctors, error }) => {
+const Doctors: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { doctors, error } = useSelector((state) => state.doctors);
 
-  const handleConsult = (doctor: Doctor) => {
+  const handleConsult = useCallback((doctor: Doctor) => {
     console.log('Consulting doctor:', doctor);
     dispatch(setSelectedDoctor(doctor)); // Dispatch the selected doctor
     router.push(`/doctors/${doctor.id}`); // Navigate to the DoctorProfile screen using id
-  };
+  }, [dispatch, router]);
 
   const filteredDoctors = useMemo(() => {
     return doctors; // No filtering based on searchQuery or excludeDoctorId
   }, [doctors]);
 
-  useEffect(() => {
-    console.log('Filtered doctors:', filteredDoctors); // Log the filtered data
-  }, [filteredDoctors]);
+  const renderDoctorItem = useCallback(({ item }: { item: Doctor }) => (
+    <View style={styles.doctorItem}>
+      <TouchableOpacity onPress={() => handleConsult(item)}>
+        <Image
+          source={{
+            uri: item.user.profileImage || item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg',
+          }}
+          style={styles.doctorImage}
+        />
+      </TouchableOpacity>
+      <View style={styles.nameCategoryContainer}>
+        <Text style={styles.doctorName}>{item.firstName} {item.lastName}</Text>
+        <Text style={styles.doctorName}>{item.specialty}</Text>
+      </View>
+    </View>
+  ), [handleConsult]);
 
   if (error) {
     return <Text>Error loading doctors: {error}</Text>;
@@ -63,23 +72,8 @@ const Doctors: React.FC<DoctorsProps> = ({ doctors, error }) => {
       <FlatList
         data={filteredDoctors}
         horizontal
-        renderItem={({ item }) => (
-          <View style={styles.doctorItem}>
-            <TouchableOpacity onPress={() => handleConsult(item)}>
-              <Image
-                source={{
-                  uri: item.user.profileImage || item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg',
-                }}
-                style={styles.doctorImage}
-              />
-            </TouchableOpacity>
-            <View style={styles.nameCategoryContainer}>
-              <Text style={styles.doctorName}>{item.firstName} {item.lastName}</Text>
-              <Text style={styles.doctorName}>{item.specialty}</Text>
-            </View>
-          </View>
-        )}
-        keyExtractor={(item, index) => `${item.id}-${index}`}
+        renderItem={renderDoctorItem}
+        keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         nestedScrollEnabled={true}
       />
@@ -90,8 +84,8 @@ const Doctors: React.FC<DoctorsProps> = ({ doctors, error }) => {
 const styles = StyleSheet.create({
   container: {
     marginTop: 10,
-    padding: 10, // Add padding if necessary
-    borderRadius: 10, // Add border radius if necessary
+    padding: 10,
+    borderRadius: 10,
   },
   doctorItem: {
     marginRight: 10,
@@ -111,8 +105,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   doctorName: {
-        fontWeight: 'bold',
-        color: Colors.primary,
+    fontWeight: 'bold',
+    color: Colors.primary,
   },
   loadingContainer: {
     flex: 1,

@@ -11,7 +11,7 @@ import {
 import SubHeading from '../../components/client/SubHeading';
 import Colors from '../Shared/Colors';
 import { useRouter } from 'expo-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedClinic } from '../../app/(redux)/clinicSlice'; // Import the setSelectedClinic action
 
 interface Clinic {
@@ -22,21 +22,12 @@ interface Clinic {
   clinicImages?: string[];
 }
 
-interface ClinicsProps {
-  clinics: Clinic[];
-  loading: boolean;
-  error: string | null;
-}
-
-const Clinics: React.FC<ClinicsProps> = ({ clinics, loading, error }) => {
+const Clinics: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const initialLoad = useRef(true);
+  const { clinics, loading, error } = useSelector((state) => state.clinics);
 
   useEffect(() => {
-    if (initialLoad.current) {
-      initialLoad.current = false;
-    }
     console.log("Clinics data:", clinics); // Log the clinics data
     clinics.forEach(clinic => {
       console.log(`Clinic: ${clinic.name}, Doctors:`, clinic.doctors); // Log each clinic's doctors

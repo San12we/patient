@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 
 const Posts = () => {
   const dispatch = useDispatch();
-  const { posts, loading } = useSelector((state: RootState) => state.posts);
+  const { posts, loading, error } = useSelector((state: RootState) => state.posts);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,6 +22,10 @@ const Posts = () => {
         <ActivityIndicator size="large" color="#6200ee" />
       </View>
     );
+  }
+
+  if (error) {
+    return <Text>{error}</Text>;
   }
 
   return (

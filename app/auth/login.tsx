@@ -10,46 +10,40 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { loginUser } from "../(services)/api/api";
 import { loginAction } from "../(redux)/authSlice";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 import { useNotification } from '../../context/NotificationsContext';
-import { emailValidator } from "../../helpers/emailValidator"; // Import emailValidator
-import { passwordValidator } from "../../helpers/passwordValidator"; // Import passwordValidator
-
-export default function Login({ navigation }) {
-  const [getEmailId, setEmailId] = useState({ value: "", error: "" });
-  const [getPassword, setPassword] = useState({ value: "", error: "" });
-  const [getError, setError] = useState(false);
-  const [throwError, setThrowError] = useState("");
-  const [getDisabled, setDisabled] = useState(false);
-  const [loading, setLoading] = useState(false);
+import { emailValidator} from "../../helpers/emailValidator"; // Combined validators
+import { passwordValidator } from "../../helpers/passwordValidator";
+export default function Login() {
+  const [email, setEmail] = useState({ value: "", error: "" });
+  const [password, setPassword] = useState({ value: "", error: "" });
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
   const router = useRouter();
   const { expoPushToken, showNotification } = useNotification();
 
-  const loginFunction = async () => {
-    const emailError = emailValidator(getEmailId.value);
-    const passwordError = passwordValidator(getPassword.value);
+  const handleLogin = async () => {
+    const emailError = emailValidator(email.value);
+    const passwordError = passwordValidator(password.value);
+
     if (emailError || passwordError) {
-      setEmailId({ ...getEmailId, error: emailError });
-      setPassword({ ...getPassword, error: passwordError });
+      setEmail((prev) => ({ ...prev, error: emailError }));
+      setPassword((prev) => ({ ...prev, error: passwordError }));
       return;
     }
 
-    setDisabled(true);
-    setLoading(true);
+    setIsLoading(true);
     try {
-      const userData = await loginUser({ email: getEmailId.value, password: getPassword.value });
-      console.log('User Data:', userData);
+      const userData = await loginUser({ email: email.value, password: password.value });
       dispatch(loginAction(userData));
-      setEmailId({ value: "", error: "" });
-      setPassword({ value: "", error: "" });
 
       if (expoPushToken) {
         await sendTokenToBackend(userData.user._id, expoPushToken);
@@ -57,126 +51,126 @@ export default function Login({ navigation }) {
 
       router.push("/(tabs)");
     } catch (err) {
-      setDisabled(false);
-      setLoading(false);
       setError(true);
-      setThrowError("Sorry! User not found / Incorrect Password");
-      setPassword({ value: "", error: "" });
-
+      setErrorMessage("Sorry! User not found / Incorrect Password");
       showNotification({
         title: 'Error',
         message: err.message || 'Login failed',
-        type: 'error'
+        type: 'error',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <ScrollView contentContainerStyle={styles.loginContainer}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Image
           source={{ uri: "https://res.cloudinary.com/dws2bgxg4/image/upload/v1739456710/log_fjcgwt.jpg" }}
-          style={styles.loginImg}
+          style={styles.image}
         />
-        <View style={styles.mainContainer}>
-          <Text style={styles.welComeText}>Hello, {"\n"} Welcome back</Text>
-          <View style={styles.loginInputView}>
+        <View style={styles.content}>
+          <Text style={styles.welcomeText}>Hello, {"\n"} Welcome back</Text>
+          <View style={styles.inputContainer}>
             <TextInput
               placeholder="Email"
-              style={styles.loginInput}
-              value={getEmailId.value}
-              onChangeText={(text) => setEmailId({ value: text, error: "" })}
+              style={styles.input}
+              value={email.value}
+              onChangeText={(text) => setEmail({ value: text, error: "" })}
               autoCapitalize="none"
               textContentType="emailAddress"
               keyboardType="email-address"
             />
+            {email.error ? <Text style={styles.errorText}>{email.error}</Text> : null}
           </View>
-          {getEmailId.error ? <Text style={styles.feedbackText}>{getEmailId.error}</Text> : null}
-          <View style={styles.loginInputView}>
+          <View style={styles.inputContainer}>
             <TextInput
               placeholder="Password"
-              style={styles.loginInput}
-              value={getPassword.value}
+              style={styles.input}
+              value={password.value}
               onChangeText={(text) => setPassword({ value: text, error: "" })}
               secureTextEntry
             />
+            {password.error ? <Text style={styles.errorText}>{password.error}</Text> : null}
           </View>
-          {getPassword.error ? <Text style={styles.feedbackText}>{getPassword.error}</Text> : null}
           <TouchableOpacity
             style={styles.forgotPassword}
             onPress={() => router.push("/auth/resetPassword")}
           >
-            <Text style={styles.forgotBtnText}>Forgot Password?</Text>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.btn, loading && { backgroundColor: '#ccc' }]}
-            onPress={loginFunction}
-            disabled={getDisabled}
+            style={[styles.button, isLoading && styles.disabledButton]}
+            onPress={handleLogin}
+            disabled={isLoading}
           >
-            <Text style={styles.btnText}>{loading ? "Signing in..." : "Sign in"}</Text>
-            {loading && (
-              <ActivityIndicator size="small" color="#fff" style={styles.loadingIndicator} />
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign in</Text>
             )}
           </TouchableOpacity>
-          <Text style={styles.contiueText}>or continue with</Text>
+          <Text style={styles.orText}>or continue with</Text>
+          <TouchableOpacity onPress={() => router.replace("/auth/register")}>
+            <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-          <Text style={styles.signupText}>Don't have an account? Sign up</Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  loginContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
   },
-  loginImg: {
+  image: {
     width: 200,
     height: 200,
     marginBottom: 20,
   },
-  mainContainer: {
+  content: {
     width: '100%',
     alignItems: 'center',
   },
-  welComeText: {
-    fontSize: 16,
+  welcomeText: {
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
   },
-  loginInputView: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  inputContainer: {
+    width: '100%',
     marginBottom: 10,
+  },
+  input: {
+    height: 40,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     paddingHorizontal: 10,
     backgroundColor: '#fff',
   },
-  loginInput: {
-    flex: 1,
-    height: 40,
-  },
-  feedbackText: {
+  errorText: {
     color: 'red',
-    marginBottom: 10,
+    marginTop: 5,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: 20,
   },
-  forgotBtnText: {
+  forgotPasswordText: {
     color: '#007bff',
   },
-  btn: {
+  button: {
     width: '100%',
     padding: 15,
     backgroundColor: '#c5f0a4',
@@ -184,19 +178,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  btnText: {
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  buttonText: {
     color: '#fff',
     fontSize: 16,
   },
-  contiueText: {
+  orText: {
     marginBottom: 20,
     color: '#a9a9a9',
   },
   signupText: {
     color: '#007bff',
-    marginTop: 20,
-  },
-  loadingIndicator: {
-    marginLeft: 10,
   },
 });

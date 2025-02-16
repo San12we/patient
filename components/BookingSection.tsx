@@ -16,9 +16,9 @@ const BookingSection: React.FC<{
   selectedTimeSlot?: { id: string; time: string } | null;
 }> = ({ doctorId, consultationFee, selectedTimeSlot }) => {
   const { expoPushToken } = useNotification();
-  const [appointmentId, setAppointmentId] = useState<string | null>(null);
-  const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
+  const appointmentIdRef = useRef<string | null>(null); // Add a ref for appointment ID
 
   const user = useSelector(selectUser);
   const userId = user.user?._id;
@@ -74,8 +74,9 @@ const BookingSection: React.FC<{
         selectedTimeSlot.time
       );
 
-      setAppointmentId(newAppointmentId);
-
+      // Update both state and ref
+      appointmentIdRef.current = newAppointmentId;
+      
       if (paystackWebViewRef.current) {
         paystackWebViewRef.current.startTransaction();
       }
@@ -93,7 +94,10 @@ const BookingSection: React.FC<{
 
   const handlePaymentSuccess = async (response: any) => {
     try {
-      if (!expoPushToken || !userId || !appointmentId) {
+      // Use the ref value instead of state
+      const currentAppointmentId = appointmentIdRef.current;
+      
+      if (!expoPushToken || !userId || !currentAppointmentId) {
         throw new Error('Missing required data for notification.');
       }
 
@@ -156,7 +160,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     marginTop: 30,
-    backgroundColor: '#bae8e8',
+    backgroundColor: Colors.goofy,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
