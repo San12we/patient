@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from "r
 import NotificationBanner from "@/components/NotificationBanner"; // Adjust the import path as necessary
 import * as Notifications from "expo-notifications";
 import { Subscription } from "expo-modules-core";
-import { requestUserPermission } from "@/utils/firebaseMessaging";
+import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 
 interface NotificationData {
   title: string;
@@ -12,7 +12,7 @@ interface NotificationData {
 }
 
 interface NotificationContextType {
-  fcmToken: string | null;
+  expoPushToken: string | null;
   notification: Notifications.Notification | null;
   showNotification: (data: NotificationData) => void;
   hideNotification: () => void;
@@ -41,7 +41,7 @@ interface NotificationProviderProps {
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
 }) => {
-  const [fcmToken, setFcmToken] = useState<string | null>(null);
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notification, setNotification] =
     useState<Notifications.Notification | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -67,8 +67,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   useEffect(() => {
-    requestUserPermission().then(
-      (token) => setFcmToken(token),
+    registerForPushNotificationsAsync().then(
+      (token) => setExpoPushToken(token),
       (error) => setError(error)
     );
 
@@ -123,7 +123,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   return (
     <NotificationContext.Provider
       value={{ 
-        fcmToken, 
+        expoPushToken, 
         notification, 
         error,
         showNotification,
