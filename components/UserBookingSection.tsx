@@ -141,9 +141,7 @@ const UserBookingSection: React.FC<{
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
-    marginTop: 30,
+   
     backgroundColor: '#e3f6f5',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
