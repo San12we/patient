@@ -17,8 +17,9 @@ import { loginUser } from "../(services)/api/api";
 import { loginAction } from "../(redux)/authSlice";
 import { sendTokenToBackend } from '../../utils/sendTokenToBackend';
 import { useNotification } from '../../context/NotificationsContext';
-import { emailValidator} from "../../helpers/emailValidator"; // Combined validators
+import { emailValidator } from "../../helpers/emailValidator"; // Combined validators
 import { passwordValidator } from "../../helpers/passwordValidator";
+
 export default function Login() {
   const [email, setEmail] = useState({ value: "", error: "" });
   const [password, setPassword] = useState({ value: "", error: "" });
@@ -28,7 +29,7 @@ export default function Login() {
 
   const dispatch = useDispatch();
   const router = useRouter();
-  const { expoPushToken, showNotification } = useNotification();
+  const { fcmToken, showNotification } = useNotification(); // Use fcmToken from context
 
   const handleLogin = async () => {
     const emailError = emailValidator(email.value);
@@ -45,8 +46,8 @@ export default function Login() {
       const userData = await loginUser({ email: email.value, password: password.value });
       dispatch(loginAction(userData));
 
-      if (expoPushToken) {
-        await sendTokenToBackend(userData.user._id, expoPushToken);
+      if (fcmToken) {
+        await sendTokenToBackend(userData.user._id, fcmToken); // Send FCM token to backend
       }
 
       router.push("/(tabs)");

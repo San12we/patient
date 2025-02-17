@@ -9,6 +9,7 @@ import {
   StatusBar,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -24,7 +25,6 @@ import axios from 'axios';
 import UserBookingSection from '../../components/UserBookingSection';
 import { getDoctors, setSelectedDoctor } from '../../app/(redux)/doctorSlice';
 import socket from '../../Services/socket';
-import LottieView from 'lottie-react-native';
 
 const DoctorProfile: React.FC = () => {
   const router = useRouter();
@@ -48,8 +48,6 @@ const DoctorProfile: React.FC = () => {
   const clinicName = doctor.practiceName || 'Unknown Clinic';
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  const animation = useRef<LottieView>(null);
 
   // Fetch doctor data, schedule, and user insurance
   useEffect(() => {
@@ -184,12 +182,7 @@ const DoctorProfile: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <LottieView
-          autoPlay
-          ref={animation}
-          style={styles.lottieAnimation}
-          source={require('../../assets/animations/loading3.json')}
-        />
+        <ActivityIndicator size="large" color={Colors.PRIMARY} />
       </View>
     );
   }
@@ -277,7 +270,7 @@ const DoctorProfile: React.FC = () => {
           />
         )}
 
-        <Doctors excludeDoctorId={doctor.id} />
+        <Doctors excludeDoctorId={doctor._id} />
       </ScrollView>
     </View>
   );
@@ -415,10 +408,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 5,
     right: 5,
-  },
-  lottieAnimation: {
-    width: 200,
-    height: 200,
   },
 });
 

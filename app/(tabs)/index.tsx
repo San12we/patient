@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -50,12 +50,7 @@ const Index: React.FC = () => {
     if (doctorsLoading || clinicsLoading || categoriesLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <LottieView
-                    autoPlay
-                    ref={animation}
-                    style={styles.lottieAnimation}
-                    source={require('../../assets/animations/loading3.json')}
-                />
+                <ActivityIndicator size="large" color="#0000ff" />
             </View>
         );
     }

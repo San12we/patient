@@ -13,7 +13,7 @@ export async function requestUserPermission() {
         const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
         console.log("grantedgranted", granted);
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            getFCMToken();
+            return getFCMToken();
         } else {
             console.log("permission denied");
         }
@@ -25,7 +25,7 @@ export async function requestUserPermission() {
 
         if (enabled) {
             console.log('Authorization status:', authStatus);
-            getFCMToken();
+            return getFCMToken();
         }
     }
 }
@@ -42,10 +42,12 @@ const getFCMToken = async () => {
         let fcmToken = await AsyncStorage.getItem('fcm_token');
         if (!!fcmToken) {
             console.log("OLD FCM_TOKEN FOUND", fcmToken);
+            return fcmToken;
         } else {
             const token = await messaging().getToken();
             await AsyncStorage.setItem('fcm_token', token);
             console.log("NEW FCM_TOKEN", token);
+            return token;
         }
     } catch (error) {
         console.log("error during generating token", error);
