@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,14 +11,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
 import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
-import Doctors from '../../components/client/Doctors';
 import useSchedule from '../../hooks/useSchedule';
 import useInsurance from '../../hooks/useInsurance';
 import axios from 'axios';
@@ -31,6 +30,8 @@ const DoctorProfile: React.FC = () => {
   const dispatch = useDispatch();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const userId = useSelector((state) => state.auth.user.user._id);
+  const doctors = useSelector((state) => state.doctors.doctorsList);
+  const clinicDoctors = useSelector((state) => state.clinics.selectedClinic?.doctors || []);
   const { schedule, fetchSchedule, loading: scheduleLoading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
 
@@ -147,15 +148,6 @@ const DoctorProfile: React.FC = () => {
           isDisabled && styles.disabledDayButton,
         ]}
         disabled={isDisabled}
-        onPress={() => {
-          if (isPastDay) {
-            Alert.alert('Past Day', 'You cannot select a day that has already passed.');
-          } else if (!hasSlots) {
-            Alert.alert('No Slots', 'The doctor is not available on this day.');
-          } else {
-            setSelectedDay(day);
-          }
-        }}
       >
         <Text
           style={[
@@ -178,6 +170,16 @@ const DoctorProfile: React.FC = () => {
       </TouchableOpacity>
     );
   };
+
+  const handleDoctorPress = async (doctor) => {
+    dispatch(setSelectedDoctor(doctor));
+    fetchSchedule();
+  };
+
+  // Filter out the selected doctor from the list of other doctors
+  const otherDoctors = useMemo(() => {
+    return clinicDoctors.filter((doc) => doc._id !== doctor._id);
+  }, [clinicDoctors, doctor]);
 
   if (loading) {
     return (
@@ -270,7 +272,7 @@ const DoctorProfile: React.FC = () => {
           />
         )}
 
-        <Doctors excludeDoctorId={doctor._id} />
+      
       </ScrollView>
     </View>
   );
@@ -279,7 +281,6 @@ const DoctorProfile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e3f6f5',
   },
   heroContainer: {
     height: 200,
@@ -288,7 +289,6 @@ const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   backButton: {
     position: 'absolute',
@@ -301,113 +301,123 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
-    backgroundColor: 'rgba(101, 159, 161, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
   },
   heroText: {
-    color: Colors.white,
+    color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
   },
   scrollContainer: {
     flex: 1,
-    padding: 20,
+    padding: 16,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   horizontalSection: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
   infoCard: {
-    flexDirection: 'row',
+    flex: 1,
     alignItems: 'center',
-    backgroundColor: Colors.light_gray,
     padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    width: '48%',
+    backgroundColor: Colors.LIGHT_GRAY,
+    borderRadius: 8,
+    marginHorizontal: 4,
   },
   infoText: {
-    marginLeft: 10,
     fontSize: 14,
-    color: Colors.primary,
+    color: Colors.DARK_GRAY,
+    marginTop: 8,
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   dayButton: {
     padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: Colors.LIGHT_GRAY,
   },
   selectedDayButton: {
-    backgroundColor: '#ffebbb',
+    backgroundColor: Colors.PRIMARY,
   },
-  availableDayButton: {
-    backgroundColor: '#ffebbb',
+  todayButton: {
+    backgroundColor: Colors.SECONDARY,
   },
-  unavailableDayButton: {
-    backgroundColor: '#ffebbb',
+  disabledDayButton: {
+    backgroundColor: Colors.DISABLED,
   },
   dayText: {
-    fontSize: 16,
+    fontSize: 14,
+    color: Colors.DARK_GRAY,
   },
   selectedDayText: {
-    color: Colors.primary,
+    color: '#fff',
   },
-  availableDayText: {
-    color: Colors.primary,
+  todayText: {
+    color: '#fff',
   },
-  unavailableDayText: {
-    color: Colors.primary,
+  disabledDayText: {
+    color: Colors.GRAY,
+  },
+  infoIcon: {
+    marginLeft: 4,
   },
   slotButton: {
     padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
+    marginHorizontal: 4,
+    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   slotText: {
-    fontSize: 16,
+    fontSize: 14,
+    color: Colors.DARK_GRAY,
+  },
+  checkIcon: {
+    position: 'absolute',
+    right: 4,
+    top: 4,
   },
   noSlotsText: {
+    fontSize: 14,
+    color: Colors.GRAY,
+    textAlign: 'center',
+  },
+  doctorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: Colors.LIGHT_GRAY,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  doctorImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 16,
+  },
+  doctorDetails: {
+    flex: 1,
+  },
+  doctorName: {
     fontSize: 16,
-    color: Colors.primary,
+    fontWeight: 'bold',
+  },
+  doctorSpecialty: {
+    fontSize: 14,
+    color: Colors.DARK_GRAY,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  disabledDayButton: {
-    backgroundColor: Colors.light_gray,
-  },
-  disabledDayText: {
-    color: Colors.GRAY,
-  },
-  todayButton: {
-    borderColor: Colors.ligh_gray,
-    borderWidth: 1,
-  },
-  todayText: {
-    color: Colors.primary,
-    fontWeight: 'bold',
-  },
-  infoIcon: {
-    marginLeft: 5,
-  },
-  checkIcon: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
   },
 });
 

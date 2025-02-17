@@ -73,7 +73,7 @@ const Doctors: React.FC = () => {
         data={filteredDoctors}
         horizontal
         renderItem={renderDoctorItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id} // Ensure each item has a unique key
         showsHorizontalScrollIndicator={false}
         nestedScrollEnabled={true}
       />
