@@ -13,7 +13,7 @@ import Colors from './Shared/Colors';
 const BookingSection: React.FC<{
   doctorId: string;
   consultationFee: number;
-  selectedTimeSlot?: { id: string; time: string } | null;
+  selectedTimeSlot?: { id: string; time: string; date: string } | null;
 }> = ({ doctorId, consultationFee, selectedTimeSlot }) => {
   const { showNotification } = useNotification();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -92,7 +92,7 @@ const BookingSection: React.FC<{
     }
   };
 
-  const handlePaymentSuccess = async (response: any, expoPushToken: string) => {
+  const handlePaymentSuccess = async (response: any) => {
     try {
       const currentAppointmentId = appointmentIdRef.current;
 
@@ -100,13 +100,42 @@ const BookingSection: React.FC<{
         throw new Error('Missing required data for notification.');
       }
 
+      const appointmentData = {
+        appointment: {
+          doctorId,
+          userId,
+          patientId: userId, // Assuming patientId is the same as userId
+          status: 'confirmed',
+          timeSlotId: selectedTimeSlot?.id,
+          time: selectedTimeSlot?.time,
+          date: selectedTimeSlot?.date,
+          _id: currentAppointmentId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0,
+        },
+        patient: {
+          _id: userId,
+          gender: user.user?.gender || 'unknown',
+          medicalHistory: user.user?.medicalHistory || [],
+          userId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0,
+        },
+      };
+
       showNotification({
         title: 'Appointment Confirmed',
         message: `Appointment scheduled for ${selectedTimeSlot?.time}`,
         type: 'success',
       });
 
-      await sendPushNotification(expoPushToken, 'Appointment Confirmed', `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`);
+      await sendPushNotification(
+        'Appointment Confirmed',
+        `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`,
+        appointmentData
+      );
 
       Toast.show({
         type: 'success',
