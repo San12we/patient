@@ -46,7 +46,7 @@ const Doctors: React.FC = () => {
   }, [doctors]);
 
   const renderDoctorItem = useCallback(({ item }: { item: Doctor }) => (
-    <View style={styles.doctorItem}>
+    <View style={styles.doctorItem} key={item.id}>
       <TouchableOpacity onPress={() => handleConsult(item)}>
         <Image
           source={{

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,12 +10,14 @@ import {
   FlatList,
   Alert,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideInLeft } from 'react-native-reanimated';
+import Loading from '../../components/Loading';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
 import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
@@ -33,50 +35,55 @@ const DoctorProfile: React.FC = () => {
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const userId = useSelector((state) => state.auth.user.user._id);
   const { doctors: clinicDoctors } = useDoctors();
-  const { schedule, fetchSchedule, loading: scheduleLoading, error } = useSchedule(doctor._id, userId);
-  const { insuranceProviders } = useInsurance();
+  const { schedule, fetchSchedule, loading: scheduleLoading, error } = useSchedule(doctor?._id, userId);
+  const { insuranceProviders, userInsurance, isInsuranceAccepted, status, error: insuranceError } = useInsurance();
+  const selectedDoctor = useSelector((state) => state.doctors.selectedDoctor);
 
   const [selectedDay, setSelectedDay] = useState<string>(moment().format('dddd'));
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ id: string; time: string; isBooked: boolean; date: string } | null>(null);
   const [selectedInsurance, setSelectedInsurance] = useState<string | undefined>(undefined);
-  const [userInsurance, setUserInsurance] = useState<string | null>(null);
-  const [isInsuranceAccepted, setIsInsuranceAccepted] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
+  const [showSchedule, setShowSchedule] = useState(false);
 
-  const profileImageUri = doctor.user?.profileImage || doctor.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg';
-  const specialties = doctor.professionalDetails?.customSpecializedTreatment || 'N/A';
-  const specialization = doctor.professionalDetails?.specialization || 'N/A';
-  const yearsOfExperience = doctor.professionalDetails?.yearsOfExperience || 'N/A';
-  const clinicName = doctor.practiceName || 'Unknown Clinic';
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(true);
+
+  const profileImageUri = doctor?.user?.profileImage || doctor?.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg';
+  const specialties = doctor?.professionalDetails?.customSpecializedTreatment || 'N/A';
+  const specialization = doctor?.professionalDetails?.specialization || 'N/A';
+  const yearsOfExperience = doctor?.professionalDetails?.yearsOfExperience || 'N/A';
+  const clinicName = doctor?.practiceName || 'Unknown Clinic';
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Fetch doctor data, schedule, and user insurance
+  const hasInsurance = useMemo(() => !!userInsurance, [userInsurance]);
+
+  // Fetch doctor data and schedule
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setProcessing(true);
         await dispatch<any>(getDoctors());
         if (!doctor) {
           router.back();
         } else {
           dispatch(setSelectedDoctor(doctor));
           await fetchSchedule();
-          const response = await axios.get(`https://project03-rj91.onrender.com/insurance/user/${userId}`);
-          if (response.status === 200) {
-            const data = response.data;
-            setUserInsurance(data.insuranceProvider);
-            setIsInsuranceAccepted(insuranceProviders.some((insurance) => insurance.name === data.insuranceProvider));
-          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
+        setProcessing(false);
       }
     };
 
-    fetchData();
-  }, [dispatch, doctor, router, userId, insuranceProviders]);
+    if (doctor && doctor._id !== selectedDoctor?._id) {
+      fetchData();
+    } else {
+      setLoading(false);
+      setProcessing(false);
+    }
+  }, [dispatch, doctor, router, selectedDoctor]);
 
   // Listen for slot updates
   useEffect(() => {
@@ -106,13 +113,12 @@ const DoctorProfile: React.FC = () => {
     }
   }, []);
 
-  // Render a single slot
   const renderSlot = useCallback(({ item }) => {
     const slotTime = moment(`${item.date} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
     const isPast = slotTime.isBefore(moment());
 
     return (
-      <Animated.View entering={FadeIn} exiting={FadeOut}>
+      <Animated.View entering={FadeIn} exiting={FadeOut} key={item._id}>
         <TouchableOpacity
           onPress={() => handleSlotSelection(item)}
           style={[
@@ -141,7 +147,7 @@ const DoctorProfile: React.FC = () => {
     const isToday = moment(day, 'dddd').isSame(moment(), 'day');
 
     return (
-      <Animated.View entering={SlideInRight} exiting={SlideInLeft}>
+      <Animated.View entering={SlideInRight} exiting={SlideInLeft} key={day}>
         <TouchableOpacity
           key={day}
           onPress={() => setSelectedDay(day)}
@@ -177,8 +183,10 @@ const DoctorProfile: React.FC = () => {
   };
 
   const handleDoctorPress = async (doctor) => {
+    setProcessing(true);
     dispatch(setSelectedDoctor(doctor));
     await fetchSchedule();
+    setProcessing(false);
   };
 
   // Filter out the selected doctor from the list of other doctors
@@ -216,9 +224,7 @@ const DoctorProfile: React.FC = () => {
 
         <View style={styles.section}>
           <Text style={styles.title}>Available Slots</Text>
-          {scheduleLoading ? (
-            <ActivityIndicator size="large" color={Colors.PRIMARY} />
-          ) : error ? (
+          {error ? (
             <Text>Error loading schedule: {error}</Text>
           ) : getSlotsForSelectedDay.length > 0 ? (
             <FlatList
@@ -236,17 +242,42 @@ const DoctorProfile: React.FC = () => {
             </Text>
           )}
         </View>
+
+        {hasInsurance ? (
+          <UserBookingSection
+            doctorId={doctor._id}
+            consultationFee={doctor.consultationFee || 'N/A'}
+            selectedTimeSlot={selectedTimeSlot}
+          />
+        ) : (
+          <BookingSection
+            doctorId={doctor._id}
+            consultationFee={doctor.consultationFee || 'N/A'}
+            selectedTimeSlot={selectedTimeSlot}
+          />
+        )}
       </>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-      </View>
-    );
+  if (loading || processing || status === 'loading') {
+    return <Loading />;
   }
+
+  const renderInfoItem = ({ item, index }) => (
+    <Animated.View entering={FadeIn.delay(index * 100)}>
+      <View style={styles.infoItem}>
+        <Ionicons name={item.icon} size={20} color={Colors.primary} />
+        <Text style={styles.infoText}>{item.text}</Text>
+      </View>
+    </Animated.View>
+  );
+
+  const infoItems = [
+    { icon: 'medkit', text: specialties },
+    { icon: 'business', text: clinicName },
+    { icon: 'calendar', text: `${yearsOfExperience} years of experience` },
+  ];
 
   return (
     <View style={styles.container}>
@@ -260,66 +291,66 @@ const DoctorProfile: React.FC = () => {
           <Text style={styles.heroText}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
         </View>
       </View>
-      <ScrollView style={styles.scrollContainer}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <ClinicSubHeading subHeadingTitle={`${doctor.firstName} ${doctor.lastName}`} />
           <Text style={styles.descriptionText}>{doctor.bio || 'No description available'}</Text>
         </View>
 
-        <View style={[styles.section, styles.horizontalSection]}>
-          <Animated.View entering={FadeIn.delay(100)}>
-            <View style={styles.infoCard}>
-              <Ionicons name="medkit" size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>{specialties}</Text>
-            </View>
-          </Animated.View>
-          <Animated.View entering={FadeIn.delay(200)}>
-            <View style={styles.infoCard}>
-              <Ionicons name="business" size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>{clinicName}</Text>
-            </View>
-          </Animated.View>
-          <Animated.View entering={FadeIn.delay(300)}>
-            <View style={styles.infoCard}>
-              <Ionicons name="calendar" size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>{yearsOfExperience} years of experience</Text>
-            </View>
-          </Animated.View>
+        <View style={styles.section}>
+          <FlatList
+            horizontal
+            data={infoItems}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderInfoItem}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+
+        <View style={styles.scheduleContainer}>
+          <View style={styles.scheduleToggleContainer}>
+            <Text style={styles.scheduleText}>Schedule</Text>
+            <Switch
+              value={showSchedule}
+              onValueChange={() => setShowSchedule(!showSchedule)}
+              trackColor={{ false: Colors.LIGHT_GRAY, true: Colors.PRIMARY }}
+              thumbColor={showSchedule ? Colors.WHITE : Colors.GRAY}
+              style={styles.scheduleSwitch}
+            />
+          </View>
         </View>
 
         {/* Render schedule section or subtle unavailability message */}
-        {renderScheduleSection()}
-
-        {isInsuranceAccepted ? (
-          <UserBookingSection
-            doctorId={doctor._id}
-            consultationFee={doctor.consultationFee || 'N/A'}
-            selectedTimeSlot={selectedTimeSlot}
-            selectedInsurance={selectedInsurance}
-          />
-        ) : (
-          <BookingSection
-            doctorId={doctor._id}
-            consultationFee={doctor.consultationFee || 'N/A'}
-            selectedTimeSlot={selectedTimeSlot}
-            selectedInsurance={selectedInsurance}
-          />
-        )}
+        {showSchedule && renderScheduleSection()}
 
         {/* Render other doctors */}
         <View style={styles.section}>
           <Text style={styles.title}>Other Doctors</Text>
           <FlatList
-            horizontal
             data={otherDoctors}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleDoctorPress(item)} style={styles.doctorCard}>
-                <Image source={{ uri: item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg' }} style={styles.doctorImage} />
-                <Text style={styles.doctorName}>{`${item.firstName} ${item.lastName}`}</Text>
-              </TouchableOpacity>
+              <Animated.View entering={FadeIn.delay(100)} exiting={FadeOut}>
+                <TouchableOpacity
+                  style={styles.doctorCard}
+                  onPress={() => handleDoctorPress(item)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg' }}
+                    style={styles.doctorImage}
+                  />
+                  <View style={styles.doctorDetails}>
+                    <Text style={styles.doctorName}>
+                      {item.firstName} {item.lastName}
+                    </Text>
+                    <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
+                  </View>
+                  <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
+                </TouchableOpacity>
+              </Animated.View>
             )}
-            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
           />
         </View>
       </ScrollView>
@@ -330,7 +361,7 @@ const DoctorProfile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.LIGHT_BACKGROUND,
+    backgroundColor: '#f6e2f8'
   },
   heroContainer: {
     height: 250,
@@ -371,18 +402,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  infoCard: {
+  infoItem: {
     flex: 1,
     alignItems: 'center',
     padding: 16,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   infoText: {
     fontSize: 14,
@@ -390,11 +413,24 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  title: {
-    fontSize: 20,
+  scheduleContainer: {
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  scheduleToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  scheduleText: {
+    fontSize: 16,
+    color: Colors.primary,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#000',
+  },
+  scheduleSwitch: {
+    marginLeft: 'auto',
   },
   dayButton: {
     padding: 12,
@@ -465,6 +501,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  lottie: {
+    width: 200,
+    height: 200,
+  },
   unavailableSection: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -483,27 +523,36 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   doctorCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 8,
-    padding: 16,
-    backgroundColor: Colors.LIGHT_BACKGROUND,
+    backgroundColor:  '#d8d8ec',
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    width: '100%', // Take up the full width of the parent container
   },
   doctorImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 8,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 16,
+  },
+  doctorDetails: {
+    flex: 1,
   },
   doctorName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  doctorSpecialty: {
     fontSize: 14,
-    color: Colors.DARK_TEXT,
-    textAlign: 'center',
+    color: Colors.gray,
   },
 });
 

@@ -142,7 +142,7 @@ const UserBookingSection: React.FC<{
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#e3f6f5',
+    backgroundColor: '#f6e2f8',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
