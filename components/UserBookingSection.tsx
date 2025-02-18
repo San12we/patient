@@ -9,6 +9,7 @@ import { selectUser } from '../app/(redux)/authSlice';
 import { bookAppointment } from '../utils/bookingUtils';
 import CustomToast from './CustomToast';
 import { useNotification } from '../context/NotificationsContext';
+import { sendPushNotification } from '../utils/sendPushNotification';
 
 const UserBookingSection: React.FC<{
   doctorId: string;
@@ -42,32 +43,6 @@ const UserBookingSection: React.FC<{
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ visible: true, message, type });
-  };
-
-  const sendNotification = async (expoPushToken: string) => {
-    const message = {
-      to: expoPushToken,
-      sound: 'default',
-      title: 'Appointment Confirmed',
-      body: `Appointment scheduled for ${selectedTimeSlot?.time}`,
-      data: { appointmentId },
-    };
-
-    try {
-      await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-      });
-      showToast('Appointment confirmed! You will receive a notification shortly.', 'success');
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      showToast('Appointment booked, but failed to send confirmation notification.', 'error');
-    }
   };
 
   const handleBookWithInsurance = async () => {
@@ -105,7 +80,7 @@ const UserBookingSection: React.FC<{
       setAppointmentId(newAppointmentId);
       showToast('Appointment booked successfully with insurance.', 'success');
 
-      await sendNotification(expoPushToken);
+      await sendPushNotification(expoPushToken, 'Appointment Confirmed', `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`);
     } catch (error) {
       console.error('Failed to book appointment:', error);
       showToast('Failed to book appointment. Please try again.', 'error');

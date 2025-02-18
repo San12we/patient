@@ -92,11 +92,10 @@ const BookingSection: React.FC<{
     }
   };
 
-  const handlePaymentSuccess = async (response: any) => {
+  const handlePaymentSuccess = async (response: any, expoPushToken: string) => {
     try {
-      // Use the ref value instead of state
       const currentAppointmentId = appointmentIdRef.current;
-      
+
       if (!currentAppointmentId) {
         throw new Error('Missing required data for notification.');
       }
@@ -107,7 +106,7 @@ const BookingSection: React.FC<{
         type: 'success',
       });
 
-      await sendPushNotification('Appointment Confirmed', `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`);
+      await sendPushNotification(expoPushToken, 'Appointment Confirmed', `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`);
 
       Toast.show({
         type: 'success',
