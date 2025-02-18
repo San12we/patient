@@ -1,9 +1,9 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNotification } from '@/context/NotificationsContext'; // Adjust the import path as necessary
 
 export const sendPushNotification = async (title: string, message: string, data: any = {}) => {
   try {
-    const expoPushToken = await AsyncStorage.getItem('expoPushToken');
+    const { expoPushToken } = useNotification();
     if (!expoPushToken) {
       throw new Error('Expo Push Token not found');
     }
