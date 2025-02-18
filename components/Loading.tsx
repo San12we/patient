@@ -9,7 +9,7 @@ const Loading: React.FC = () => {
         autoPlay
         loop
         style={styles.lottie}
-        source={require('../../assets/animations/loading2.json')}
+        source={require('../assets/animations/loading2.json')}
       />
     </View>
   );
