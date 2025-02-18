@@ -80,7 +80,37 @@ const UserBookingSection: React.FC<{
       setAppointmentId(newAppointmentId);
       showToast('Appointment booked successfully with insurance.', 'success');
 
-      await sendPushNotification(expoPushToken, 'Appointment Confirmed', `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`);
+      const appointmentData = {
+        appointment: {
+          doctorId,
+          userId,
+          patientId: userId, // Assuming patientId is the same as userId
+          status: 'confirmed',
+          timeSlotId: selectedTimeSlot.id,
+          time: selectedTimeSlot.time,
+          date: selectedTimeSlot.date,
+          _id: newAppointmentId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0,
+        },
+        patient: {
+          _id: userId,
+          gender: user.user?.gender || 'unknown',
+          medicalHistory: user.user?.medicalHistory || [],
+          userId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0,
+        },
+      };
+
+      await sendPushNotification(
+        'Upcoming Appointment',
+        `Your appointment with Dr. ${doctorId} is scheduled for ${moment(selectedTimeSlot.date).format('MMMM Do YYYY')} at ${selectedTimeSlot.time}.`,
+        appointmentData
+      );
+
     } catch (error) {
       console.error('Failed to book appointment:', error);
       showToast('Failed to book appointment. Please try again.', 'error');
