@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import NotificationBanner from "@/components/NotificationBanner"; // Adjust the import path as necessary
 import * as Notifications from "expo-notifications";
-import { Subscription } from "expo-modules-core";
-import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
+import { Platform } from "react-native";
+import NotificationBanner from "@/components/NotificationBanner"; // Adjust the import path as necessary
 
 interface NotificationData {
   title: string;
@@ -20,16 +21,12 @@ interface NotificationContextType {
   error: Error | null;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(
-  undefined
-);
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error(
-      "useNotification must be used within a NotificationProvider"
-    );
+    throw new Error("useNotification must be used within a NotificationProvider");
   }
   return context;
 };
@@ -38,24 +35,18 @@ interface NotificationProviderProps {
   children: React.ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({
-  children,
-}) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [notification, setNotification] =
-    useState<Notifications.Notification | null>(null);
+  const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [currentNotification, setCurrentNotification] = useState<NotificationData | null>(null);
   const [lastNotificationId, setLastNotificationId] = useState<string>("");
 
-  const notificationListener = useRef<Subscription>();
-  const responseListener = useRef<Subscription>();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   const showNotification = (data: NotificationData) => {
-    // Generate a unique ID for the notification based on content and timestamp
     const notificationId = `${data.title}-${data.message}-${Date.now()}`;
-    
-    // Only show if it's a different notification
     if (notificationId !== lastNotificationId) {
       setLastNotificationId(notificationId);
       setCurrentNotification(data);
@@ -66,69 +57,76 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     setCurrentNotification(null);
   };
 
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(
-      (token) => setExpoPushToken(token),
-      (error) => setError(error)
-    );
+  const handleRegistrationError = (errorMessage: string) => {
+    alert(errorMessage);
+    throw new Error(errorMessage);
+  };
 
-    // Configure foreground notification behavior
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true, // Show alert in the foreground
-        shouldPlaySound: true, // Play sound
-        shouldSetBadge: true, // Set badge count
-      }),
+  const registerForPushNotificationsAsync = async () => {
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        handleRegistrationError('Permission not granted to get push token for push notification!');
+        return;
+      }
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      if (!projectId) {
+        handleRegistrationError('Project ID not found');
+      }
+      try {
+        const pushTokenString = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+        console.log(pushTokenString);
+        return pushTokenString;
+      } catch (e: unknown) {
+        handleRegistrationError(`${e}`);
+      }
+    } else {
+      handleRegistrationError('Must use physical device for push notifications');
+    }
+  };
+
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then(token => setExpoPushToken(token ?? ''))
+      .catch((error: any) => setExpoPushToken(`${error}`));
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
     });
 
-    // Listen for notifications received in the foreground
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        const notificationId = `${notification.request.identifier}-${Date.now()}`;
-        
-        // Prevent duplicate notifications
-        if (notificationId !== lastNotificationId) {
-          setLastNotificationId(notificationId);
-          setNotification(notification);
-          
-          showNotification({
-            title: notification.request.content.title ?? "No Title",
-            message: notification.request.content.body ?? "No Message",
-            type: 'info',
-            data: notification.request.content.data
-          });
-        }
-      });
-
-    // Listen for notification responses (user taps on notification)
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data;
-        console.log("🔔 Notification Tapped: ", data);
-        // Handle notification tap here (e.g., navigate to a specific screen)
-      });
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationListener.current
-        );
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
+      notificationListener.current && Notifications.removeNotificationSubscription(notificationListener.current);
+      responseListener.current && Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, [lastNotificationId]);
+  }, []);
 
   return (
     <NotificationContext.Provider
-      value={{ 
-        expoPushToken, 
-        notification, 
+      value={{
+        expoPushToken,
+        notification,
         error,
         showNotification,
         hideNotification,
-        currentNotification
+        currentNotification,
       }}
     >
       {children}

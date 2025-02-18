@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import moment from 'moment';
-import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { fetchSubaccountCode, bookAppointment } from '../utils/bookingUtils';
 import { useNotification } from '../context/NotificationsContext';
+import { sendPushNotification } from '../utils/sendPushNotification';
 import Colors from './Shared/Colors';
 
 const BookingSection: React.FC<{
@@ -15,7 +15,7 @@ const BookingSection: React.FC<{
   consultationFee: number;
   selectedTimeSlot?: { id: string; time: string } | null;
 }> = ({ doctorId, consultationFee, selectedTimeSlot }) => {
-  const { expoPushToken } = useNotification();
+  const { showNotification } = useNotification();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
   const appointmentIdRef = useRef<string | null>(null); // Add a ref for appointment ID
@@ -97,18 +97,18 @@ const BookingSection: React.FC<{
       // Use the ref value instead of state
       const currentAppointmentId = appointmentIdRef.current;
       
-      if (!expoPushToken || !userId || !currentAppointmentId) {
+      if (!currentAppointmentId) {
         throw new Error('Missing required data for notification.');
       }
 
-      const notificationData = {
-        token: expoPushToken,
+      showNotification({
         title: 'Appointment Confirmed',
-        body: `Appointment scheduled for ${selectedTimeSlot?.time}`,
-        userId: userId,
-      };
+        message: `Appointment scheduled for ${selectedTimeSlot?.time}`,
+        type: 'success',
+      });
 
-      await axios.post('https://project03-rj91.onrender.com/send-notification', notificationData);
+      await sendPushNotification('Appointment Confirmed', `Your appointment scheduled for ${selectedTimeSlot?.time} has been confirmed.`);
+
       Toast.show({
         type: 'success',
         text1: 'Success',

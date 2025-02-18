@@ -1,5 +1,6 @@
 import axios from 'axios';
 import moment from 'moment';
+import { sendPushNotification } from './sendPushNotification'; // Import sendPushNotification
 
 export const fetchSubaccountCode = async (userId: string): Promise<string | null> => {
   try {
@@ -48,7 +49,18 @@ export const bookAppointment = async (
       throw new Error('Failed to retrieve appointmentId from response');
     }
 
+    const appointmentDetails = appointmentResponse.data.appointment;
+    const patientDetails = appointmentResponse.data.patient;
+
+    const notificationMessage = `Your appointment with Dr. ${doctorId} is scheduled for ${moment(appointmentDetails.date).format('MMMM Do YYYY')} at ${appointmentDetails.time}.`;
+
+    const notificationData = {
+      appointment: appointmentDetails,
+      patient: patientDetails,
+    };
+
     if (withInsurance) {
+      await sendPushNotification('Upcoming Appointment', notificationMessage, notificationData); // Send push notification
       return newAppointmentId;
     }
 
@@ -73,6 +85,7 @@ export const bookAppointment = async (
     );
 
     if (paymentResponse.data.status) {
+      await sendPushNotification('Upcoming Appointment', notificationMessage, notificationData); // Send push notification
       return newAppointmentId;
     } else {
       throw new Error('Payment initialization failed');

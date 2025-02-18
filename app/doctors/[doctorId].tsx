@@ -15,6 +15,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
+import Animated, { FadeIn, FadeOut, SlideInRight, SlideInLeft } from 'react-native-reanimated';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
 import ClinicSubHeading from '@/components/clinics/ClinicSubHeading';
@@ -111,22 +112,24 @@ const DoctorProfile: React.FC = () => {
     const isPast = slotTime.isBefore(moment());
 
     return (
-      <TouchableOpacity
-        onPress={() => handleSlotSelection(item)}
-        style={[
-          styles.slotButton,
-          item.isBooked || isPast ? { backgroundColor: Colors.SECONDARY } : { backgroundColor: Colors.goofy },
-          selectedTimeSlot?.id === item._id && { borderColor: Colors.SECONDARY, borderWidth: 2, backgroundColor: Colors.selectedBackground },
-        ]}
-        disabled={item.isBooked || isPast}
-      >
-        <Text style={[styles.slotText, selectedTimeSlot?.id === item._id && { color: Colors.PRIMARY }]}>
-          {`${item.startTime} - ${item.endTime}`}
-        </Text>
-        {selectedTimeSlot?.id === item._id && (
-          <Ionicons name="checkmark-circle" size={20} color={Colors.PRIMARY} style={styles.checkIcon} />
-        )}
-      </TouchableOpacity>
+      <Animated.View entering={FadeIn} exiting={FadeOut}>
+        <TouchableOpacity
+          onPress={() => handleSlotSelection(item)}
+          style={[
+            styles.slotButton,
+            item.isBooked || isPast ? { backgroundColor: Colors.SECONDARY } : { backgroundColor: Colors.goofy },
+            selectedTimeSlot?.id === item._id && { borderColor: Colors.SECONDARY, borderWidth: 2, backgroundColor: Colors.selectedBackground },
+          ]}
+          disabled={item.isBooked || isPast}
+        >
+          <Text style={[styles.slotText, selectedTimeSlot?.id === item._id && { color: Colors.PRIMARY }]}>
+            {`${item.startTime} - ${item.endTime}`}
+          </Text>
+          {selectedTimeSlot?.id === item._id && (
+            <Ionicons name="checkmark-circle" size={20} color={Colors.PRIMARY} style={styles.checkIcon} />
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     );
   }, [selectedTimeSlot]);
 
@@ -138,36 +141,38 @@ const DoctorProfile: React.FC = () => {
     const isToday = moment(day, 'dddd').isSame(moment(), 'day');
 
     return (
-      <TouchableOpacity
-        key={day}
-        onPress={() => setSelectedDay(day)}
-        style={[
-          styles.dayButton,
-          selectedDay === day && styles.selectedDayButton,
-          isToday && !isDisabled && styles.todayButton,
-          isDisabled && styles.disabledDayButton,
-        ]}
-        disabled={isDisabled}
-      >
-        <Text
+      <Animated.View entering={SlideInRight} exiting={SlideInLeft}>
+        <TouchableOpacity
+          key={day}
+          onPress={() => setSelectedDay(day)}
           style={[
-            styles.dayText,
-            selectedDay === day && styles.selectedDayText,
-            isToday && !isDisabled && styles.todayText,
-            isDisabled && styles.disabledDayText,
+            styles.dayButton,
+            selectedDay === day && styles.selectedDayButton,
+            isToday && !isDisabled && styles.todayButton,
+            isDisabled && styles.disabledDayButton,
           ]}
+          disabled={isDisabled}
         >
-          {day}
-        </Text>
-        {isDisabled && (
-          <Ionicons
-            name="information-circle-outline"
-            size={16}
-            color={Colors.GRAY}
-            style={styles.infoIcon}
-          />
-        )}
-      </TouchableOpacity>
+          <Text
+            style={[
+              styles.dayText,
+              selectedDay === day && styles.selectedDayText,
+              isToday && !isDisabled && styles.todayText,
+              isDisabled && styles.disabledDayText,
+            ]}
+          >
+            {day}
+          </Text>
+          {isDisabled && (
+            <Ionicons
+              name="information-circle-outline"
+              size={16}
+              color={Colors.GRAY}
+              style={styles.infoIcon}
+            />
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
@@ -181,47 +186,23 @@ const DoctorProfile: React.FC = () => {
     return clinicDoctors.filter((doc) => doc._id !== doctor._id);
   }, [clinicDoctors, doctor]);
 
-  if (loading) {
+  // Check if the doctor has any slots at all
+  const hasAnySlots = useMemo(() => {
+    return Object.values(schedule).some((slots) => slots.length > 0);
+  }, [schedule]);
+
+  // Render the schedule section only if there are slots
+  const renderScheduleSection = () => {
+    if (!hasAnySlots) {
+      return (
+        <View style={[styles.section, styles.unavailableSection]}>
+          <Text style={styles.unavailableText}>Currently Unavailable</Text>
+        </View>
+      );
+    }
+
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.heroContainer}>
-        <Image source={{ uri: profileImageUri }} style={styles.heroImage} />
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.heroOverlay}>
-          <Text style={styles.heroText}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
-        </View>
-      </View>
-      <ScrollView style={styles.scrollContainer}>
-        <View style={styles.section}>
-          <ClinicSubHeading subHeadingTitle={`${doctor.firstName} ${doctor.lastName}`} />
-          <Text style={styles.descriptionText}>{doctor.bio || 'No description available'}</Text>
-        </View>
-
-        <View style={[styles.section, styles.horizontalSection]}>
-          <View style={styles.infoCard}>
-            <Ionicons name="medkit" size={20} color={Colors.primary} />
-            <Text style={styles.infoText}>{specialties}</Text>
-          </View>
-          <View style={styles.infoCard}>
-            <Ionicons name="business" size={20} color={Colors.primary} />
-            <Text style={styles.infoText}>{clinicName}</Text>
-          </View>
-          <View style={styles.infoCard}>
-            <Ionicons name="calendar" size={20} color={Colors.primary} />
-            <Text style={styles.infoText}>{yearsOfExperience} years of experience</Text>
-          </View>
-        </View>
-
+      <>
         <View style={styles.section}>
           <Text style={styles.title}>Select a Day</Text>
           <FlatList
@@ -255,6 +236,59 @@ const DoctorProfile: React.FC = () => {
             </Text>
           )}
         </View>
+      </>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.heroContainer}>
+        <Image source={{ uri: profileImageUri }} style={styles.heroImage} />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <View style={styles.heroOverlay}>
+          <Text style={styles.heroText}>{`${doctor.firstName} ${doctor.lastName}`}</Text>
+        </View>
+      </View>
+      <ScrollView style={styles.scrollContainer}>
+        <View style={styles.section}>
+          <ClinicSubHeading subHeadingTitle={`${doctor.firstName} ${doctor.lastName}`} />
+          <Text style={styles.descriptionText}>{doctor.bio || 'No description available'}</Text>
+        </View>
+
+        <View style={[styles.section, styles.horizontalSection]}>
+          <Animated.View entering={FadeIn.delay(100)}>
+            <View style={styles.infoCard}>
+              <Ionicons name="medkit" size={20} color={Colors.primary} />
+              <Text style={styles.infoText}>{specialties}</Text>
+            </View>
+          </Animated.View>
+          <Animated.View entering={FadeIn.delay(200)}>
+            <View style={styles.infoCard}>
+              <Ionicons name="business" size={20} color={Colors.primary} />
+              <Text style={styles.infoText}>{clinicName}</Text>
+            </View>
+          </Animated.View>
+          <Animated.View entering={FadeIn.delay(300)}>
+            <View style={styles.infoCard}>
+              <Ionicons name="calendar" size={20} color={Colors.primary} />
+              <Text style={styles.infoText}>{yearsOfExperience} years of experience</Text>
+            </View>
+          </Animated.View>
+        </View>
+
+        {/* Render schedule section or subtle unavailability message */}
+        {renderScheduleSection()}
 
         {isInsuranceAccepted ? (
           <UserBookingSection
@@ -271,8 +305,6 @@ const DoctorProfile: React.FC = () => {
             selectedInsurance={selectedInsurance}
           />
         )}
-
-      
       </ScrollView>
     </View>
   );
@@ -281,14 +313,16 @@ const DoctorProfile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.LIGHT_BACKGROUND,
   },
   heroContainer: {
-    height: 200,
+    height: 250,
     position: 'relative',
   },
   heroImage: {
     width: '100%',
     height: '100%',
+    resizeMode: 'cover',
   },
   backButton: {
     position: 'absolute',
@@ -302,11 +336,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
+    padding: 16,
   },
   heroText: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
   },
   scrollContainer: {
@@ -323,26 +357,38 @@ const styles = StyleSheet.create({
   infoCard: {
     flex: 1,
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: Colors.LIGHT_GRAY,
-    borderRadius: 8,
-    marginHorizontal: 4,
+    padding: 16,
+    backgroundColor: Colors.ligh_gray,
+    borderRadius: 12,
+    marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   infoText: {
     fontSize: 14,
-    color: Colors.DARK_GRAY,
+    color: Colors.primary,
     marginTop: 8,
+    textAlign: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#000',
   },
   dayButton: {
-    padding: 10,
-    marginHorizontal: 4,
-    borderRadius: 8,
-    backgroundColor: Colors.LIGHT_GRAY,
+    padding: 12,
+    marginHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   selectedDayButton: {
     backgroundColor: Colors.PRIMARY,
@@ -351,11 +397,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SECONDARY,
   },
   disabledDayButton: {
-    backgroundColor: Colors.DISABLED,
+    backgroundColor: Colors.LIGHT_GRAY,
   },
   dayText: {
     fontSize: 14,
-    color: Colors.DARK_GRAY,
+    color: Colors.primary,
+    fontWeight: '500',
   },
   selectedDayText: {
     color: '#fff',
@@ -370,14 +417,21 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   slotButton: {
-    padding: 10,
-    marginHorizontal: 4,
-    borderRadius: 8,
+    padding: 12,
+    marginHorizontal: 8,
+    borderRadius: 12,
     alignItems: 'center',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   slotText: {
     fontSize: 14,
-    color: Colors.DARK_GRAY,
+    color: Colors.primary,
+    fontWeight: '500',
   },
   checkIcon: {
     position: 'absolute',
@@ -386,38 +440,25 @@ const styles = StyleSheet.create({
   },
   noSlotsText: {
     fontSize: 14,
-    color: Colors.GRAY,
+    color: Colors.primary,
     textAlign: 'center',
-  },
-  doctorCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: Colors.LIGHT_GRAY,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  doctorImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 16,
-  },
-  doctorDetails: {
-    flex: 1,
-  },
-  doctorName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  doctorSpecialty: {
-    fontSize: 14,
-    color: Colors.DARK_GRAY,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  unavailableSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: Colors.LIGHT_GRAY,
+    borderRadius: 12,
+  },
+  unavailableText: {
+    fontSize: 14,
+    color: Colors.GRAY,
+    fontStyle: 'italic',
   },
 });
 

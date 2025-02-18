@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../app/(redux)/authSlice';
 import { bookAppointment } from '../utils/bookingUtils';
 import CustomToast from './CustomToast';
-import { useNotification } from '../context/NotificationsContext'; // Import useNotification
+import { useNotification } from '../context/NotificationsContext';
 
 const UserBookingSection: React.FC<{
   doctorId: string;
@@ -28,12 +28,11 @@ const UserBookingSection: React.FC<{
   const userId = user.user?._id;
   const userEmail = user.user?.email;
   const patientName = user.user?.username || user.name;
-  const { expoPushToken } = useNotification(); // Get the Expo push token
+  const { expoPushToken } = useNotification();
 
   useEffect(() => {
     socket.on('slotUpdated', (data) => {
       console.log('Slot updated:', data);
-      // Update the state of the slots here based on the received data
     });
 
     return () => {
@@ -45,25 +44,25 @@ const UserBookingSection: React.FC<{
     setToast({ visible: true, message, type });
   };
 
-  const sendNotification = async (appointmentId: string) => {
+  const sendNotification = async (expoPushToken: string) => {
+    const message = {
+      to: expoPushToken,
+      sound: 'default',
+      title: 'Appointment Confirmed',
+      body: `Appointment scheduled for ${selectedTimeSlot?.time}`,
+      data: { appointmentId },
+    };
+
     try {
-      console.log('expoPushToken:', expoPushToken);
-      console.log('userId:', userId);
-      console.log('appointmentId:', appointmentId);
-
-      if (!expoPushToken || !userId || !appointmentId) {
-        throw new Error('Missing required data for notification.');
-      }
-
-      const notificationData = {
-        token: expoPushToken,
-        title: 'Appointment Confirmed',
-        body: `Appointment scheduled for ${selectedTimeSlot?.time}`,
-        userId: userId,
-      };
-
-      await axios.post('https://project03-rj91.onrender.com/send-notification', notificationData);
-      console.log('Notification sent successfully');
+      await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Accept-encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
       showToast('Appointment confirmed! You will receive a notification shortly.', 'success');
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -96,20 +95,17 @@ const UserBookingSection: React.FC<{
         selectedDateTime.toDate(),
         selectedTimeSlot.id,
         selectedInsurance,
-        null, // No subaccount code for insurance bookings
+        null,
         userEmail,
         consultationFee,
-        true, // withInsurance is true
+        true,
         selectedTimeSlot.time
       );
-
-      console.log('Booking response:', newAppointmentId); // Log the response to check its structure
 
       setAppointmentId(newAppointmentId);
       showToast('Appointment booked successfully with insurance.', 'success');
 
-      // Send notification after successful booking
-      await sendNotification(newAppointmentId); // Pass the newAppointmentId directly
+      await sendNotification(expoPushToken);
     } catch (error) {
       console.error('Failed to book appointment:', error);
       showToast('Failed to book appointment. Please try again.', 'error');
@@ -141,7 +137,6 @@ const UserBookingSection: React.FC<{
 
 const styles = StyleSheet.create({
   container: {
-   
     backgroundColor: '#e3f6f5',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,

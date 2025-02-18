@@ -35,18 +35,6 @@ export default function Index() {
     }
   };
 
-  // Clear the token when a user logs out
-  const clearPushToken = async () => {
-    try {
-      await AsyncStorage.removeItem('expoPushToken');
-      // Optionally, notify your backend to remove the token for the current user
-      // await api.removeUserPushToken();
-    } catch (error) {
-      console.error('Error clearing push token:', error);
-    }
-  };
-
-  // Check if the user has completed onboarding
   useEffect(() => {
     checkOnboarding();
   }, []);

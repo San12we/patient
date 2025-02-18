@@ -7,15 +7,15 @@ import {
   StyleSheet,
   Image,
   ScrollView,
-  Dimensions,
   ActivityIndicator,
   Alert,
   SafeAreaView,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'expo-router';
-import Colors from '../../components/Shared/Colors';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeOut, SlideInRight, SlideInLeft } from 'react-native-reanimated';
+import Colors from '../../components/Shared/Colors';
 import { setSelectedDoctor } from '../../app/(redux)/doctorSlice';
 import axios from 'axios';
 import moment from 'moment';
@@ -122,16 +122,18 @@ const ClinicProfile: React.FC = () => {
             <FlatList
               data={insuranceDetails}
               renderItem={({ item }) => (
-                <View style={styles.insuranceCard}>
-                  {item.icon ? (
-                    <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
-                  ) : (
-                    <View style={styles.placeholderIcon}>
-                      <Text style={styles.placeholderText}>{item.name.charAt(0)}</Text>
-                    </View>
-                  )}
-                  <Text style={styles.insuranceText}>{item.name}</Text>
-                </View>
+                <Animated.View entering={FadeIn} exiting={FadeOut}>
+                  <View style={styles.insuranceCard}>
+                    {item.icon ? (
+                      <Image source={{ uri: item.icon }} style={styles.insuranceIcon} />
+                    ) : (
+                      <View style={styles.placeholderIcon}>
+                        <Text style={styles.placeholderText}>{item.name.charAt(0)}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.insuranceText}>{item.name}</Text>
+                  </View>
+                </Animated.View>
               )}
               keyExtractor={(item, index) => index.toString()}
               horizontal
@@ -146,9 +148,11 @@ const ClinicProfile: React.FC = () => {
               data={services}
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
-                <View style={styles.serviceCard}>
-                  <Text style={styles.serviceText}>{item}</Text>
-                </View>
+                <Animated.View entering={SlideInRight} exiting={SlideInLeft}>
+                  <View style={styles.serviceCard}>
+                    <Text style={styles.serviceText}>{item}</Text>
+                  </View>
+                </Animated.View>
               )}
               showsHorizontalScrollIndicator={false}
             />
@@ -159,23 +163,25 @@ const ClinicProfile: React.FC = () => {
             data={clinic.doctors}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.doctorCard}
-                onPress={() => handleDoctorPress(item)}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={{ uri: item.profileImage || 'https://via.placeholder.com/150' }}
-                  style={styles.doctorImage}
-                />
-                <View style={styles.doctorDetails}>
-                  <Text style={styles.doctorName}>
-                    {item.firstName} {item.lastName}
-                  </Text>
-                  <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
-              </TouchableOpacity>
+              <Animated.View entering={FadeIn.delay(100)} exiting={FadeOut}>
+                <TouchableOpacity
+                  style={styles.doctorCard}
+                  onPress={() => handleDoctorPress(item)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: item.profileImage || 'https://via.placeholder.com/150' }}
+                    style={styles.doctorImage}
+                  />
+                  <View style={styles.doctorDetails}>
+                    <Text style={styles.doctorName}>
+                      {item.firstName} {item.lastName}
+                    </Text>
+                    <Text style={styles.doctorSpecialty}>{item.specialty}</Text>
+                  </View>
+                  <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
+                </TouchableOpacity>
+              </Animated.View>
             )}
           />
         </View>
@@ -190,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   imageContainer: {
-    height: 200,
+    height: 250,
     position: 'relative',
   },
   profileImage: {
@@ -208,24 +214,24 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    marginTop: 20, // Offset to account for the fixed profile image
+    marginTop: 20,
   },
   scrollContent: {
-    paddingBottom: 20, // Add padding to avoid content being cut off
+    paddingBottom: 20,
   },
   detailsContainer: {
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: Colors.primary,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     color: Colors.gray,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   category: {
     fontSize: 14,
@@ -235,7 +241,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
@@ -243,10 +249,10 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   section: {
-    marginTop: 20,
+    marginTop: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: Colors.primary,
     marginBottom: 16,
@@ -280,26 +286,33 @@ const styles = StyleSheet.create({
   },
   serviceCard: {
     borderColor: '#ffe9e3',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     marginRight: 12,
+    backgroundColor: Colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   serviceText: {
     fontSize: 14,
     color: Colors.primary,
+    fontWeight: '500',
   },
   doctorCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-  
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#fff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   doctorImage: {
     width: 50,
