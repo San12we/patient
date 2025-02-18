@@ -25,14 +25,14 @@ import axios from 'axios';
 import UserBookingSection from '../../components/UserBookingSection';
 import { getDoctors, setSelectedDoctor } from '../../app/(redux)/doctorSlice';
 import socket from '../../Services/socket';
+import { useDoctors } from '../../hooks/useDoctors';
 
 const DoctorProfile: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const doctor = useSelector((state) => state.doctors.selectedDoctor);
   const userId = useSelector((state) => state.auth.user.user._id);
-  const doctors = useSelector((state) => state.doctors.doctorsList);
-  const clinicDoctors = useSelector((state) => state.clinics.selectedClinic?.doctors || []);
+  const { doctors: clinicDoctors } = useDoctors();
   const { schedule, fetchSchedule, loading: scheduleLoading, error } = useSchedule(doctor._id, userId);
   const { insuranceProviders } = useInsurance();
 
@@ -178,7 +178,7 @@ const DoctorProfile: React.FC = () => {
 
   const handleDoctorPress = async (doctor) => {
     dispatch(setSelectedDoctor(doctor));
-    fetchSchedule();
+    await fetchSchedule();
   };
 
   // Filter out the selected doctor from the list of other doctors
@@ -305,6 +305,23 @@ const DoctorProfile: React.FC = () => {
             selectedInsurance={selectedInsurance}
           />
         )}
+
+        {/* Render other doctors */}
+        <View style={styles.section}>
+          <Text style={styles.title}>Other Doctors</Text>
+          <FlatList
+            horizontal
+            data={otherDoctors}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleDoctorPress(item)} style={styles.doctorCard}>
+                <Image source={{ uri: item.profileImage || 'https://res.cloudinary.com/dws2bgxg4/image/upload/v1726073012/nurse_portrait_hospital_2d1bc0a5fc.jpg' }} style={styles.doctorImage} />
+                <Text style={styles.doctorName}>{`${item.firstName} ${item.lastName}`}</Text>
+              </TouchableOpacity>
+            )}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
       </ScrollView>
     </View>
   );
@@ -358,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 16,
-    backgroundColor: Colors.ligh_gray,
+    backgroundColor: Colors.white,
     borderRadius: 12,
     marginHorizontal: 8,
     shadowColor: '#000',
@@ -459,6 +476,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.GRAY,
     fontStyle: 'italic',
+  },
+  descriptionText: {
+    fontSize: 16,
+    color: Colors.DARK_TEXT,
+    marginVertical: 8,
+  },
+  doctorCard: {
+    alignItems: 'center',
+    marginHorizontal: 8,
+    padding: 16,
+    backgroundColor: Colors.LIGHT_BACKGROUND,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  doctorImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+  },
+  doctorName: {
+    fontSize: 14,
+    color: Colors.DARK_TEXT,
+    textAlign: 'center',
   },
 });
 
