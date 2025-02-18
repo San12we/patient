@@ -9,14 +9,12 @@ export const sendPushNotification = async (title: string, message: string, data:
     }
 
     const messagePayload = {
-      to: expoPushToken,
-      sound: 'default',
+      token: expoPushToken,
       title,
       body: message,
-      data,
     };
 
-    await axios.post('https://exp.host/--/api/v2/push/send', messagePayload);
+    await axios.post('https://project03-rj91.onrender.com/send-notification', messagePayload);
   } catch (error) {
     console.error('Error sending push notification:', error);
   }
