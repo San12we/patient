@@ -78,6 +78,9 @@ const clinicSlice = createSlice({
     setClinicsFromStorage: (state, action) => {
       state.clinics = action.payload;
     },
+    setSelectedProfessional: (state, action) => {
+      state.selectedProfessional = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -99,5 +102,5 @@ const clinicSlice = createSlice({
   },
 });
 
-export const { setSelectedClinic, setClinicsFromStorage } = clinicSlice.actions;
+export const { setSelectedClinic, setClinicsFromStorage, setSelectedProfessional } = clinicSlice.actions;
 export default clinicSlice.reducer;

@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
 
 const Loading: React.FC = () => {
+  const animation = useRef<LottieView>(null);
   const [invalidDimensions, setInvalidDimensions] = useState(false);
+
+  useEffect(() => {
+    // You can control the ref programmatically, rather than using autoPlay
+    animation.current?.play();
+  }, []);
 
   const handleLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
@@ -24,8 +30,7 @@ const Loading: React.FC = () => {
   return (
     <View style={styles.container}>
       <LottieView
-        autoPlay
-        loop
+        ref={animation}
         style={styles.lottie}
         source={require('../assets/animations/loading2.json')}
         onLayout={handleLayout}
@@ -43,6 +48,7 @@ const styles = StyleSheet.create({
   lottie: {
     width: 200,
     height: 200,
+    backgroundColor: '#eee',
   },
   errorText: {
     color: 'red',

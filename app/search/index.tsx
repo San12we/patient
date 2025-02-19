@@ -91,25 +91,24 @@ const index = () => {
 
   return (
     <View style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <AntDesign name="left" size={24} color="black" />
-      </TouchableOpacity>
-
-      {/* Search Bar with Filter Toggle */}
-      <View style={styles.searchBarContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search clinics..."
-          value={searchQuery}
-          onChangeText={(text) => {
-            setSearchQuery(text);
-            handleSearchChange(text);
-          }}
-        />
-        <TouchableOpacity onPress={() => setShowFilters((prev) => !prev)}>
-          <Ionicons name="filter" size={24} color="black" />
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <AntDesign name="left" size={24} color="black" />
         </TouchableOpacity>
+        <View style={styles.searchBarContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search clinics..."
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              handleSearchChange(text);
+            }}
+          />
+          <TouchableOpacity onPress={() => setShowFilters((prev) => !prev)}>
+            <Ionicons name="filter" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Filters */}
@@ -173,13 +172,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 20,
   },
-  backButton: {
-    marginBottom: 10,
-  },
-  searchBarContainer: {
+  headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  backButton: {
+    marginRight: 10,
+  },
+  searchBarContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
