@@ -53,27 +53,37 @@ const Index: React.FC = () => {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.innerContainer}>
-                <SearchBar setSearchQuery={setSearchQuery} onSubmit={handleSearchSubmit} />
-                <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
-                <Doctors />
-                <Clinics />
-                <ClinicSubHeading subHeadingTitle='Explore Insights' />
-                <Posts />
-            </View>
-        </ScrollView>
+        <View style={styles.outerContainer}>
+            {/* Fixed header */}
+            <SearchBar setSearchQuery={setSearchQuery} onSubmit={handleSearchSubmit} />
+            {/* Scrollable content */}
+            <ScrollView 
+                contentContainerStyle={styles.container} 
+                showsVerticalScrollIndicator={false}>
+                <View style={styles.innerContainer}>
+                    <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
+                    <Doctors />
+                    <Clinics />
+                    <ClinicSubHeading subHeadingTitle='Explore Insights' />
+                    <Posts />
+                </View>
+            </ScrollView>
+        </View>
     );
 };
 
 export default Index;
 
 const styles = StyleSheet.create({
+    outerContainer: {
+        flex: 1,
+    },
     container: {
         flexGrow: 1,
         backgroundColor: '#e3f6f5',
         padding: 20,
         paddingBottom: 40,
+        paddingVertical: 30, // added vertical padding
     },
     innerContainer: {
         flex: 1,

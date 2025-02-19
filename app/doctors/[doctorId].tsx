@@ -16,7 +16,6 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
-import Animated, { FadeIn, FadeOut, SlideInRight, SlideInLeft } from 'react-native-reanimated';
 import Loading from '../../components/Loading';
 import Colors from '../../components/Shared/Colors';
 import BookingSection from '../../components/BookingSection';
@@ -121,7 +120,7 @@ const DoctorProfile: React.FC = () => {
     const isPast = slotTime.isBefore(moment());
   
     return (
-      <Animated.View entering={FadeIn} exiting={FadeOut} key={item._id}>
+      <View key={item._id}>
         <TouchableOpacity
           onPress={() => handleSlotSelection(item)}
           style={[
@@ -138,7 +137,7 @@ const DoctorProfile: React.FC = () => {
             <Ionicons name="checkmark-circle" size={20} color={Colors.PRIMARY} style={styles.checkIcon} />
           )}
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   }, [selectedTimeSlot]);
 
@@ -150,7 +149,7 @@ const DoctorProfile: React.FC = () => {
     const isToday = moment(day, 'dddd').isSame(moment(), 'day');
 
     return (
-      <Animated.View entering={SlideInRight} exiting={SlideInLeft} key={day}>
+      <View key={day}>
         <TouchableOpacity
           key={day}
           onPress={() => setSelectedDay(day)}
@@ -181,7 +180,7 @@ const DoctorProfile: React.FC = () => {
             />
           )}
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   };
 
@@ -265,24 +264,17 @@ const DoctorProfile: React.FC = () => {
     );
   };
 
-  // Optional: Wrap schedule section in an Animated.View for graceful exit/enter.
-  const ScheduleSectionWithAnimations = () => (
-    <Animated.View entering={FadeIn} exiting={FadeOut}>
-      {renderScheduleSection()}
-    </Animated.View>
-  );
-
   if (loading || processing || status === 'loading') {
     return <Loading />;
   }
 
   const renderInfoItem = ({ item, index }) => (
-    <Animated.View entering={FadeIn.delay(index * 100)}>
+    <View key={index}>
       <View style={styles.infoItem}>
         <Ionicons name={item.icon} size={20} color={Colors.primary} />
         <Text style={styles.infoText}>{item.text}</Text>
       </View>
-    </Animated.View>
+    </View>
   );
 
   const infoItems = [
@@ -333,7 +325,7 @@ const DoctorProfile: React.FC = () => {
         </View>
 
         {/* Render schedule section or subtle unavailability message */}
-        {showSchedule && <ScheduleSectionWithAnimations />}
+        {showSchedule && renderScheduleSection()}
 
         {/* Render other doctors */}
         <View style={styles.section}>
@@ -342,7 +334,7 @@ const DoctorProfile: React.FC = () => {
             data={otherDoctors}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
-              <Animated.View entering={FadeIn.delay(100)} exiting={FadeOut}>
+              <View key={item._id}>
                 <TouchableOpacity
                   style={styles.doctorCard}
                   onPress={() => handleDoctorPress(item)}
@@ -360,7 +352,7 @@ const DoctorProfile: React.FC = () => {
                   </View>
                   <MaterialIcons name="chevron-right" size={24} color={Colors.primary} />
                 </TouchableOpacity>
-              </Animated.View>
+              </View>
             )}
             showsVerticalScrollIndicator={false}
           />
