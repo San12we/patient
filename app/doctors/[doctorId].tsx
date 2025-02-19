@@ -113,10 +113,13 @@ const DoctorProfile: React.FC = () => {
     }
   }, []);
 
+  // Updated renderSlot with item check
   const renderSlot = useCallback(({ item }) => {
+    if (!item) return null; // safeguard against undefined item
+  
     const slotTime = moment(`${item.date} ${item.startTime}`, 'YYYY-MM-DD HH:mm');
     const isPast = slotTime.isBefore(moment());
-
+  
     return (
       <Animated.View entering={FadeIn} exiting={FadeOut} key={item._id}>
         <TouchableOpacity
@@ -199,8 +202,10 @@ const DoctorProfile: React.FC = () => {
     return Object.values(schedule).some((slots) => slots.length > 0);
   }, [schedule]);
 
-  // Render the schedule section only if there are slots
+  // Updated renderScheduleSection with checks for undefined values
   const renderScheduleSection = () => {
+    if (!schedule || !selectedDay) return null; // ensure valid values
+  
     if (!hasAnySlots) {
       return (
         <View style={[styles.section, styles.unavailableSection]}>
@@ -208,7 +213,7 @@ const DoctorProfile: React.FC = () => {
         </View>
       );
     }
-
+  
     return (
       <>
         <View style={styles.section}>
@@ -221,7 +226,7 @@ const DoctorProfile: React.FC = () => {
             showsHorizontalScrollIndicator={false}
           />
         </View>
-
+  
         <View style={styles.section}>
           <Text style={styles.title}>Available Slots</Text>
           {error ? (
@@ -242,7 +247,7 @@ const DoctorProfile: React.FC = () => {
             </Text>
           )}
         </View>
-
+  
         {hasInsurance ? (
           <UserBookingSection
             doctorId={doctor._id}
@@ -259,6 +264,13 @@ const DoctorProfile: React.FC = () => {
       </>
     );
   };
+
+  // Optional: Wrap schedule section in an Animated.View for graceful exit/enter.
+  const ScheduleSectionWithAnimations = () => (
+    <Animated.View entering={FadeIn} exiting={FadeOut}>
+      {renderScheduleSection()}
+    </Animated.View>
+  );
 
   if (loading || processing || status === 'loading') {
     return <Loading />;
@@ -312,7 +324,7 @@ const DoctorProfile: React.FC = () => {
             <Text style={styles.scheduleText}>Schedule</Text>
             <Switch
               value={showSchedule}
-              onValueChange={() => setShowSchedule(!showSchedule)}
+              onValueChange={(value) => setShowSchedule(value)}
               trackColor={{ false: Colors.LIGHT_GRAY, true: Colors.PRIMARY }}
               thumbColor={showSchedule ? Colors.WHITE : Colors.GRAY}
               style={styles.scheduleSwitch}
@@ -321,7 +333,7 @@ const DoctorProfile: React.FC = () => {
         </View>
 
         {/* Render schedule section or subtle unavailability message */}
-        {showSchedule && renderScheduleSection()}
+        {showSchedule && <ScheduleSectionWithAnimations />}
 
         {/* Render other doctors */}
         <View style={styles.section}>
