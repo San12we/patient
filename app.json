@@ -4,7 +4,7 @@
     "slug": "crono",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icons/dov.png",
+    "icon": "./assets/images/icons/dovi.png",
     "scheme": "crono",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icons/dov.png",
+        "foregroundImage": "./assets/images/icons/dovi.png",
         "backgroundColor": "#ffffff"
 
       },
@@ -31,7 +31,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icons/dov.png",
+          "image":  "./assets/images/icons/dovi.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
