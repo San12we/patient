@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   scheduleSwitch: {
-    marginLeft: 'auto',
+    alignSelf: 'flex-end',
   },
   dayButton: {
     padding: 12,
