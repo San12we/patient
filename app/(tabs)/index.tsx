@@ -54,17 +54,13 @@ const Index: React.FC = () => {
 
     return (
         <View style={styles.outerContainer}>
-            {/* Fixed header */}
             <SearchBar setSearchQuery={setSearchQuery} onSubmit={handleSearchSubmit} />
-            {/* Scrollable content */}
-            <ScrollView 
-                contentContainerStyle={styles.container} 
-                showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
                 <View style={styles.innerContainer}>
                     <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
                     <Doctors />
                     <Clinics />
-                    <ClinicSubHeading subHeadingTitle='Explore Insights' />
+                    <ClinicSubHeading subHeadingTitle="Explore Insights" />
                     <Posts />
                 </View>
             </ScrollView>
@@ -83,7 +79,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#e3f6f5',
         padding: 20,
         paddingBottom: 40,
-        paddingVertical: 30, // added vertical padding
+        paddingVertical: 30,
     },
     innerContainer: {
         flex: 1,
