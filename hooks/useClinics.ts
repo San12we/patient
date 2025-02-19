@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchClinics, setClinicsFromStorage } from '../app/(redux)/clinicSlice';
+import { fetchClinics, fetchClinicsFromStorage, setClinicsFromStorage } from '../app/(redux)/clinicSlice';
 import useInsurance from './useInsurance'; // Import the insurance hook
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

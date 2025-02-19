@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
+import Loading from '../../components/Loading';
 
 import Doctors from '../../components/client/Doctors';
 import Category from '@/components/client/Category';
@@ -48,11 +49,7 @@ const Index: React.FC = () => {
     };
 
     if (doctorsLoading || clinicsLoading || categoriesLoading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
-        );
+        return <Loading />;
     }
 
     return (
@@ -61,7 +58,7 @@ const Index: React.FC = () => {
                 <SearchBar setSearchQuery={setSearchQuery} onSubmit={handleSearchSubmit} />
                 <Category categories={categories} loading={categoriesLoading} error={categoriesError} />
                 <Doctors />
-                <Clinics clinics={clinics} loading={clinicsLoading} error={clinicsError} />
+                <Clinics />
                 <ClinicSubHeading subHeadingTitle='Explore Insights' />
                 <Posts />
             </View>
