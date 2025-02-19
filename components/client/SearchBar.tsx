@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, TextInput, StyleSheet, Text } from 'react-native';
+import Colors from '../Shared/Colors';
 
 interface SearchBarProps {
   setSearchQuery: (query: string) => void;
@@ -45,12 +46,12 @@ const styles = StyleSheet.create({
     },
     iconContainer: {
       marginLeft: 10,
-      backgroundColor: '#4CAF50',
+      backgroundColor: '#90f6d7',
       padding: 8,
       borderRadius: 25,
     },
     searchButtonText: {
-      color: '#fff',
+      color: Colors.primary,
       fontSize: 16,
     },
   });

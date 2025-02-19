@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   categoryIconContainer: {
-    backgroundColor: '#ffe9e3',
+    backgroundColor: '#90f6d7',
     padding: 15,
     borderRadius: 99,
   },

@@ -32,7 +32,7 @@ const Loading: React.FC = () => {
       <LottieView
         ref={animation}
         style={styles.lottie}
-        source={require('../assets/animations/loading2.json')}
+        source={require('../assets/animations/loading3.json')}
         onLayout={handleLayout}
       />
     </View>
